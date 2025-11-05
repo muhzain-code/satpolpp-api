@@ -27,7 +27,7 @@ class StoreJabatanRequest extends FormRequest
             'nama' => 'required|string|max:255|unique:jabatan,nama',
             'keterangan' => 'nullable|string|max:500',
         ];
-    }
+    }   
     public function messages(): array
     {
         return [
@@ -45,7 +45,7 @@ class StoreJabatanRequest extends FormRequest
 
         $response = response()->json([
             'message' => 'Validasi gagal. Mohon periksa kembali input Anda.',
-            'errors' => $errors,               // akan berisi detail per‐field
+            'errors' => $errors,               
         ], 422);
 
         throw new HttpResponseException($response);
