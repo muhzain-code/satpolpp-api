@@ -20,6 +20,11 @@ return new class extends Migration
             $table->id();
             $table->string('nama')->unique();
             $table->string('keterangan')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -27,6 +32,11 @@ return new class extends Migration
             $table->id();
             $table->string('nama')->unique();
             $table->string('keterangan')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -43,6 +53,11 @@ return new class extends Migration
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->nullOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained('unit')->nullOnDelete();
             $table->enum('status', ['aktif', 'nonaktif', 'cuti'])->default('aktif');
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
@@ -60,6 +75,11 @@ return new class extends Migration
             $table->id();
             $table->string('nama')->unique();
             $table->string('keterangan')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -97,7 +117,11 @@ return new class extends Migration
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
             $table->foreignId('ke_anggota_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->text('catatan')->nullable();
-            $table->foreignId('dibuat_oleh')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -113,16 +137,25 @@ return new class extends Migration
             $table->text('uraian')->nullable();
             $table->dateTime('mulai')->nullable();
             $table->dateTime('selesai')->nullable();
-            $table->foreignId('dibuat_oleh')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
 
-        Schema::create('operasi_penugasan', function (Blueprint $table) { 
+        Schema::create('operasi_penugasan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('operasi_id')->constrained('operasi')->cascadeOnDelete();
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
             $table->string('peran')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -137,8 +170,13 @@ return new class extends Migration
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->foreignId('anggota_pelapor_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->text('uraian')->nullable();
-            $table->decimal('denda', 12, 2)->nullable(); 
+            $table->decimal('denda', 12, 2)->nullable();
             $table->timestamps();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->softDeletes();
         });
 
@@ -158,6 +196,11 @@ return new class extends Migration
             $table->foreignId('dibuat_oleh')->nullable()->constrained('users')->nullOnDelete();
             $table->string('path_pdf', 1000)->nullable();
             $table->string('data_qr', 1000)->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -175,6 +218,11 @@ return new class extends Migration
             $table->text('ringkasan')->nullable();
             $table->string('path_pdf', 1000)->nullable();
             $table->boolean('aktif')->default(true);
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
@@ -184,6 +232,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
             $table->text('catatan')->nullable();
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->unique(['user_id', 'regulasi_id']);
         });
@@ -236,6 +289,11 @@ return new class extends Migration
             $table->text('isi')->nullable();
             $table->string('path_gambar', 1000)->nullable();
             $table->boolean('tampilkan_publik')->default(true);
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
@@ -245,26 +303,14 @@ return new class extends Migration
             $table->string('judul')->nullable();
             $table->string('path_file', 1000)->nullable();
             $table->enum('tipe', ['foto', 'video'])->default('foto');
+
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
-
-        /**
-         * ============================================================
-         *  10. LOG AUDIT
-         * ============================================================
-         */
-        // Schema::create('log_audit', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->string('aksi');
-        //     $table->string('entitas')->nullable();
-        //     $table->unsignedBigInteger('entitas_id')->nullable();
-        //     $table->json('perubahan')->nullable();
-        //     $table->string('ip', 64)->nullable();
-        //     $table->string('user_agent')->nullable();
-        //     $table->timestamps();
-        // });
     }
 
     public function down(): void
