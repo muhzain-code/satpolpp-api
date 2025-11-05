@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Anggota\StoreJabatanRequest;
 use App\Http\Requests\Anggota\UpdateJabatanRequest;
 use App\Services\Anggota\JabatanService;
-use Illuminate\Http\Request;
 
 class JabatanController extends Controller
 {
