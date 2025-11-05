@@ -74,7 +74,6 @@ return new class extends Migration
             $table->decimal('lng', 10, 7)->nullable();
             $table->text('alamat')->nullable();
             $table->enum('status', ['baru', 'diproses', 'selesai'])->default('baru');
-            $table->foreignId('anggota_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -119,7 +118,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('operasi_penugasan', function (Blueprint $table) {
+        Schema::create('operasi_penugasan', function (Blueprint $table) { 
             $table->id();
             $table->foreignId('operasi_id')->constrained('operasi')->cascadeOnDelete();
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
@@ -138,7 +137,7 @@ return new class extends Migration
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->foreignId('anggota_pelapor_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->text('uraian')->nullable();
-            $table->decimal('denda', 12, 2)->nullable(); // opsional
+            $table->decimal('denda', 12, 2)->nullable(); 
             $table->timestamps();
             $table->softDeletes();
         });
@@ -255,22 +254,22 @@ return new class extends Migration
          *  10. LOG AUDIT
          * ============================================================
          */
-        Schema::create('log_audit', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('aksi');
-            $table->string('entitas')->nullable();
-            $table->unsignedBigInteger('entitas_id')->nullable();
-            $table->json('perubahan')->nullable();
-            $table->string('ip', 64)->nullable();
-            $table->string('user_agent')->nullable();
-            $table->timestamps();
-        });
+        // Schema::create('log_audit', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->string('aksi');
+        //     $table->string('entitas')->nullable();
+        //     $table->unsignedBigInteger('entitas_id')->nullable();
+        //     $table->json('perubahan')->nullable();
+        //     $table->string('ip', 64)->nullable();
+        //     $table->string('user_agent')->nullable();
+        //     $table->timestamps();
+        // });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('log_audit');
+        // Schema::dropIfExists('log_audit');
         Schema::dropIfExists('galeri');
         Schema::dropIfExists('konten');
         Schema::dropIfExists('laporan_harian_lampiran');
