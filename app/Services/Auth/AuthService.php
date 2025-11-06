@@ -4,7 +4,6 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use App\Exceptions\CustomException;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 

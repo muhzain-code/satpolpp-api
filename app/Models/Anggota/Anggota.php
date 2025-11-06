@@ -3,24 +3,42 @@
 namespace App\Models\Anggota;
 
 use App\Models\User;
+use App\Models\Anggota\Jabatan;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
-class Unit extends Model
+class Anggota extends Model
 {
-    protected $table = 'unit';
+    use LogsActivity;
+    
+    protected $table = 'anggota';
     protected $fillable = [
+        'kode_anggota',
+        'nik',
         'nama',
-        'keterangan',
+        'jenis_kelamin',
+        'tempat_lahir',
+        'tanggal_lahir',
+        'alamat',
+        'foto',
+        'jabatan_id',
+        'unit_id',
+        'status',
         'created_by',
         'updated_by',
-        'deleted_by'
+        'deleted_by',
     ];
 
-    public function anggota()
+    public function jabatan()
     {
-        return $this->hasMany(Anggota::class, 'unit_id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
     public function creator()
@@ -41,13 +59,13 @@ class Unit extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('unit')
+            ->useLogName('anggota')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data unit berhasil " .
+                "Data anggota berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',
