@@ -2,6 +2,7 @@
 
 namespace App\Models\Anggota;
 
+use App\Models\User;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,26 @@ class Jabatan extends Model
         'updated_by',
         'deleted_by',
     ];
+
+    public function anggota()
+    {
+        return $this->hasMany(Anggota::class, 'jabatan_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function deleter()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
