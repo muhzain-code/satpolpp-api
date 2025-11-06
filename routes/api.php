@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
 use App\Http\Controllers\Api\Anggota\UnitController;
+use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,4 +27,10 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('unit/{id}', [UnitController::class, 'show']);
     Route::put('unit/{id}', [UnitController::class, 'update']);
     Route::delete('unit/{id}', [UnitController::class, 'destroy']);
+
+    Route::get('kategori-pengaduan', [KategoriPengaduanController::class, 'index']);
+    Route::post('kategori-pengaduan', [KategoriPengaduanController::class, 'store']);
+    Route::get('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'show']);
+    Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
+    Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
 });
