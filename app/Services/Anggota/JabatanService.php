@@ -3,6 +3,7 @@
 namespace App\Services\Anggota;
 
 use App\Models\Anggota\Jabatan;
+use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -10,152 +11,89 @@ class JabatanService
 {
     public function getAll()
     {
-        try {
-            $jabatans = Jabatan::all();
+        $jabatans = Jabatan::all();
 
-            return [
-                'status' => true,
-                'message' => 'Data jabatan berhasil diambil',
-                'data' => $jabatans
-            ];
-        } catch (\Exception $e) {
-            Log::error('Gagal mengambil semua jabatan', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return [
-                'status' => false,
-                'message' => 'Terjadi kesalahan saat mengambil data jabatan',
-                'data' => null
-            ];
+        if ($jabatans->isEmpty()) {
+            throw new CustomException('Data jabatan tidak ditemukan', 404);
         }
+
+        return [
+            'status' => true,
+            'message' => 'Data jabatan berhasil diambil',
+            'data' => $jabatans
+        ];
     }
 
     public function getById($id)
     {
-        try {
-            $jabatan = Jabatan::find($id);
-            if (!$jabatan) {
-                return [
-                    'status' => false,
-                    'message' => 'Data jabatan tidak ditemukan',
-                    'data' => null
-                ];
-            }
+        $jabatan = Jabatan::find($id);
 
-            return [
-                'status' => true,
-                'message' => 'Data jabatan berhasil ditemukan',
-                'data' => $jabatan
-            ];
-        } catch (\Exception $e) {
-            Log::error('Gagal mengambil jabatan berdasarkan ID', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return [
-                'status' => false,
-                'message' => 'Terjadi kesalahan saat mengambil data jabatan',
-                'data' => null
-            ];
+        if (!$jabatan) {
+            throw new CustomException('Data jabatan tidak ditemukan', 404);
         }
+
+        return [
+            'status' => true,
+            'message' => 'Data jabatan berhasil ditemukan',
+            'data' => $jabatan
+        ];
     }
 
     public function create(array $data)
     {
-        try {
-            $data['created_by'] = Auth::id();
-            $jabatan = Jabatan::create($data);
+        $data['created_by'] = Auth::id();
 
-            return [
-                'status' => true,
-                'message' => 'Jabatan berhasil dibuat',
-                'data' => $jabatan
-            ];
-        } catch (\Exception $e) {
+        $jabatan = Jabatan::create($data);
+
+        if (!$jabatan) {
             Log::error('Gagal membuat jabatan', [
-                'error' => $e->getMessage(),
                 'user_id' => Auth::id(),
                 'data' => $data
             ]);
-
-            return [
-                'status' => false,
-                'message' => 'Terjadi kesalahan saat membuat jabatan',
-                'data' => null
-            ];
+            throw new CustomException('Gagal membuat jabatan', 500);
         }
+
+        return [
+            'status' => true,
+            'message' => 'Jabatan berhasil dibuat',
+            'data' => $jabatan
+        ];
     }
 
     public function update($id, array $data)
     {
-        try {
-            $jabatan = Jabatan::find($id);
-            if (!$jabatan) {
-                return [
-                    'status' => false,
-                    'message' => 'Data jabatan tidak ditemukan',
-                    'data' => null
-                ];
-            }
+        $jabatan = Jabatan::find($id);
 
-            $data['updated_by'] = Auth::id();
-            $jabatan->update($data);
-
-            return [
-                'status' => true,
-                'message' => 'Jabatan berhasil diperbarui',
-                'data' => $jabatan
-            ];
-        } catch (\Exception $e) {
-            Log::error('Gagal memperbarui jabatan', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id(),
-                'data' => $data
-            ]);
-
-            return [
-                'status' => false,
-                'message' => 'Terjadi kesalahan saat memperbarui jabatan',
-                'data' => null
-            ];
+        if (!$jabatan) {
+            throw new CustomException('Data jabatan tidak ditemukan', 404);
         }
+
+        $data['updated_by'] = Auth::id();
+
+        $jabatan->update($data);
+
+        return [
+            'status' => true,
+            'message' => 'Jabatan berhasil diperbarui',
+            'data' => $jabatan
+        ];
     }
 
     public function delete($id)
     {
-        try {
-            $jabatan = Jabatan::find($id);
-            if (!$jabatan) {
-                return [
-                    'status' => false,
-                    'message' => 'Data jabatan tidak ditemukan'
-                ];
-            }
+        $jabatan = Jabatan::find($id);
 
-            $jabatan->deleted_by = Auth::id();
-            $jabatan->save();
-            $jabatan->delete();
-
-            return [
-                'status' => true,
-                'message' => 'Jabatan berhasil dihapus'
-            ];
-        } catch (\Exception $e) {
-            Log::error('Gagal menghapus jabatan', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return [
-                'status' => false,
-                'message' => 'Terjadi kesalahan saat menghapus jabatan'
-            ];
+        if (!$jabatan) {
+            throw new CustomException('Data jabatan tidak ditemukan', 404);
         }
+
+        $jabatan->deleted_by = Auth::id();
+        $jabatan->save();
+        $jabatan->delete();
+
+        return [
+            'status' => true,
+            'message' => 'Jabatan berhasil dihapus',
+        ];
     }
 }

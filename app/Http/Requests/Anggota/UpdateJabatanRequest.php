@@ -24,7 +24,7 @@ class UpdateJabatanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $jabatanId = $this->route('jabatan'); // Ambil id dari route untuk ignore unique
+        $jabatanId = $this->route('id'); // Ambil id dari route untuk ignore unique
 
         return [
             'nama' => [

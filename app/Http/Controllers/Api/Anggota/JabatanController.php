@@ -33,11 +33,6 @@ class JabatanController extends Controller
     public function show($id)
     {
         $result = $this->service->getById($id);
-
-        if (!$result['status']) {
-            return $this->errorResponse(null, $result['message'], 404);
-        }
-
         return $this->successResponse($result['data'], $result['message']);
     }
 
@@ -45,18 +40,12 @@ class JabatanController extends Controller
     public function update(UpdateJabatanRequest $request, $id)
     {
         $result = $this->service->update($id, $request->validated());
-        if (!$result['status']) {
-            return $this->errorResponse(null, $result['message'], 404);
-        }
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function destroy($id)
     {
         $result = $this->service->delete($id);
-        if (!$result['status']) {
-            return $this->errorResponse(null, $result['message'], 404);
-        }
         return $this->successResponse(null, $result['message']);
     }
 }
