@@ -5,9 +5,8 @@ namespace App\Http\Requests\Anggota;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\Rule;
 
-class UpdateJabatanRequest extends FormRequest
+class StoreUnitRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,25 +23,19 @@ class UpdateJabatanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $jabatanId = $this->route('id'); 
         return [
-            'nama' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('jabatan', 'nama')->ignore($jabatanId),
-            ],
-            'keterangan' => 'nullable|string|max:500',
+            'nama' => 'required|string|max:100',
+            'keterangan' => 'nullable|string|max:500'
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nama.required' => 'Nama jabatan wajib diisi.',
-            'nama.string' => 'Nama jabatan harus berupa teks.',
-            'nama.max' => 'Nama jabatan maksimal 255 karakter.',
-            'nama.unique' => 'Nama jabatan sudah digunakan.',
+            'nama.required' => 'Nama unit wajib diisi.',
+            'nama.string' => 'Nama unit harus berupa teks.',
+            'nama.max' => 'Nama unit maksimal 255 karakter.',
+            'nama.unique' => 'Nama unit sudah digunakan.',
             'keterangan.string' => 'Keterangan harus berupa teks.',
             'keterangan.max' => 'Keterangan maksimal 500 karakter.',
         ];
@@ -53,7 +46,7 @@ class UpdateJabatanRequest extends FormRequest
 
         $response = response()->json([
             'message' => 'Validasi gagal. Mohon periksa kembali input Anda.',
-            'errors' => $errors,               
+            'errors' => $errors,
         ], 422);
 
         throw new HttpResponseException($response);
