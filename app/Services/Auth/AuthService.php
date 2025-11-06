@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Exceptions\CustomException;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
@@ -36,5 +37,39 @@ class AuthService
                 'data' => null
             ];
         }
+    }
+
+    public function login(array $data): array
+    {
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user) {
+            throw new CustomException('Email tidak aktif', 403);
+        }
+
+        if (!Hash::check($data['password'], $user->password)) {
+            throw new CustomException('Password salah', 401);
+        }
+
+        $token = $user->createToken('auth_token', [$user->getRoleNames()->first()])->plainTextToken;
+
+        $user->tokens()->latest()->first()->forceFill([
+            'expires_at' => now()->addHours(8)
+        ])->save();
+
+        return [
+            'success' => true,
+            'message' => 'Login berhasil',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->getRoleNames()->first(),
+                    'anggota_id' => $user->anggota_id ?? null
+                ],
+                'token' => $token,
+            ],
+        ];
     }
 }

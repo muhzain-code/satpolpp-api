@@ -10,6 +10,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 
 Route::get('jabatan', [JabatanController::class, 'index']);
 Route::post('jabatan', [JabatanController::class, 'store']);

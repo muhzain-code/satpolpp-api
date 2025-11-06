@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\AuthService;
 use App\Traits\ApiResponse;
@@ -27,6 +28,12 @@ class AuthController extends Controller
             return $this->errorResponse(null, $result['message'], 500);
         }
 
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $result = $this->service->login($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 }
