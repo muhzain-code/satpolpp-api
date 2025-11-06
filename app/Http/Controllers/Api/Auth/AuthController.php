@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\AuthService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    use ApiResponse;
     protected AuthService $service;
 
     public function __construct(AuthService $service)
@@ -22,9 +24,9 @@ class AuthController extends Controller
         $result = $this->service->register($request->validated());
 
         if (!$result['success']) {
-            return errorResponse(null, $result['message'], 500);
+            return $this->errorResponse(null, $result['message'], 500);
         }
 
-        return successResponse($result['data'], $result['message']);
+        return $this->successResponse($result['data'], $result['message']);
     }
 }
