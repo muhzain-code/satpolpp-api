@@ -2,15 +2,18 @@
 
 namespace App\Services\Auth;
 
-use App\Exceptions\CustomException;
 use App\Models\User;
+use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
     public function register(array $data): array
     {
+        $authUser = Auth::user();
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -19,6 +22,19 @@ class AuthService
         ]);
 
         $user->assignRole($data['role']);
+
+        activity('auth')
+            ->causedBy($authUser)   
+            ->performedOn($user)    
+            ->event('register')
+            ->withProperties([
+                'user_id'     => $user->id,
+                'email'       => $user->email,
+                'role'        => $user->getRoleNames()->first(),
+                'ip'          => request()->ip(),
+                'user_agent'  => request()->userAgent(),
+            ])
+            ->log("User '{$user->email}' berhasil diregistrasi oleh '{$authUser->email}'");
 
         return [
             'success' => true,
@@ -44,6 +60,20 @@ class AuthService
         $user->tokens()->latest()->first()->forceFill([
             'expires_at' => now()->addHours(8)
         ])->save();
+
+        activity('auth')
+            ->causedBy($user)
+            ->performedOn($user)
+            ->event('login')
+            ->withProperties([
+                'user_id'     => $user->id,
+                'email'       => $user->email,
+                'role'        => $user->getRoleNames()->first(),
+                'ip'          => request()->ip(),
+                'user_agent'  => request()->userAgent(),
+            ])
+            ->log("Pengguna '{$user->email}' berhasil login");
+
 
         return [
             'success' => true,

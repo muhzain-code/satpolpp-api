@@ -10,10 +10,11 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+
     Route::get('jabatan', [JabatanController::class, 'index']);
     Route::post('jabatan', [JabatanController::class, 'store']);
     Route::get('jabatan/{id}', [JabatanController::class, 'show']);
