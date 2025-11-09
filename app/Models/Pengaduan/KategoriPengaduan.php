@@ -46,4 +46,9 @@ class KategoriPengaduan extends Model
         ])->saveQuietly());
     }
 
+    public function pengaduan()
+    {
+        return $this->hasMany(Pengaduan::class, 'kategori_id');
+    }
+
 }

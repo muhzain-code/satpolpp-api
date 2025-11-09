@@ -78,33 +78,42 @@ class AnggotaService
     {
         try {
             $data['created_by'] = Auth::id();
+            $path = null;
 
             if (isset($data['foto']) && $data['foto'] instanceof UploadedFile) {
                 $path = $data['foto']->store('anggota', 'public');
-
                 $data['foto'] = $path;
             }
 
             $anggota = Anggota::create($data);
 
             if (!$anggota) {
+                if ($path) {
+                    Storage::disk('public')->delete($path);
+                }
                 throw new CustomException('Gagal menambah anggota', 422);
             }
 
             return [
                 'message' => 'Berhasil menambah anggota',
-                'data' => $anggota
+                'data' => $anggota,
             ];
         } catch (Exception $e) {
+            if (!empty($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
             Log::error('Gagal menambah anggota', [
-                'message' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'data' => $data ?? null,
             ]);
 
             throw new CustomException('Gagal menambah anggota', 422);
         }
     }
 
-    public function update($data, $id): array
+
+    public function update(array $data, $id): array
     {
         try {
             $anggota = Anggota::find($id);
@@ -113,38 +122,49 @@ class AnggotaService
                 throw new CustomException('Anggota tidak ditemukan', 404);
             }
 
-            if ($anggota->status != 'aktif') {
+            if ($anggota->status !== 'aktif') {
                 throw new CustomException('Anggota tidak aktif', 422);
             }
 
             $data['updated_by'] = Auth::id();
 
+            $oldFoto = $anggota->foto;
+            $newFotoPath = null;
+
             if (isset($data['foto']) && $data['foto'] instanceof UploadedFile) {
-                if ($anggota->foto && Storage::disk('public')->exists($anggota->foto)) {
-                    Storage::disk('public')->delete($anggota->foto);
-                }
-
-                $path = $data['foto']->store('anggota', 'public');
-
-                $data['foto'] = $path;
+                $newFotoPath = $data['foto']->store('anggota', 'public');
+                $data['foto'] = $newFotoPath;
             } else {
                 unset($data['foto']);
             }
 
-            $anggota->update($data);
+            $updateSuccess = $anggota->update($data);
+
+            if (!$updateSuccess) {
+                if ($newFotoPath) {
+                    Storage::disk('public')->delete($newFotoPath);
+                }
+                throw new CustomException('Gagal update anggota', 422);
+            }
+
+            if ($newFotoPath && $oldFoto && Storage::disk('public')->exists($oldFoto)) {
+                Storage::disk('public')->delete($oldFoto);
+            }
 
             return [
                 'message' => 'Berhasil mengupdate anggota',
-                'data' => $anggota
+                'data' => $anggota->fresh(), 
             ];
         } catch (Exception $e) {
             Log::error('Gagal mengupdate anggota', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'id' => $id,
             ]);
 
             throw new CustomException('Gagal update anggota', 422);
         }
     }
+
 
     public function delete($id): array
     {

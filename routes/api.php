@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Anggota\JabatanController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Api\Pengaduan\PengaduanController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -40,4 +41,10 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'show']);
     Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
     Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
+
+    Route::get('pengaduan', [PengaduanController::class, 'index']);
+    Route::post('pengaduan', [PengaduanController::class, 'store']);
+    Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
+    Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
+    Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
 });
