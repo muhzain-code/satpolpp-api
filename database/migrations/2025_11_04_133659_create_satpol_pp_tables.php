@@ -241,16 +241,30 @@ return new class extends Migration
             $table->unique(['user_id', 'regulasi_id']);
         });
 
+        // Schema::create('kemajuan_pembacaan', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+        //     $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
+        //     $table->enum('status', ['belum', 'sedang', 'selesai'])->default('belum');
+        //     $table->timestamp('terakhir_dibaca')->nullable();
+        //     $table->timestamps();
+        //     $table->unique(['user_id', 'regulasi_id']);
+        // });
+
         Schema::create('kemajuan_pembacaan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
+            $table->smallInteger('bulan');
+            $table->smallInteger('tahun');
             $table->enum('status', ['belum', 'sedang', 'selesai'])->default('belum');
             $table->timestamp('terakhir_dibaca')->nullable();
             $table->timestamps();
-            $table->unique(['user_id', 'regulasi_id']);
+            $table->unique(
+                ['user_id', 'regulasi_id', 'bulan', 'tahun'],
+                'kemajuan_user_regulasi_bulanan_unique' // Nama custom agar mudah dibaca
+            );
         });
-
         /**
          * ============================================================
          *  8. LAPORAN HARIAN

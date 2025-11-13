@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\UnitController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 
 Route::get('/user', function (Request $request) {
@@ -40,4 +42,17 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'show']);
     Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
     Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
+
+    Route::get('regulasi', [RegulasiController::class, 'index']);
+    Route::post('regulasi', [RegulasiController::class, 'store']);
+    Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
+    Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
+    Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
+
+    Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
+    Route::post('progres', [RegulationProgressController::class, 'Progress']);
+    Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
+    Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
+    Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
+    Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 });
