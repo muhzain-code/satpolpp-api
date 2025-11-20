@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
+use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
+use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
 
@@ -64,4 +66,21 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
+
+    Route::get('laporan', [LaporanHarianController::class, 'index']);
+    Route::post('laporan', [LaporanHarianController::class, 'store']);
+    Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
+    Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
+    Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum', 'role:anggota_satpolpp')->group(function () {
+    Route::get('lampiran', [LampiranLaporanController::class, 'index']);
+    Route::post('lampiran', [LampiranLaporanController::class, 'store']);
+    Route::get('lampiran/{id}', [LampiranLaporanController::class, 'show']);
+    Route::put('lampiran/{id}', [LampiranLaporanController::class, 'update']);
+});
+Route::middleware('auth:sanctum', 'role:komandan_regu')->group(function () {
+    Route::get('laporan-komandan', [LampiranLaporanController::class, 'indexKomandan']);
+    Route::put('laporan-komandan/{id}', [LampiranLaporanController::class, 'AccbyKomandan']);
 });

@@ -4,6 +4,7 @@ namespace App\Models\Anggota;
 
 use App\Models\User;
 use App\Models\Anggota\Jabatan;
+use App\Models\ManajemenLaporan\LaporanHarian;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +57,10 @@ class Anggota extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
+    public function LaporanHarian()
+    {
+        return $this->hasMany(LaporanHarian::class, 'anggota_id', 'id');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
