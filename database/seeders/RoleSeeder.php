@@ -20,9 +20,9 @@ class RoleSeeder extends Seeder
         $roles = [
             'super_admin',
             'admin_dinas',
-            'operator_pengaduan',
+            'operator',
             'komandan_regu',
-            'anggota_satpolpp',
+            'anggota_regu',
             'ppns',
             'humas',
         ];

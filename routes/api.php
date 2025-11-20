@@ -1,13 +1,15 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Models\Operasi\Disposisi;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Anggota\JabatanController;
-use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\UnitController;
-use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Operasi\DisposisiController;
+use App\Http\Controllers\Api\Anggota\AnggotaController;
+use App\Http\Controllers\Api\Anggota\JabatanController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
+use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -17,6 +19,7 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
+    Route::post('logout', [AuthController::class, 'logout']);
 
     Route::get('jabatan', [JabatanController::class, 'index']);
     Route::post('jabatan', [JabatanController::class, 'store']);
@@ -47,4 +50,10 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
     Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
     Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
+
+    Route::get('disposisi', [DisposisiController::class, 'index']);
+    Route::post('disposisi', [DisposisiController::class, 'store']);
+    Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
+    Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
+    Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
 });

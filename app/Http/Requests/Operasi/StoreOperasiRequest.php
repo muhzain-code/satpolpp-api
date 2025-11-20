@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Requests\Operasi;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreOperasiRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'kode_operasi'       => 'required|string|max:255|unique:operasi,kode_operasi',
+            'nomor_surat_tugas'  => 'nullable|string|max:255|unique:operasi,nomor_surat_tugas',
+            'pengaduan_id'       => 'nullable|integer|exists:pengaduan,id',
+            'judul'              => 'required|string|max:255',
+            'uraian'             => 'nullable|string',
+            'mulai'              => 'nullable|date',
+            'selesai'            => 'nullable|date|after_or_equal:mulai',
+        ];
+    }
+}

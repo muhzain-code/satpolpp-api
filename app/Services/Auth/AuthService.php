@@ -23,8 +23,8 @@ class AuthService
         $user->assignRole($data['role']);
 
         activity('auth')
-            ->causedBy($authUser)   
-            ->performedOn($user)    
+            ->causedBy($authUser)
+            ->performedOn($user)
             ->event('register')
             ->withProperties([
                 'user_id'     => $user->id,
@@ -87,6 +87,30 @@ class AuthService
                 ],
                 'token' => $token,
             ],
+        ];
+    }
+
+    public function logout(User $user): array
+    {
+        $user->tokens()->delete();
+
+        activity('auth')
+            ->causedBy($user)
+            ->performedOn($user)
+            ->event('logout')
+            ->withProperties([
+                'user_id'     => $user->id,
+                'email'       => $user->email,
+                'role'        => $user->getRoleNames()->first(),
+                'ip'          => request()->ip(),
+                'user_agent'  => request()->userAgent(),
+            ])
+            ->log("Pengguna '{$user->email}' berhasil logout");
+
+        return [
+            'success' => true,
+            'message' => 'Logout berhasil',
+            'data' => null,
         ];
     }
 }

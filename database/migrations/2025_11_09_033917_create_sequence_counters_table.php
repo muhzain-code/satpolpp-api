@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sequence_counters', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // 'pengaduan', 'surat_tugas', 'ppid'
+            $table->string('name', 50); // 'pengaduan', 'surat_tugas', 'ppid'
             $table->integer('year');
             $table->integer('month'); // 0 untuk reset tahunan, 1-12 untuk bulanan
             $table->unsignedBigInteger('count')->default(0);
