@@ -110,7 +110,13 @@ return new class extends Migration
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
             $table->text('alamat')->nullable();
-            $table->enum('status', ['diterima', 'diproses', 'selesai'])->default('diterima');
+            $table->enum('status', [
+                'diterima',       
+                'diproses',     
+                'selesai',      
+                'ditolak',        
+            ])->default('diterima');
+
             $table->timestamps();
             $table->softDeletes();
         });
@@ -138,6 +144,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -165,6 +172,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->softDeletes();
             $table->timestamps();
         });
 

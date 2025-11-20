@@ -5,56 +5,61 @@ namespace App\Http\Controllers\Operasi;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Operasi\DisposisiRequest;
-use GrahamCampbell\ResultType\Success;
-use App\Services\Operasi\DisposisiService;
+use App\Services\Operasi\OperasiPenugasanService;
+use App\Http\Requests\Operasi\StoreOperasiPenugasanRequest;
+use App\Http\Requests\Operasi\UpdateOperasiPenugasanRequest;
 
-class DisposisiController extends Controller
+class OperasiPenugasanController extends Controller
 {
     use ApiResponse;
-    protected DisposisiService $service;
 
-    public function __construct(DisposisiService $service)
+    protected OperasiPenugasanService $service;
+
+    public function __construct(OperasiPenugasanService $service)
     {
         $this->service = $service;
     }
 
     public function index(Request $request)
     {
-        $filters = [
-            'per_page'      => $request->input('per_page', 25),
-            'page'          => $request->input('page', 1),
-            'pengaduan_id'  => $request->input('pengaduan_id'),
-            'ke_unit_id'    => $request->input('ke_unit_id'),
-            'ke_anggota_id' => $request->input('ke_anggota_id'),
+        $filter = [
+            'per_page'   => $request->input('per_page', 25),
+            'page'       => $request->input('page', 1),
+            'operasi_id' => $request->input('operasi_id'),
+            'anggota_id' => $request->input('anggota_id'),
+            'peran'      => $request->input('peran'),
         ];
 
-        $result = $this->service->getAll($filters);
+        $result = $this->service->getAll($filter);
 
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function store(DisposisiRequest $request)
+    public function store(StoreOperasiPenugasanRequest $request)
     {
         $result = $this->service->create($request->validated());
+
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function show($id)
     {
         $result = $this->service->getById($id);
+
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(DisposisiRequest $request, $id)
+    public function update(UpdateOperasiPenugasanRequest $request, $id)
     {
         $result = $this->service->update($request->validated(), $id);
+
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function destroy($id)
     {
         $result = $this->service->delete($id);
+
         return $this->successResponse($result['data'], $result['message']);
     }
 }

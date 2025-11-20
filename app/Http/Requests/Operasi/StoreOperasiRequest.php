@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Operasi;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreOperasiRequest extends FormRequest
 {
@@ -30,5 +32,17 @@ class StoreOperasiRequest extends FormRequest
             'mulai'              => 'nullable|date',
             'selesai'            => 'nullable|date|after_or_equal:mulai',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $errors = $validator->errors();
+
+        $response = response()->json([
+            'message' => 'Validasi gagal. Mohon periksa kembali input Anda.',
+            'errors' => $errors,
+        ], 422);
+
+        throw new HttpResponseException($response);
     }
 }

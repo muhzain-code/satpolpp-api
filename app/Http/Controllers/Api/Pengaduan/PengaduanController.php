@@ -41,4 +41,28 @@ class PengaduanController extends Controller
         $result = $this->service->create($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
+
+    public function show($id): JsonResponse
+    {
+        $result = $this->service->getById($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function update(PengaduanRequest $request, $id): JsonResponse
+    {
+        $result = $this->service->update($id, $request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function destroy($id): JsonResponse
+    {
+        $result = $this->service->delete($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function setDitolak($id): JsonResponse
+    {
+        $result = $this->service->setDitolak($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
 }

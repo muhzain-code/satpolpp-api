@@ -114,4 +114,124 @@ class PengaduanService
             throw new CustomException('Gagal menambah pengaduan', 422);
         }
     }
+
+    public function getById($id): array
+    {
+        $pengaduan = Pengaduan::with('pengaduanLampiran', 'kategoriPengaduan:id,nama')->find($id);
+
+        if (!$pengaduan) {
+            throw new CustomException('Pengaduan tidak ditemukan', 404);
+        }
+
+        return [
+            'message' => 'Detail pengaduan berhasil ditampilkan',
+            'data' => $pengaduan
+        ];
+    }
+
+    public function update($id, array $data): array
+    {
+        try {
+            return DB::transaction(function () use ($id, $data) {
+                $pengaduan = Pengaduan::find($id);
+
+                if (!$pengaduan) {
+                    throw new CustomException('Pengaduan tidak ditemukan', 404);
+                }
+
+                $pengaduan->update([
+                    'nama_pelapor' => $data['nama_pelapor'] ?? $pengaduan->nama_pelapor,
+                    'kontak_pelapor' => $data['kontak_pelapor'] ?? $pengaduan->kontak_pelapor,
+                    'kategori_id' => $data['kategori_id'] ?? $pengaduan->kategori_id,
+                    'deskripsi' => $data['deskripsi'] ?? $pengaduan->deskripsi,
+                    'lat' => $data['lat'] ?? $pengaduan->lat,
+                    'lng' => $data['lng'] ?? $pengaduan->lng,
+                    'alamat' => $data['alamat'] ?? $pengaduan->alamat,
+                ]);
+
+                if (!empty($data['lampiran']) && is_array($data['lampiran'])) {
+                    foreach ($data['lampiran'] as $file) {
+                        if ($file instanceof UploadedFile) {
+                            $originalName = $file->getClientOriginalName();
+                            $path = $file->store('pengaduan', 'public');
+
+                            $lampiran = PengaduanLampiran::create([
+                                'pengaduan_id' => $pengaduan->id,
+                                'nama_file' => $originalName,
+                                'path_file' => $path,
+                            ]);
+
+                            if (!$lampiran) {
+                                Storage::disk('public')->delete($path);
+                                throw new CustomException('Gagal menambah pengaduan lampiran', 422);
+                            }
+                        }
+                    }
+                }
+
+                return [
+                    'message' => 'Pengaduan berhasil diperbarui',
+                    'data' => $pengaduan->load('pengaduanLampiran')
+                ];
+            });
+        } catch (Exception $e) {
+            Log::error('Gagal memperbarui pengaduan', [
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new CustomException('Gagal memperbarui pengaduan', 422);
+        }
+    }
+
+    public function delete($id): array
+    {
+        try {
+            return DB::transaction(function () use ($id) {
+                $pengaduan = Pengaduan::with('pengaduanLampiran')->find($id);
+
+                if (!$pengaduan) {
+                    throw new CustomException('Pengaduan tidak ditemukan', 404);
+                }
+
+                foreach ($pengaduan->pengaduanLampiran as $lampiran) {
+                    Storage::disk('public')->delete($lampiran->path_file);
+                    $lampiran->delete();
+                }
+
+                $pengaduan->delete();
+
+                return [
+                    'message' => 'Pengaduan berhasil dihapus',
+                    'data' => true
+                ];
+            });
+        } catch (Exception $e) {
+            Log::error('Gagal menghapus pengaduan', [
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new CustomException('Gagal menghapus pengaduan', 422);
+        }
+    }
+
+    public function setDitolak($id): array
+    {
+        $pengaduan = Pengaduan::find($id);
+        if (!$pengaduan) {
+            throw new CustomException('Pengaduan tidak ditemukan', 404);
+        }
+
+        if ($pengaduan->status !== 'diterima') {
+            throw new CustomException("Pengaduan hanya bisa ditolak dari status diterima", 422);
+        }
+
+        $pengaduan->update([
+            'status' => 'ditolak',
+        ]);
+
+        return [
+            'message' => 'Pengaduan telah ditolak',
+            'data' => $pengaduan
+        ];
+    }
 }

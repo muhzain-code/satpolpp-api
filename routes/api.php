@@ -4,20 +4,24 @@ use Illuminate\Http\Request;
 use App\Models\Operasi\Disposisi;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Operasi\OperasiController;
 use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Operasi\DisposisiController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
-use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
-use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
-use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
+use App\Http\Controllers\Operasi\OperasiPenugasanController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
+use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 Route::post('login', [AuthController::class, 'login']);
+
+Route::post('pengaduan', [PengaduanController::class, 'store']);
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -49,16 +53,29 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
 
 
     Route::get('pengaduan', [PengaduanController::class, 'index']);
-    Route::post('pengaduan', [PengaduanController::class, 'store']);
     Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
     Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
     Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
-
+    Route::get('pengaduan-tolak', [PengaduanController::class, 'setDitolak']);
+    
     Route::get('disposisi', [DisposisiController::class, 'index']);
     Route::post('disposisi', [DisposisiController::class, 'store']);
     Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
     Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
     Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
+
+    Route::get('operasi', [OperasiController::class, 'index']);
+    Route::post('operasi', [OperasiController::class, 'store']);
+    Route::get('operasi/{id}', [OperasiController::class, 'show']);
+    Route::put('operasi/{id}', [OperasiController::class, 'update']);
+    Route::delete('operasi/{id}', [OperasiController::class, 'destroy']);
+
+    Route::get('operasi-penugasan', [OperasiPenugasanController::class, 'index']);
+    Route::post('operasi-penugasan', [OperasiPenugasanController::class, 'store']);
+    Route::get('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'show']);
+    Route::put('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'update']);
+    Route::delete('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'destroy']);
+
     Route::get('regulasi', [RegulasiController::class, 'index']);
     Route::post('regulasi', [RegulasiController::class, 'store']);
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
@@ -71,5 +88,4 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
     Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
-
 });

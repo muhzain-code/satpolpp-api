@@ -2,7 +2,13 @@
 
 namespace App\Services\Operasi;
 
+use Exception;
 use App\Models\Operasi\Disposisi;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\CustomException;
+use App\Models\Pengaduan\Pengaduan;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class DisposisiService
 {
@@ -46,19 +52,68 @@ class DisposisiService
         ];
     }
 
+    // public function create($data)
+    // {
+    //     $pengaduan = Pengaduan::find($data['pengaduan_id']);
+
+    //     if (!$pengaduan) {
+    //         throw new CustomException('Pengaduan tidak ditemukan', 404);
+    //     }
+
+    //     if ($pengaduan->status !== 'diterima') {
+    //         throw new CustomException("Hanya pengaduan diterima yang bisa diproses", 422);
+    //     }
+
+    //     $pengaduan->update(['status' => 'diproses']);
+
+    //     $data['created_by'] = Auth::id();
+    //     $disposisi = Disposisi::create($data);
+
+    //     return [
+    //         'message' => 'Disposisi berhasil dibuat',
+    //         'data' => $disposisi
+    //     ];
+    // }
+
     public function create($data)
     {
-        $disposisi = Disposisi::create($data);
+        try {
+            return DB::transaction(function () use ($data) {
+                $pengaduan = Pengaduan::find($data['pengaduan_id']);
 
-        return [
-            'message' => 'Disposisi berhasil dibuat',
-            'data' => $disposisi
-        ];
+                if (!$pengaduan) {
+                    throw new CustomException('Pengaduan tidak ditemukan', 404);
+                }
+
+                if ($pengaduan->status !== 'diterima') {
+                    throw new CustomException("Hanya pengaduan dengan status 'diterima' yang bisa diproses", 422);
+                }
+
+                $pengaduan->update(['status' => 'diproses']);
+
+                $data['created_by'] = Auth::id();
+                $disposisi = Disposisi::create($data);
+
+                return [
+                    'message' => 'Disposisi berhasil dibuat',
+                    'data' => $disposisi
+                ];
+            });
+        } catch (Exception $e) {
+            Log::error('Gagal membuat disposisi: ' . $e->getMessage());
+            throw $e;
+
+             throw new CustomException('Gagal membuat disposisi', 422);
+        }
     }
 
     public function getById($id)
     {
-        $disposisi = Disposisi::findOrFail($id);
+        $disposisi = Disposisi::find($id);
+
+        if (!$disposisi) {
+            throw new CustomException('Data disposisi tidak ditemukan', 404);
+        }
 
         return [
             'message' => 'Disposisi berhasil ditemukan',
@@ -68,7 +123,13 @@ class DisposisiService
 
     public function update($data, $id)
     {
-        $disposisi = Disposisi::findOrFail($id);
+        $disposisi = Disposisi::find($id);
+
+        if (!$disposisi) {
+            throw new CustomException('Data disposisi tidak ditemukan', 404);
+        }
+
+        $data['updated_by'] = Auth::id();
         $disposisi->update($data);
 
         return [
@@ -79,7 +140,15 @@ class DisposisiService
 
     public function delete($id)
     {
-        $disposisi = Disposisi::findOrFail($id);
+        $disposisi = Disposisi::find($id);
+
+        if (!$disposisi) {
+            throw new CustomException('Data disposisi tidak ditemukan', 404);
+        }
+
+        $disposisi->update([
+            'deleted_by' => Auth::id()
+        ]);
         $disposisi->delete();
 
         return [
