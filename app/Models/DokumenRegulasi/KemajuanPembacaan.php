@@ -12,7 +12,7 @@ class KemajuanPembacaan extends Model
 {
     use LogsActivity;
 
-    protected $table = 'kemajuan_pembacaan';
+    protected $table = 'buku_saku_progres';
 
     protected $fillable = [
         'user_id',
@@ -30,7 +30,7 @@ class KemajuanPembacaan extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('kemajuan_pembacaan')
+            ->useLogName('buku_saku_progres')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()

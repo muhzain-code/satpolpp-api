@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Humas;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Humas\GaleriRequest;
 use App\Services\Humas\GaleriService;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class GaleriController extends Controller
@@ -14,51 +16,39 @@ class GaleriController extends Controller
 
     protected GaleriService $service;
 
-    public function __construct(GaleriService $service) {
+    public function __construct(GaleriService $service)
+    {
         $this->service = $service;
     }
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 25);
         $currentPage = $request->input('page', 1);
-        $result = $this->service->index($perPage, $currentPage);
+        $result = $this->service->index($currentPage, $perPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function store(Request $request)
+    public function store(GaleriRequest $request): JsonResponse
     {
-
+        $result = $this->service->store($request->validated());
+        return $this->successResponse($result['data'], $result['message']);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(string $Id): JsonResponse
     {
-        //
+        $result = $this->service->show($Id);
+        return $this->successResponse($result['data'], $result['message']);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(GaleriRequest $request, string $Id)
     {
-        //
+        $result = $this->service->update($request->validated(), $Id);
+        return $this->successResponse($result['data'], $result['message']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(string $Id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $result = $this->service->destroy($Id);
+        return $this->successResponse($result['message']);
     }
 }

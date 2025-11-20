@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
+use App\Http\Controllers\Api\Humas\GaleriController;
+use App\Http\Controllers\Api\Humas\KontenController;
 use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
@@ -72,6 +74,18 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
     Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
     Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+
+    Route::get('Galeri', [GaleriController::class, 'index']);
+    Route::post('Galeri', [GaleriController::class, 'store']);
+    Route::get('Galeri/{id}', [GaleriController::class, 'show']);
+    Route::put('Galeri/{id}', [GaleriController::class, 'update']);
+    Route::delete('Galeri/{id}', [GaleriController::class, 'destroy']);
+
+    Route::get('konten', [KontenController::class, 'index']);
+    Route::post('konten', [KontenController::class, 'store']);
+    Route::get('konten/{slug}', [KontenController::class, 'show']);
+    Route::put('konten/{slug}', [KontenController::class, 'update']);
+    Route::delete('konten/{slug}', [KontenController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum', 'role:anggota_satpolpp')->group(function () {

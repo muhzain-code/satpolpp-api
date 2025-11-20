@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+
 
 class GaleriService
 {
@@ -29,7 +31,13 @@ class GaleriService
 
         return [
             'message' => 'data berhasil ditampilkan',
-            'data'    => $Galery
+            'data'    => [
+                'current_page'  => $Galery->currentPage(),
+                'per_page'      => $Galery->perPage(),
+                'total'         => $Galery->total(),
+                'last_page'     => $Galery->lastPage(),
+                'items'         => $Galery->items(),
+            ]
         ];
     }
 
@@ -38,17 +46,32 @@ class GaleriService
         DB::beginTransaction();
         try {
             $UserId = Auth::id();
+            $path = null;
+            $tipe = null;
 
             if (isset($data['path_file']) && $data['path_file']->isValid()) {
+
+                $extension = strtolower($data['path_file']->getClientOriginalExtension());
+
+                $fotoExt  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $videoExt = ['mp4', 'mov', 'avi', 'mkv'];
+
+                if (in_array($extension, $fotoExt)) {
+                    $tipe = 'foto';
+                } elseif (in_array($extension, $videoExt)) {
+                    $tipe = 'video';
+                } else {
+                    throw new CustomException('Format file tidak didukung');
+                }
+
                 $path = $data['path_file']->store('Galeri', 'public');
-                $data['path_file'] = $path;
             }
 
             $Galery = Galeri::create([
-                'tipe'              => $data['tipe'],
-                'judul'             => $data['judul'],
-                'path_file'       => $path,
-                'created_by'        => $UserId
+                'tipe'       => $tipe,
+                'judul'      => $data['judul'],
+                'path_file'  => $path,
+                'created_by' => $UserId
             ]);
 
             DB::commit();
@@ -63,31 +86,22 @@ class GaleriService
             Log::error('Gagal menambahkan data galeri', [
                 'error' => $e->getMessage()
             ]);
-
             if ($e instanceof CustomException) {
                 throw $e;
             }
-
             throw new CustomException('Gagal menambahkan data galeri');
         }
     }
 
     public function show($Id): array
     {
-        $Galery = Galeri::where($Id)->first();
+        $Galery = Galeri::find($Id);
 
         if (!$Galery) {
             throw new CustomException('Data tidak ditemukan');
         }
 
-        $Galery->getCollection()->transform(function ($item) {
-            return [
-                'id'                => $item->id,
-                'tipe'              => $item->tipe,
-                'judul'             => $item->judul,
-                'path_file'       => $item->path_file = url(Storage::url($item->path_file)),
-            ];
-        });
+        $Galery->path_file = url(Storage::url($Galery->path_file));
 
         return [
             'message' => 'data berhasil ditampilkan',
@@ -98,25 +112,46 @@ class GaleriService
     public function update(array $data, $Id): array
     {
         DB::beginTransaction();
+
         try {
             $UserId = Auth::id();
-            $Galery = Galeri::where($Id)->first();
+            $Galery = Galeri::find($Id);
+
             if (!$Galery) {
                 throw new CustomException('Data tidak ditemukan');
             }
-            if (isset($data['path_file']) && $data['path_file'] instanceof \Illuminate\Http\UploadedFile) {
+
+            $newFilePath = $Galery->path_file;
+            $newTipe = $Galery->tipe;
+
+            if (isset($data['path_file']) && $data['path_file'] instanceof UploadedFile) {
+
+                $extension = strtolower($data['path_file']->getClientOriginalExtension());
+                $fotoExt  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $videoExt = ['mp4', 'mov', 'avi', 'mkv'];
+
+                if (in_array($extension, $fotoExt)) {
+                    $newTipe = 'foto';
+                } elseif (in_array($extension, $videoExt)) {
+                    $newTipe = 'video';
+                } else {
+                    throw new CustomException('Format file tidak didukung');
+                }
+
                 if ($Galery->path_file && Storage::disk('public')->exists($Galery->path_file)) {
                     Storage::disk('public')->delete($Galery->path_file);
                 }
-                $data['path_file'] = $data['path_file']->store('Galeri', 'public');
+
+                $newFilePath = $data['path_file']->store('Galeri', 'public');
             }
 
             $Galery->update([
-                'tipe'              => $data['tipe'],
-                'judul'             => $data['judul'],
-                'path_file'       => $data['path_file'] ?? $Galery->path_file,
-                'updated_by'        => $UserId,
+                'tipe'       => $newTipe,
+                'judul'      => $data['judul'],
+                'path_file'  => $newFilePath,
+                'updated_by' => $UserId,
             ]);
+
             DB::commit();
 
             return [
@@ -124,8 +159,10 @@ class GaleriService
                 'data' => $Galery
             ];
         } catch (\Throwable $e) {
+
             DB::rollBack();
-            Log::error('Gagal menambahkan data galeri', [
+
+            Log::error('Gagal memperbarui data galeri', [
                 'error' => $e->getMessage()
             ]);
 
@@ -139,7 +176,7 @@ class GaleriService
 
     public function destroy($Id): array
     {
-        $Galery = Galeri::where($Id)->first();
+        $Galery = Galeri::find($Id);
         if (!$Galery) {
             throw new CustomException('Data tidak ditemukan');
         }

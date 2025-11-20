@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class GaleriRequest extends FormRequest
+class KontenRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,29 +23,39 @@ class GaleriRequest extends FormRequest
      */
     public function rules(): array
     {
-        $isUpdate = $this->isMethod('PUT');
+        $slug = $this->route('slug');
 
         return [
-            'judul' => ['required', 'string', 'max:255'],
+            'tipe' => 'required|in:berita,agenda,himbauan',
 
-            'path_file' => [
-                $isUpdate ? 'nullable' : 'required',
+            'judul' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:konten,judul,' . $slug . ',slug',
+            ],
+
+            'isi' => ['nullable', 'string'],
+
+            'path_gambar' => [
+                'nullable',
                 'file',
-                'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,mkv',
-                'max:20480',
-            ]
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:2048'
+            ],
+
+            'tampilkan_publik' => ['required', 'boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'judul.required' => 'Judul wajib diisi.',
-            'judul.max'      => 'Judul maksimal 255 karakter.',
-
-            'path_file.file'  => 'File tidak valid.',
-            'path_file.mimes' => 'File harus berupa JPG, JPEG, PNG, GIF, WEBP, MP4, MOV, AVI, atau MKV.',
-            'path_file.max'   => 'Ukuran file maksimal 20 MB.',
+            'judul.unique' => 'Judul sudah digunakan.',
+            'path_gambar.image' => 'File harus berupa gambar.',
+            'tampilkan_publik.boolean' => 'Format tampilkan_publik harus true atau false.',
+            'published_at.date' => 'Format tanggal tidak valid.',
         ];
     }
     protected function failedValidation(Validator $validator)

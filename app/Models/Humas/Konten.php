@@ -11,22 +11,23 @@ class Konten extends Model
 {
     use LogsActivity;
 
-    protected $table = 'Konten';
+    protected $table = 'konten';
 
     protected $fillable = [
         'tipe',
         'judul',
+        'slug',
         'isi',
         'path_gambar',
         'tampilkan_publik',
+        'published_at',
         'created_by',
         'deleted_by',
     ];
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('unit')
+            ->useLogName('konten')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
