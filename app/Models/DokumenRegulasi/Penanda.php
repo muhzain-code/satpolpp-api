@@ -1,45 +1,26 @@
 <?php
 
-namespace App\Models\Anggota;
+namespace App\Models\DokumenRegulasi;
 
 use App\Models\User;
-use App\Models\Anggota\Jabatan;
-use Spatie\Activitylog\LogOptions;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Anggota extends Model
+class Penanda extends Model
 {
     use LogsActivity;
+    protected $table = 'penanda';
 
-    protected $table = 'anggota';
     protected $fillable = [
-        'kode_anggota',
-        'nik',
-        'nama',
-        'jenis_kelamin',
-        'tempat_lahir',
-        'tanggal_lahir',
-        'alamat',
-        'foto',
-        'jabatan_id',
-        'unit_id',
-        'status',
-        'created_by',
+        'user_id',
+        'regulasi_id',
+        'catatan',
         'updated_by',
+        'created_by',
         'deleted_by',
     ];
-
-    public function jabatan()
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_id');
-    }
-
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class, 'unit_id');
-    }
 
     public function creator()
     {
@@ -55,17 +36,20 @@ class Anggota extends Model
     {
         return $this->belongsTo(User::class, 'deleted_by');
     }
-
+    public function Regulasi()
+    {
+        return $this->belongsTo(Regulasi::class, 'regulasi_id', 'id');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('anggota')
+            ->useLogName('penanda')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data anggota berhasil " .
+                "Data penanda berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',

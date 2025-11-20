@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Operasi\DisposisiController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
-use App\Http\Controllers\Api\Pengaduan\PengaduanController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Api\Pengaduan\PengaduanController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -45,6 +47,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
     Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
 
+
     Route::get('pengaduan', [PengaduanController::class, 'index']);
     Route::post('pengaduan', [PengaduanController::class, 'store']);
     Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
@@ -56,4 +59,17 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
     Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
     Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
+    Route::get('regulasi', [RegulasiController::class, 'index']);
+    Route::post('regulasi', [RegulasiController::class, 'store']);
+    Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
+    Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
+    Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
+
+    Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
+    Route::post('progres', [RegulationProgressController::class, 'Progress']);
+    Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
+    Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
+    Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
+    Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
+
 });
