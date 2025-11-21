@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Anggota\Anggota;
 use App\Models\DokumenRegulasi\KemajuanPembacaan;
 use App\Models\ManajemenLaporan\LaporanLampiran;
+use App\Models\PPID\PPID;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -56,6 +57,11 @@ class User extends Authenticatable
         return $this->belongsTo(Anggota::class);
     }
 
+    public function ppid()
+    {
+        return $this->hasMany(PPID::class);
+    }
+    
     public function kemajuanPembacaan()
     {
         return $this->hasMany(KemajuanPembacaan::class,'user_id','id');
