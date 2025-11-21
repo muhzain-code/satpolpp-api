@@ -34,6 +34,12 @@ class RegulationProgressController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
+    public function ProgressMembaca(ProgressRequest $request): JsonResponse
+    {
+        $result = $this->service->progressmembaca($request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
     public function Penanda(PenandaRequest $request): JsonResponse
     {
         $result = $this->service->penanda($request->validated());

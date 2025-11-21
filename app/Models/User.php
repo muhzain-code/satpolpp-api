@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Anggota\Anggota;
+use App\Models\DokumenRegulasi\KemajuanPembacaan;
+use App\Models\ManajemenLaporan\LaporanLampiran;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -52,5 +54,10 @@ class User extends Authenticatable
     public function anggota()
     {
         return $this->belongsTo(Anggota::class);
+    }
+
+    public function kemajuanPembacaan()
+    {
+        return $this->hasMany(KemajuanPembacaan::class,'user_id','id');
     }
 }

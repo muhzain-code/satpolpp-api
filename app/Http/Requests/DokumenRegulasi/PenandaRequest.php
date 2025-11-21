@@ -25,6 +25,7 @@ class PenandaRequest extends FormRequest
     {
         return [
             'regulasi_id' => ['required', 'integer', 'exists:regulasi,id'],
+            'pasal_atau_halaman' => ['nullable','string','max:255'],
             'catatan' => ['nullable', 'string', 'max:500'],
         ];
     }

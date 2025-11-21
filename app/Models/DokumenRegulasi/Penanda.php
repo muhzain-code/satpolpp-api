@@ -17,6 +17,7 @@ class Penanda extends Model
         'user_id',
         'regulasi_id',
         'catatan',
+        'pasal_atau_halaman',
         'updated_by',
         'created_by',
         'deleted_by',

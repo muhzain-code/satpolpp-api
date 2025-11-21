@@ -4,7 +4,9 @@ namespace App\Services\DokumenRegulasi;
 
 use Exception;
 use App\Exceptions\CustomException;
+use App\Models\Anggota\Anggota;
 use App\Models\DokumenRegulasi\Regulasi;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -166,6 +168,125 @@ class RegulasiService
         $regulasi->delete();
         return [
             'message' => 'data berhasil dihapus'
+        ];
+    }
+
+    public function GetallProgress($perPage, $currentPage, $request): array
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('super_admin') && !$user->hasRole('admin')) {
+            throw new CustomException('Akses ditolak. Fitur khusus Admin.', 403);
+        }
+
+        $bulan = $request->bulan ?? now()->month;
+        $tahun = $request->tahun ?? now()->year;
+        $regulasiId = $request->regulasi_id;
+        $unitId = $request->unit_id;
+        $statusFilter = $request->status;
+
+        if (!$regulasiId) {
+            return [
+                'message' => 'Silakan pilih regulasi terlebih dahulu untuk melihat progres.',
+                'data' => [
+                    'current_page' => 1,
+                    'per_page' => $perPage,
+                    'total' => 0,
+                    'last_page' => 1,
+                    'items' => []
+                ]
+            ];
+        }
+
+        $query = Anggota::query()->with(['unit', 'user']);
+
+        if ($unitId) {
+            $query->where('unit_id', $unitId);
+        }
+
+        $query->with(['user.kemajuanPembacaan' => function ($q) use ($bulan, $tahun, $regulasiId) {
+            $q->where('bulan', $bulan)
+                ->where('tahun', $tahun)
+                ->where('regulasi_id', $regulasiId)
+                ->with('regulasi');
+        }]);
+
+        if ($statusFilter) {
+            if ($statusFilter === 'selesai') {
+                $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+                    $q->where('bulan', $bulan)
+                        ->where('tahun', $tahun)
+                        ->where('regulasi_id', $regulasiId)
+                        ->where('status', 'selesai');
+                });
+            } elseif ($statusFilter === 'sedang') {
+                $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+                    $q->where('bulan', $bulan)
+                        ->where('tahun', $tahun)
+                        ->where('regulasi_id', $regulasiId)
+                        ->where('status', 'sedang');
+                });
+            } elseif ($statusFilter === 'belum') {
+                $query->where(function ($mainQ) use ($bulan, $tahun, $regulasiId) {
+                    $mainQ->whereDoesntHave('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+                        $q->where('bulan', $bulan)
+                            ->where('tahun', $tahun)
+                            ->where('regulasi_id', $regulasiId);
+                    })
+                        ->orWhereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+                            $q->where('bulan', $bulan)
+                                ->where('tahun', $tahun)
+                                ->where('regulasi_id', $regulasiId)
+                                ->where('status', 'belum');
+                        });
+                });
+            }
+        }
+
+        $anggotaList = $query->orderBy('nama', 'asc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $anggotaList->getCollection()->transform(function ($anggota) use ($regulasiId) {
+
+            $progresData = null;
+            if ($anggota->user && $anggota->user->relationLoaded('kemajuanPembacaan')) {
+                $progresData = $anggota->user->kemajuanPembacaan->first();
+            }
+
+            $statusBaca = $progresData ? $progresData->status : 'belum';
+
+            $judulBuku = '-';
+            if ($progresData && $progresData->regulasi) {
+                $judulBuku = $progresData->regulasi->judul;
+            } else {
+                $judulBuku = "Belum Membaca Harap di baca terlebih dahulu";
+            }
+
+            return [
+                'id_anggota'   => $anggota->id,
+                'nama_anggota' => $anggota->nama,
+                'unit'         => $anggota->unit->nama ?? '-',
+                'jabatan'      => $anggota->jabatan->nama ?? '-',
+                'foto_profil'  => $anggota->foto ? url(Storage::url($anggota->foto)) : null,
+
+                'filter_info' => [
+                    'regulasi_target_id' => $regulasiId,
+                    'info_buku'          => $judulBuku,
+                    'status_baca'        => $statusBaca,
+                    'terakhir_dibaca'    => $progresData ? Carbon::parse($progresData->terakhir_dibaca)->format('d-m-Y H:i') : '-',
+                ]
+            ];
+        });
+
+        return [
+            'message' => 'Data progres seluruh anggota berhasil ditampilkan',
+            'data' => [
+                'current_page' => $anggotaList->currentPage(),
+                'per_page'     => $anggotaList->perPage(),
+                'total'        => $anggotaList->total(),
+                'last_page'    => $anggotaList->lastPage(),
+                'items'        => $anggotaList->items()
+            ]
         ];
     }
 }

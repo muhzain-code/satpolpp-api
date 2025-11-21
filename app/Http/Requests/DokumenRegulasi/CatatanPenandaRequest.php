@@ -23,6 +23,8 @@ class CatatanPenandaRequest extends FormRequest
     {
         return [
             'catatan' => ['nullable', 'string', 'max:1000'],
+            'pasal_atau_halaman' => ['nullable', 'string', 'max:255'],
+
         ];
     }
 

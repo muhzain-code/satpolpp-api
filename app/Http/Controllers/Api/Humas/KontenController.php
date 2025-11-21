@@ -39,15 +39,27 @@ class KontenController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(KontenRequest $request, string $slug)
+    public function update(KontenRequest $request, string $slug): JsonResponse
     {
         $result = $this->service->update($request->validated(), $slug);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function destroy(string $slug)
+    public function destroy(string $slug): JsonResponse
     {
         $result = $this->service->destroy($slug);
         return $this->successResponse($result['message']);
+    }
+
+    public function KontenPublik(Request $request): JsonResponse
+    {
+        $result = $this->service->KontenPublik($request);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function detailKonten($slug): JsonResponse
+    {
+        $result = $this->service->detailKonten($slug);
+        return $this->successResponse($result['data'], $result['message']);
     }
 }

@@ -87,16 +87,17 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
     Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
     Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
+    Route::get('progress-anggota',[RegulasiController::class,'GetallProgress']);
 
     Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
     Route::post('progres', [RegulationProgressController::class, 'Progress']);
+    Route::post('sedang-membaca', [RegulationProgressController::class, 'ProgressMembaca']);
     Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
     Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
     Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
-
-        // laporan dashboard admin
+    // laporan dashboard admin
     Route::get('laporan-admin',[LaporanHarianController::class,'getallLaporan']);
     Route::get('laporan', [LaporanHarianController::class, 'index']);
     Route::post('laporan', [LaporanHarianController::class, 'store']);
@@ -127,3 +128,7 @@ Route::middleware('auth:sanctum', 'role:komandan_regu')->group(function () {
     Route::get('laporan-komandan', [LampiranLaporanController::class, 'indexKomandan']);
     Route::put('laporan-komandan/{id}', [LampiranLaporanController::class, 'AccbyKomandan']);
 });
+
+    // masyarakat
+    Route::get('konten-publik',[KontenController::class,'KontenPublik']);
+    Route::get('konten-publik/{slug}',[KontenController::class, 'detailKonten']);

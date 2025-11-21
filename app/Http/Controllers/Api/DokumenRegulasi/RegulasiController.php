@@ -22,7 +22,7 @@ class RegulasiController extends Controller
     {
         $perPage = $request->input('per_page', 25);
         $currentPage = $request->input('page', 1);
-        $result = $this->service->getAll($perPage,$currentPage);
+        $result = $this->service->getAll($perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
     public function store(RegulasiRequest $request): JsonResponse
@@ -38,7 +38,7 @@ class RegulasiController extends Controller
 
     public function update(RegulasiRequest $request, string $id): JsonResponse
     {
-        $result = $this->service->update($id,$request->validated());
+        $result = $this->service->update($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
@@ -46,5 +46,12 @@ class RegulasiController extends Controller
     {
         $result = $this->service->delete($id);
         return $this->successResponse($result['message']);
+    }
+    public function GetallProgress(Request $request): JsonResponse
+    {
+        $perPage = $request->input('per_page', 25);
+        $currentPage = $request->input('page', 1);
+        $result = $this->service->GetallProgress($perPage, $currentPage, $request);
+        return $this->successResponse($result['data'], $result['message']);
     }
 }
