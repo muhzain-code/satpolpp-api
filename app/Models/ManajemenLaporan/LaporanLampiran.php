@@ -1,42 +1,38 @@
 <?php
 
-namespace App\Models\DokumenRegulasi;
+namespace App\Models\ManajemenLaporan;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class KemajuanPembacaan extends Model
+class LaporanLampiran extends Model
 {
     use LogsActivity;
-
-    protected $table = 'buku_saku_progres';
+    protected $table = 'laporan_harian_lampiran';
 
     protected $fillable = [
-        'user_id',
-        'regulasi_id',
-        'bulan',
-        'tahun',
-        'status',
-        'terakhir_dibaca',
+        'laporan_id',
+        'path_file',
+        'nama_file',
+        'jenis',
     ];
 
-    public function Regulasi()
+    public function LaporanHarian()
     {
-        return $this->belongsTo(Regulasi::class,'regulasi_id','id');
+        return $this->belongsTo(LaporanHarian::class,'laporan_id','id');
     }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('buku_saku_progres')
+            ->useLogName('laporan_harian_lampiran')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data kemajuan pembacaan berhasil " .
+                "Data lampiran laporan harian berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',
@@ -44,10 +40,5 @@ class KemajuanPembacaan extends Model
                         default => $event,
                     } . ' oleh ' . (Auth::user()->name ?? 'Sistem') . '.'
             );
-    }
-
-    protected static function booted()
-    {
-        static::creating(fn($model) => $model->user_id ??= Auth::id());
     }
 }

@@ -1,42 +1,39 @@
 <?php
 
-namespace App\Models\DokumenRegulasi;
+namespace App\Models\Humas;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class KemajuanPembacaan extends Model
+class Konten extends Model
 {
     use LogsActivity;
 
-    protected $table = 'buku_saku_progres';
+    protected $table = 'konten';
 
     protected $fillable = [
-        'user_id',
-        'regulasi_id',
-        'bulan',
-        'tahun',
-        'status',
-        'terakhir_dibaca',
+        'tipe',
+        'judul',
+        'slug',
+        'isi',
+        'path_gambar',
+        'tampilkan_publik',
+        'published_at',
+        'created_by',
+        'deleted_by',
     ];
-
-    public function Regulasi()
-    {
-        return $this->belongsTo(Regulasi::class,'regulasi_id','id');
-    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('buku_saku_progres')
+            ->useLogName('konten')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data kemajuan pembacaan berhasil " .
+                "Data unit berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',
@@ -48,6 +45,10 @@ class KemajuanPembacaan extends Model
 
     protected static function booted()
     {
-        static::creating(fn($model) => $model->user_id ??= Auth::id());
+        static::creating(fn($model) => $model->created_by ??= Auth::id());
+        static::updating(fn($model) => $model->updated_by = Auth::id());
+        static::deleting(fn($model) => $model->forceFill([
+            'deleted_by' => Auth::id(),
+        ])->saveQuietly());
     }
 }

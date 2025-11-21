@@ -1,42 +1,46 @@
 <?php
 
-namespace App\Models\DokumenRegulasi;
+namespace App\Models\ManajemenLaporan;
 
-use App\Models\User;
+use App\Models\Anggota\Anggota;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class KemajuanPembacaan extends Model
+class LaporanHarian extends Model
 {
     use LogsActivity;
-
-    protected $table = 'buku_saku_progres';
+    protected $table = 'laporan_harian';
 
     protected $fillable = [
-        'user_id',
-        'regulasi_id',
-        'bulan',
-        'tahun',
-        'status',
-        'terakhir_dibaca',
+        'anggota_id',
+        'jenis',
+        'catatan',
+        'lat',
+        'lng',
+        'status_validasi',
+        'divalidasi_oleh',
     ];
 
-    public function Regulasi()
+    public function anggota()
     {
-        return $this->belongsTo(Regulasi::class,'regulasi_id','id');
+        return $this->belongsTo(Anggota::class,'anggota_id', 'id');
+    }
+    public function lampiran()
+    {
+        return $this->hasMany(LaporanLampiran::class,'laporan_id','id');
     }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('buku_saku_progres')
+            ->useLogName('lampiran_harian')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data kemajuan pembacaan berhasil " .
+                "Data lampiran harian berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',
@@ -45,9 +49,8 @@ class KemajuanPembacaan extends Model
                     } . ' oleh ' . (Auth::user()->name ?? 'Sistem') . '.'
             );
     }
-
     protected static function booted()
     {
-        static::creating(fn($model) => $model->user_id ??= Auth::id());
+        static::creating(fn($model) => $model->anggota_id ??= Auth::id());
     }
 }
