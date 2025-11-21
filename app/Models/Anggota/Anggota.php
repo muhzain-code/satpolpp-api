@@ -65,6 +65,11 @@ class Anggota extends Model
     {
         return $this->hasMany(LaporanHarian::class, 'anggota_id', 'id');
     }
+
+    public function user()
+    {
+        return $this->hasOne(User::class,'anggota_id','id');
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -23,9 +23,13 @@ class KemajuanPembacaan extends Model
         'terakhir_dibaca',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
     public function Regulasi()
     {
-        return $this->belongsTo(Regulasi::class,'regulasi_id','id');
+        return $this->belongsTo(Regulasi::class, 'regulasi_id', 'id');
     }
     public function getActivitylogOptions(): LogOptions
     {

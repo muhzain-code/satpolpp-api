@@ -28,52 +28,52 @@ class KontenService
         ];
     }
 
-public function store(array $data): array
-{
-    DB::beginTransaction();
+    public function store(array $data): array
+    {
+        DB::beginTransaction();
 
-    try {
-        $userId = Auth::id();
-        $path = null;
+        try {
+            $userId = Auth::id();
+            $path = null;
 
-        // upload gambar
-        if (isset($data['path_gambar']) && $data['path_gambar']->isValid()) {
-            $path = $data['path_gambar']->store('konten', 'public');
+            // upload gambar
+            if (isset($data['path_gambar']) && $data['path_gambar']->isValid()) {
+                $path = $data['path_gambar']->store('konten', 'public');
+            }
+
+            // generate slug unik
+            $slug = Str::slug($data['judul']);
+            $slug = $this->generateUniqueSlug($slug);
+
+            // otomatis set published_at
+            $publishedAt = ($data['tampilkan_publik'] ?? false) ? now() : null;
+
+            $konten = Konten::create([
+                'tipe'              => $data['tipe'],
+                'judul'             => $data['judul'],
+                'slug'              => $slug,
+                'isi'               => $data['isi'] ?? null,
+                'path_gambar'       => $path,
+                'tampilkan_publik'  => $data['tampilkan_publik'],
+                'published_at'      => $publishedAt,
+                'created_by'        => $userId,
+            ]);
+            DB::commit();
+
+            return [
+                'message' => 'berhasil menambahkan data Konten',
+                'data'    => $konten
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Gagal menambahkan data Konten', [
+                'error' => $e->getMessage()
+            ]);
+
+            throw new CustomException('Gagal menambahkan data Konten');
         }
-
-        // generate slug unik
-        $slug = Str::slug($data['judul']);
-        $slug = $this->generateUniqueSlug($slug);
-
-        // otomatis set published_at
-        $publishedAt = ($data['tampilkan_publik'] ?? false) ? now() : null;
-
-        $konten = Konten::create([
-            'tipe'              => $data['tipe'],
-            'judul'             => $data['judul'],
-            'slug'              => $slug,
-            'isi'               => $data['isi'] ?? null,
-            'path_gambar'       => $path,
-            'tampilkan_publik'  => $data['tampilkan_publik'],
-            'published_at'      => $publishedAt,
-            'created_by'        => $userId,
-        ]);
-        DB::commit();
-
-        return [
-            'message' => 'berhasil menambahkan data Konten',
-            'data'    => $konten
-        ];
-    } catch (\Throwable $e) {
-        DB::rollBack();
-
-        Log::error('Gagal menambahkan data Konten', [
-            'error' => $e->getMessage()
-        ]);
-
-        throw new CustomException('Gagal menambahkan data Konten');
     }
-}
 
 
     public function show($slug): array
@@ -193,5 +193,52 @@ public function store(array $data): array
         }
 
         return $slug;
+    }
+
+    public function KontenPublik($request): array
+    {
+        $limit = $request->input('limit', 25);
+
+        $konten = Konten::select([
+            'tipe',
+            'judul',
+            'slug',
+            'path_gambar'
+        ])
+            ->where('tampilkan_publik', true)
+            ->orderBy('published_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function ($item) {
+                if ($item->path_gambar) {
+                    $item->path_gambar = Storage::url($item->path_gambar);
+                }
+                return $item;
+            });
+
+        return [
+            'message' => 'data berhasil ditampilkan',
+            'data'  => $konten
+        ];
+    }
+
+    public function detailKonten($slug): array
+    {
+        $konten = Konten::where('slug', $slug)
+            ->where('tampilkan_publik', true)
+            ->first();
+
+        if (!$konten) {
+            throw new CustomException('Data tidak ditemukan');
+        }
+
+        if ($konten->path_gambar) {
+            $konten->path_gambar = Storage::url($konten->path_gambar);
+        }
+
+        return [
+            'message' => 'data berhasil ditampilkan',
+            'data' => $konten
+        ];
     }
 }

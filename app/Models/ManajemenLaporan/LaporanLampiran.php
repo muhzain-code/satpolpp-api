@@ -2,6 +2,7 @@
 
 namespace App\Models\ManajemenLaporan;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
@@ -21,7 +22,7 @@ class LaporanLampiran extends Model
 
     public function LaporanHarian()
     {
-        return $this->belongsTo(LaporanHarian::class,'laporan_id','id');
+        return $this->belongsTo(LaporanHarian::class, 'laporan_id', 'id');
     }
     public function getActivitylogOptions(): LogOptions
     {
