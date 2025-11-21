@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             PengaduanSeeder::class,
         ]);
 
+        $user->update(['anggota_id' => 1]);
         $superAdminRole = Role::where('name', 'super_admin')->first();
         if ($superAdminRole) {
             $user->assignRole($superAdminRole);

@@ -23,18 +23,15 @@ class OperasiController extends Controller
 
     public function index(Request $request)
     {
-        $filter = [
-            'per_page'      => $request->input('per_page', 25),
-            'page'          => $request->input('page', 1),
-            'pengaduan_id'  => $request->input('pengaduan_id'),
-            'mulai'         => $request->input('mulai'),
-            'selesai'       => $request->input('selesai'),
-            'keyword'       => $request->input('keyword'),
-        ];
 
-        $result = $this->service->getAll($filter);
+        $request->input('per_page', 25);
+        $request->input('page', 1);
+
+        $result = $this->service->getAll($request);
+
         return $this->successResponse($result['data'], $result['message']);
     }
+
 
     public function store(StoreOperasiRequest $request)
     {

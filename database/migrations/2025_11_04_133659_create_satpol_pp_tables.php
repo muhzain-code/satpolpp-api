@@ -191,23 +191,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Schema::create('operasi', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('kode_operasi')->unique();
-        //     $table->string('nomor_surat_tugas')->unique()->nullable();
-        //     $table->enum('jenis_operasi', ['rutin', 'pengaduan'])->nullable();
-        //     $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
-        //     $table->string('judul');
-        //     $table->text('uraian')->nullable();
-        //     $table->dateTime('mulai')->nullable();
-        //     $table->dateTime('selesai')->nullable();
-        //     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->timestamps();
-        //     $table->softDeletes();
-        // });
-
         Schema::create('operasi', function (Blueprint $table) {
             $table->id();
             $table->string('kode_operasi')->unique();
