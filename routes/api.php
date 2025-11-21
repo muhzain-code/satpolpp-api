@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\Humas\GaleriController;
 use App\Http\Controllers\Api\Humas\KontenController;
+use App\Http\Controllers\Api\PPID\PPIDController;
 use App\Http\Controllers\Operasi\OperasiController;
 use App\Http\Controllers\Operasi\DisposisiController;
 use App\Http\Controllers\Operasi\OperasiPenugasanController;
@@ -32,6 +33,8 @@ Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 Route::get('konten-publik', [KontenController::class, 'KontenPublik']);
 Route::get('konten-publik/{slug}', [KontenController::class, 'detailKonten']);
 
+Route::post('permohonan-ppid', [PPIDController::class, 'permohonanPPID']);
+Route::post('lacak-permohonan-ppid', [PPIDController::class, 'lacakPPID']);
 
 /**
  * ==========================
@@ -193,6 +196,9 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('konten/{slug}', [KontenController::class, 'show']);
     Route::put('konten/{slug}', [KontenController::class, 'update']);
     Route::delete('konten/{slug}', [KontenController::class, 'destroy']);
+
+    Route::get('ppid', [PPIDController::class, 'index']);
+    Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
 });
 
 
