@@ -235,4 +235,27 @@ class PengaduanService
             'data' => $pengaduan
         ];
     }
+
+    public function lacakNomorTiket($nomor)
+    {
+        $pengaduan = Pengaduan::with('kategoriPengaduan:id,nama')->where('nomor_tiket', $nomor)->first();
+
+        if (! $pengaduan) {
+            throw new CustomException('Data pengaduan tidak ditemukan', 404);
+        }
+
+        $data = [
+            'id' => $pengaduan->id,
+            'nomor_tiket' => $pengaduan->nomor_tiket,
+            'nama_pelapor' => $pengaduan->nama_pelapor,
+            'kontak_pelapor' => $pengaduan->kontak_pelapor,
+            'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
+            'status' => $pengaduan->status,
+        ];
+
+        return [
+            'message' => 'Data pengaduan berhasil ditemukan',
+            'data' => $data
+        ];
+    }
 }

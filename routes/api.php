@@ -26,6 +26,8 @@ Route::get('/user', function (Request $request) {
 Route::post('login', [AuthController::class, 'login']);
 
 Route::post('pengaduan', [PengaduanController::class, 'store']);
+Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
+
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -61,7 +63,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
     Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
     Route::get('pengaduan-tolak', [PengaduanController::class, 'setDitolak']);
-    
+
     Route::get('disposisi', [DisposisiController::class, 'index']);
     Route::post('disposisi', [DisposisiController::class, 'store']);
     Route::get('disposisi/{id}', [DisposisiController::class, 'show']);

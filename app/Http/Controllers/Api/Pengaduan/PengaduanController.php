@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pengaduan;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pengaduan\LacakNomorTiketRequest;
 use App\Http\Requests\Pengaduan\PengaduanRequest;
 use App\Services\Pengaduan\PengaduanService;
 use App\Traits\ApiResponse;
@@ -63,6 +64,12 @@ class PengaduanController extends Controller
     public function setDitolak($id): JsonResponse
     {
         $result = $this->service->setDitolak($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function lacakNomorTiket(LacakNomorTiketRequest $request): JsonResponse
+    {
+        $result = $this->service->lacakNomorTiket($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 }
