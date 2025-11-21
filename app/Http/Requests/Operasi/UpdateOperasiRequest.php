@@ -27,8 +27,8 @@ class UpdateOperasiRequest extends FormRequest
         $id = $this->route('id');
 
         return [
-            'nomor_surat_tugas'  => "nullable|string|max:255|unique:operasi,nomor_surat_tugas,$id",
             'pengaduan_id'       => 'nullable|integer|exists:pengaduan,id',
+            'jenis_operasi'      => 'required|string|in:rutin,pengaduan,gabungan,penertiban,yustisi',
             'judul'              => 'required|string|max:255',
             'uraian'             => 'nullable|string',
             'mulai'              => 'nullable|date',

@@ -17,19 +17,23 @@ class Anggota extends Model
     protected $fillable = [
         'kode_anggota',
         'nik',
+        'nip',
         'nama',
         'jenis_kelamin',
         'tempat_lahir',
         'tanggal_lahir',
         'alamat',
+        'no_hp',
         'foto',
         'jabatan_id',
         'unit_id',
         'status',
+        'jenis_kepegawaian',
         'created_by',
         'updated_by',
         'deleted_by',
     ];
+
 
     public function jabatan()
     {

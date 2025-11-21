@@ -8,10 +8,18 @@ use Illuminate\Http\UploadedFile;
 use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NomorGeneratorService;
 use Illuminate\Support\Facades\Storage;
 
 class AnggotaService
 {
+    protected NomorGeneratorService $service;
+
+    public function __construct(NomorGeneratorService $service)
+    {
+        $this->service = $service;
+    }
+
     public function getAll($perPage, $currentPage): array
     {
         $anggota = Anggota::with('unit:id,nama', 'jabatan:id,nama')
@@ -85,6 +93,8 @@ class AnggotaService
                 $data['foto'] = $path;
             }
 
+            $data['kode_anggota'] = $this->service->generateKodeAnggota();
+
             $anggota = Anggota::create($data);
 
             if (!$anggota) {
@@ -153,7 +163,7 @@ class AnggotaService
 
             return [
                 'message' => 'Berhasil mengupdate anggota',
-                'data' => $anggota->fresh(), 
+                'data' => $anggota->fresh(),
             ];
         } catch (Exception $e) {
             Log::error('Gagal mengupdate anggota', [

@@ -18,6 +18,7 @@ class Operasi extends Model
         'kode_operasi',
         'nomor_surat_tugas',
         'pengaduan_id',
+        'jenis_operasi',
         'judul',
         'uraian',
         'mulai',

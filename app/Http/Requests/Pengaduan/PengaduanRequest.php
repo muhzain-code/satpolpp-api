@@ -26,7 +26,7 @@ class PengaduanRequest extends FormRequest
         return [
             'nama_pelapor'     => 'required|string|max:100',
             'kontak_pelapor'   => 'required|string|max:50',
-            'kategori_id'      => 'nullable|exists:kategori_pengaduan,id',
+            'kategori_id'      => 'required|exists:kategori_pengaduan,id',
             'deskripsi'        => 'required|string',
             'lat'              => 'nullable|numeric|between:-90,90',
             'lng'              => 'nullable|numeric|between:-180,180',

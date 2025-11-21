@@ -24,9 +24,8 @@ class StoreOperasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kode_operasi'       => 'required|string|max:255|unique:operasi,kode_operasi',
-            'nomor_surat_tugas'  => 'nullable|string|max:255|unique:operasi,nomor_surat_tugas',
             'pengaduan_id'       => 'nullable|integer|exists:pengaduan,id',
+            'jenis_operasi'      => 'required|string|in:rutin,pengaduan,gabungan,penertiban,yustisi',
             'judul'              => 'required|string|max:255',
             'uraian'             => 'nullable|string',
             'mulai'              => 'nullable|date',

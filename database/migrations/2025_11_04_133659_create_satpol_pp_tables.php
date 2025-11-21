@@ -37,25 +37,59 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Schema::create('anggota', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('kode_anggota', 50)->unique()->nullable();
+        //     $table->string('nik', 32)->unique()->nullable();
+        //     $table->string('nama');
+        //     $table->enum('jenis_kelamin', ['l', 'p'])->nullable();
+        //     $table->string('tempat_lahir')->nullable();
+        //     $table->date('tanggal_lahir')->nullable();
+        //     $table->string('alamat')->nullable();
+        //     $table->string('foto')->nullable();
+        //     $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->nullOnDelete();
+        //     $table->foreignId('unit_id')->nullable()->constrained('unit')->nullOnDelete();
+        //     $table->enum('status', ['aktif', 'nonaktif', 'cuti'])->default('aktif');
+        //     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
+
         Schema::create('anggota', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_anggota', 50)->unique()->nullable();
-            $table->string('nik', 32)->unique()->nullable();
+
+            $table->string('kode_anggota', 50)->unique();
+            $table->string('nik', 16)->unique()->nullable();
+            $table->string('nip', 18)->unique()->nullable(); 
+
             $table->string('nama');
-            $table->enum('jenis_kelamin', ['l', 'p'])->nullable();
+            $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
+
             $table->string('tempat_lahir')->nullable();
             $table->date('tanggal_lahir')->nullable();
-            $table->string('alamat')->nullable();
-            $table->string('foto')->nullable();
+
+            $table->text('alamat')->nullable();
+            $table->string('no_hp', 20)->nullable();
+
+            $table->text('foto')->nullable();
+
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->nullOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained('unit')->nullOnDelete();
-            $table->enum('status', ['aktif', 'nonaktif', 'cuti'])->default('aktif');
+
+            $table->enum('status', ['aktif', 'nonaktif', 'cuti', 'mutasi', 'pensiun', 'meninggal'])
+                ->default('aktif');
+
+            $table->enum('jenis_kepegawaian', ['asn', 'p3k', 'nonasn'])->nullable();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
-        });
+        }); 
 
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('anggota_id')
@@ -111,10 +145,10 @@ return new class extends Migration
             $table->decimal('lng', 10, 7)->nullable();
             $table->text('alamat')->nullable();
             $table->enum('status', [
-                'diterima',       
-                'diproses',     
-                'selesai',      
-                'ditolak',        
+                'diterima',
+                'diproses',
+                'selesai',
+                'ditolak',
             ])->default('diterima');
 
             $table->timestamps();
@@ -152,6 +186,7 @@ return new class extends Migration
             $table->id();
             $table->string('kode_operasi')->unique();
             $table->string('nomor_surat_tugas')->unique()->nullable();
+            $table->enum('jenis_operasi', ['rutin', 'pengaduan', 'gabungan', 'penertiban', 'yustisi'])->nullable();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->string('judul');
             $table->text('uraian')->nullable();

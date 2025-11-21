@@ -41,7 +41,7 @@ class PengaduanService
                 'nomor_tiket' => $item->nomor_tiket,
                 'nama_pelapor' => $item->nama_pelapor,
                 'kontak_pelapor' => $item->kontak_pelapor,
-                'deskripsi' => $item->deskripsi,
+                'kategori' => $item->kategoriPengaduan->nama,
                 'status' => $item->status,
             ];
         });

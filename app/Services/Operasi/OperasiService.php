@@ -20,7 +20,7 @@ class OperasiService
 
     public function getAll($filter)
     {
-        $operasi = Operasi::query();
+        $operasi = Operasi::with('pengaduan');
 
         if (isset($filter['pengaduan_id'])) {
             $operasi->where('pengaduan_id', $filter['pengaduan_id']);
@@ -78,11 +78,14 @@ class OperasiService
         try {
             return DB::transaction(function () use ($data) {
                 $kodeOperasi = $this->service->generateKodeOperasi();
+                $nomorSuratTugas = $this->service->generateNomorSuratTugas();
+                
 
                 $operasi = Operasi::create([
                     'kode_operasi'       => $kodeOperasi,
-                    'nomor_surat_tugas' => $data['nomor_surat_tugas'] ?? null,
+                    'nomor_surat_tugas' => $nomorSuratTugas,
                     'pengaduan_id'      => $data['pengaduan_id'] ?? null,
+                    'jenis_operasi'      => $data['jenis_operasi'] ?? null,
                     'judul'             => $data['judul'],
                     'uraian'            => $data['uraian'] ?? null,
                     'mulai'             => $data['mulai'] ?? null,

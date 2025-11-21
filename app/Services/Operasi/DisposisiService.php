@@ -14,7 +14,7 @@ class DisposisiService
 {
     public function getAll($filter)
     {
-        $disposisi = Disposisi::Query();
+        $disposisi = Disposisi::with('pengaduan', 'keAnggota', 'keUnit');
 
         if (isset($filter['pengaduan_id'])) {
             $disposisi->where('pengaduan_id', $filter['pengaduan_id']);
@@ -33,9 +33,9 @@ class DisposisiService
         $disposisi->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->id,
-                'pengaduan_id' => $item->pengaduan_id,
-                'ke_anggota_id' => $item->ke_anggota_id,
-                'ke_unit_id' => $item->ke_unit_id,
+                'pengaduan_id' => $item->pengaduan->nomor_tiket,
+                'ke_anggota_id' => $item->keAnggota->kode_anggota ?? null,
+                'ke_unit_id' => $item->keUnit->nama ?? null,
                 'catatan' => $item->catatan,
             ];
         });

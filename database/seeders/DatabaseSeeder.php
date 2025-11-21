@@ -18,24 +18,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            RoleSeeder::class,
-        ]);
-
-        // $anggota = Anggota::create([
-        //     'kode_anggota'   => null,
-        //     'nik'            => null,
-        //     'nama'           => 'Super Administrator',
-        //     'jenis_kelamin'  => null,
-        //     'alamat'         => null,
-        //     'status'         => 'aktif',
-        // ]);
-
         $user = User::create([
             'name'        => 'Super Admin',
             'email'       => 'superadmin@example.com',
             'password'    => Hash::make('password'),
             'anggota_id'  => null,
+        ]);
+
+        $this->call([
+            RoleSeeder::class,
+            JabatanSeeder::class,
+            UnitSeeder::class,
+            AnggotaSeeder::class,
+            KategoriPengaduanSeeder::class,
+            PengaduanSeeder::class,
         ]);
 
         $superAdminRole = Role::where('name', 'super_admin')->first();

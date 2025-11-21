@@ -25,7 +25,8 @@ class AnggotaRequest extends FormRequest
 
     public function rules(): array
     {
-        $anggotaId = $this->route('id')?->anggota ?? null;
+        // gunakan id dari route (default Laravel)
+        $anggotaId = $this->route('id');
 
         return [
             'kode_anggota' => [
@@ -34,23 +35,43 @@ class AnggotaRequest extends FormRequest
                 'max:50',
                 Rule::unique('anggota')->ignore($anggotaId),
             ],
+
             'nik' => [
                 'nullable',
                 'string',
-                'max:32',
+                'max:16',
                 Rule::unique('anggota')->ignore($anggotaId),
             ],
+
+            'nip' => [
+                'nullable',
+                'string',
+                'max:18',
+                Rule::unique('anggota')->ignore($anggotaId),
+            ],
+
             'nama' => 'required|string|max:255',
-            'jenis_kelamin' => 'nullable|in:l,p',
+
+            'jenis_kelamin' => 'nullable|in:L,P',
+
             'tempat_lahir' => 'nullable|string|max:255',
             'tanggal_lahir' => 'nullable|date',
-            'alamat' => 'nullable|string|max:255',
+
+            'alamat' => 'nullable|string',
+
+            'no_hp' => 'nullable|string|max:20',
+
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+
             'jabatan_id' => 'nullable|exists:jabatan,id',
             'unit_id' => 'nullable|exists:unit,id',
-            'status' => 'required|in:aktif,nonaktif,cuti',
+
+            'status' => 'required|in:aktif,nonaktif,cuti,mutasi,pensiun,meninggal',
+
+            'jenis_kepegawaian' => 'nullable|in:asn,p3k,nonasn',
         ];
     }
+
 
     public function messages(): array
     {
