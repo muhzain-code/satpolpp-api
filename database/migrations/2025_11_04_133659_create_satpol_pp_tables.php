@@ -138,9 +138,6 @@ return new class extends Migration
             $table->timestamp('selesai_at')->nullable();
             $table->timestamp('ditolak_at')->nullable();
 
-            // cache monitoring
-            $table->foreignId('penindakan_terakhir_id')->nullable()->constrained('penindakan')->nullOnDelete();
-
             $table->timestamps();
             $table->softDeletes();
         });
@@ -270,11 +267,6 @@ return new class extends Migration
             $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->foreignId('laporan_harian_id')->nullable()->constrained('laporan_harian')->nullOnDelete();
-            $table->check('
-            (operasi_id IS NOT NULL AND pengaduan_id IS NULL AND laporan_harian_id IS NULL) OR
-            (operasi_id IS NULL AND pengaduan_id IS NOT NULL AND laporan_harian_id IS NULL) OR
-            (operasi_id IS NULL AND pengaduan_id IS NULL AND laporan_harian_id IS NOT NULL)
-            ');
 
             $table->foreignId('anggota_pelapor_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->text('uraian')->nullable();

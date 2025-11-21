@@ -18,28 +18,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::create([
-            'name'        => 'Super Admin',
-            'email'       => 'superadmin@example.com',
-            'password'    => Hash::make('password'),
-            'anggota_id'  => null,
-        ]);
+        // $user = User::create([
+        //     'name'        => 'Super Admin',
+        //     'email'       => 'superadmin@example.com',
+        //     'password'    => Hash::make('password'),
+        //     'anggota_id'  => null,
+        // ]);
 
         $this->call([
             RoleSeeder::class,
-            JabatanSeeder::class,
-            UnitSeeder::class,
-            AnggotaSeeder::class,
+            // JabatanSeeder::class,
+            // UnitSeeder::class,
+            // AnggotaSeeder::class,
             KategoriPengaduanSeeder::class,
             PengaduanSeeder::class,
         ]);
 
-        $user->update(['anggota_id' => 1]);
-        $superAdminRole = Role::where('name', 'super_admin')->first();
-        if ($superAdminRole) {
-            $user->assignRole($superAdminRole);
-        }
+        // $user->update(['anggota_id' => 1]);
+        // $superAdminRole = Role::where('name', 'super_admin')->first();
+        // if ($superAdminRole) {
+        //     $user->assignRole($superAdminRole);
+        // }
 
-        $this->command->info('✅ Super Admin berhasil dibuat: superadmin@example.com / password');
+        // $this->command->info('✅ Super Admin berhasil dibuat: superadmin@example.com / password');
     }
 }
