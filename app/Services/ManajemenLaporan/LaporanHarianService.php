@@ -195,4 +195,74 @@ class LaporanHarianService
             'message' => 'Data laporan harian berhasil dihapus'
         ];
     }
+    public function getallLaporan($perPage, $currentPage, $request): array
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('super_admin')) {
+            throw new CustomException('Akses ditolak. Khusus Super Admin.', 403);
+        }
+
+        $query = LaporanHarian::with(['anggota.unit', 'validator']);
+
+        // 2. Terapkan Filter
+        if ($request->has('unit_id') && $request->unit_id != null) {
+            $query->whereHas('anggota', function ($q) use ($request) {
+                $q->where('unit_id', $request->unit_id);
+            });
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        if ($request->has('jenis') && $request->jenis != null) {
+            $query->where('jenis', $request->jenis);
+        }
+
+        if ($request->has('severity') && $request->severity != null) {
+            $query->where('severity', $request->severity);
+        }
+
+        if ($request->has('status_validasi') && $request->status_validasi != null) {
+            $query->where('status_validasi', $request->status_validasi);
+        }
+
+        if ($request->has('telah_dieskalasi') && $request->telah_dieskalasi !== null) {
+            $val = filter_var($request->telah_dieskalasi, FILTER_VALIDATE_BOOLEAN);
+            $query->where('telah_dieskalasi', $val);
+        }
+
+        $laporan = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $laporan->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'tanggal' => $item->created_at->format('d-m-Y H:i'),
+                'anggota' => $item->anggota->nama ?? '-',
+                'unit' => $item->anggota->unit->nama ?? '-',
+                'jenis' => $item->jenis,
+                'severity' => $item->severity,
+                'lokasi' => $item->catatan,
+                'status' => $item->status_validasi,
+                'divalidasi_oleh' => $item->validator->nama ?? '-',
+                'eskalasi' => $item->telah_dieskalasi ? 'Ya' : 'Tidak',
+            ];
+        });
+
+        return [
+            'message' => 'Data seluruh laporan berhasil ditampilkan',
+            'data' => [
+                'current_page' => $laporan->currentPage(),
+                'per_page' => $laporan->perPage(),
+                'total' => $laporan->total(),
+                'last_page' => $laporan->lastPage(),
+                'items' => $laporan->items()
+            ]
+        ];
+    }
 }

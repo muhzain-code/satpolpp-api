@@ -115,14 +115,33 @@ class LampiranLaporanService
                 throw new CustomException('Akun anggota Anda tidak aktif, tidak dapat membuat laporan');
             }
 
+            $kategoriId = null;
+            $regulasiId = null;
+            $severity   = null;
+
+            if (isset($data['jenis']) && $data['jenis'] === 'insiden') {
+                $kategoriId = $data['kategori_pelanggaran_id'] ?? null;
+                $regulasiId = $data['regulasi_indikatif_id'] ?? null;
+                $severity   = $data['severity'] ?? null;
+
+                if (!$severity) {
+                    throw new CustomException('Tingkat keparahan (severity) wajib diisi untuk laporan insiden.');
+                }
+            }
+
             $laporan = LaporanHarian::create([
-                'anggota_id'        => $anggota->id,
-                'jenis'             => $data['jenis'] ?? 'aman',
-                'catatan'           => $data['catatan'] ?? null,
-                'lat'               => $data['lat'] ?? null,
-                'lng'               => $data['lng'] ?? null,
-                'status_validasi'   => 'menunggu',
-                'created_by'        => $user->id,
+                'anggota_id'              => $anggota->id,
+                'jenis'                   => $data['jenis'] ?? 'aman',
+                'catatan'                 => $data['catatan'] ?? null,
+                'lat'                     => $data['lat'] ?? null,
+                'lng'                     => $data['lng'] ?? null,
+
+                'kategori_pelanggaran_id' => $kategoriId,
+                'regulasi_indikatif_id'   => $regulasiId,
+                'severity'                => $severity,
+
+                'status_validasi'         => 'menunggu',
+                'created_by'              => $user->id,
             ]);
 
             if (!empty($data['lampiran']) && is_array($data['lampiran'])) {
@@ -140,7 +159,9 @@ class LampiranLaporanService
                 }
             }
 
+
             DB::commit();
+
             return [
                 'message' => 'Laporan harian berhasil ditambahkan',
                 'data'    => $laporan->load('lampiran'),
@@ -156,7 +177,7 @@ class LampiranLaporanService
                 throw $e;
             }
 
-            throw new CustomException('Gagal menambah laporan harian', 422);
+            throw new CustomException('Gagal menambah laporan harian: ' . $e->getMessage(), 422);
         }
     }
 
@@ -166,16 +187,10 @@ class LampiranLaporanService
 
         try {
             $user = Auth::user();
-
-            if (!$user) {
-                throw new CustomException('Anda belum login, silakan login terlebih dahulu');
-            }
+            if (!$user) throw new CustomException('Anda belum login, silakan login terlebih dahulu');
 
             $anggota = $user->anggota;
-
-            if (!$anggota) {
-                throw new CustomException('Akun Anda tidak memiliki data anggota');
-            }
+            if (!$anggota) throw new CustomException('Akun Anda tidak memiliki data anggota');
 
             if ($anggota->status !== 'aktif') {
                 throw new CustomException('Akun anggota Anda tidak aktif, tidak dapat memperbarui laporan');
@@ -191,8 +206,39 @@ class LampiranLaporanService
             }
 
             if ($laporan->status_validasi !== 'menunggu') {
-                throw new CustomException('Status validasi sudah berubah, laporan tidak bisa diupdate');
+                throw new CustomException('Laporan sudah divalidasi oleh komandan, tidak bisa diubah.');
             }
+
+            if ($laporan->telah_dieskalasi) {
+                throw new CustomException('Laporan ini sudah dieskalasi ke penindakan, data terkunci.');
+            }
+
+            if ($laporan->severity === 'tinggi') {
+                throw new CustomException('Laporan prioritas tinggi (High Severity) terkunci demi keamanan data. Hubungi Komandan jika ada revisi.');
+            }
+
+            $jenisBaru = $data['jenis'] ?? $laporan->jenis;
+
+            $kategoriId = null;
+            $regulasiId = null;
+            $severity   = null;
+
+            if ($jenisBaru === 'insiden') {
+                $kategoriId = $data['kategori_pelanggaran_id'] ?? $laporan->kategori_pelanggaran_id;
+                $regulasiId = $data['regulasi_indikatif_id'] ?? $laporan->regulasi_indikatif_id;
+                $severity   = $data['severity'] ?? $laporan->severity;
+            }
+
+            $laporan->update([
+                'jenis'                   => $jenisBaru,
+                'catatan'                 => $data['catatan'] ?? $laporan->catatan,
+                'lat'                     => $data['lat'] ?? $laporan->lat,
+                'lng'                     => $data['lng'] ?? $laporan->lng,
+
+                'kategori_pelanggaran_id' => $kategoriId,
+                'regulasi_indikatif_id'   => $regulasiId,
+                'severity'                => $severity,
+            ]);
 
             if (!empty($data['lampiran'])) {
                 foreach ($laporan->lampiran as $lampiran) {
@@ -201,20 +247,10 @@ class LampiranLaporanService
                     }
                     $lampiran->delete();
                 }
-            }
 
-            $laporan->update([
-                'jenis'      => $data['jenis'] ?? $laporan->jenis,
-                'catatan'    => $data['catatan'] ?? $laporan->catatan,
-                'lat'        => $data['lat'] ?? $laporan->lat,
-                'lng'        => $data['lng'] ?? $laporan->lng,
-            ]);
-
-            if (!empty($data['lampiran'])) {
                 foreach ($data['lampiran'] as $file) {
                     if ($file->isValid()) {
                         $path = $file->store('laporan_harian', 'public');
-
                         LaporanLampiran::create([
                             'laporan_id' => $laporan->id,
                             'path_file'  => $path,
@@ -235,7 +271,9 @@ class LampiranLaporanService
             DB::rollBack();
             Log::error('Gagal memperbarui laporan harian', [
                 'error' => $e->getMessage(),
+                'id_laporan' => $Id ?? 'unknown'
             ]);
+
             if ($e instanceof CustomException) {
                 throw $e;
             }
@@ -265,11 +303,18 @@ class LampiranLaporanService
         if (!$komandan->unit_id) {
             throw new CustomException('Data anggota anda tidak memiliki Unit Regu, tidak bisa mengambil data laporan');
         }
-
         $lap = LaporanHarian::whereHas('anggota', function ($q) use ($komandan) {
             $q->where('unit_id', $komandan->unit_id);
         })
-            ->with('anggota')
+            ->with(['anggota', 'validator'])
+            ->orderByRaw("
+            CASE
+                WHEN severity = 'tinggi' THEN 1
+                WHEN severity = 'sedang' THEN 2
+                WHEN severity = 'rendah' THEN 3
+                ELSE 4
+            END ASC
+        ")
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
@@ -277,18 +322,19 @@ class LampiranLaporanService
             throw new CustomException('Data tidak ditemukan');
         }
 
-
         $lap->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->id,
-                'anggota_id' => $item->anggota->nama,
+                'anggota_nama' => $item->anggota->nama ?? 'Tidak Diketahui',
                 'jenis' => $item->jenis,
+                'severity' => $item->severity,
+                'telah_dieskalasi' => (bool) $item->telah_dieskalasi,
                 'catatan' => $item->catatan,
                 'lat' => $item->lat,
                 'lng' => $item->lng,
                 'status_validasi' => $item->status_validasi,
-                'divalidasi_oleh' => Anggota::find($item->divalidasi_oleh)->nama ?? null,
-                'created_at' => $item->created_at,
+                'divalidasi_oleh_nama' => $item->validator->nama ?? null,
+                'created_at' => $item->created_at->format('Y-m-d H:i:s'),
             ];
         });
 
