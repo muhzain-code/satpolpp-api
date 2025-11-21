@@ -2,6 +2,7 @@
 
 namespace App\Models\DokumenRegulasi;
 
+use App\Models\ManajemenLaporan\LaporanHarian;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -68,6 +69,10 @@ class Regulasi extends Model
             );
     }
 
+    public function LaporanHarian()
+    {
+        return $this->hasMany(LaporanHarian::class, 'regulasi_indikatif_id', 'id');
+    }
     protected static function booted()
     {
         static::creating(fn($model) => $model->created_by ??= Auth::id());

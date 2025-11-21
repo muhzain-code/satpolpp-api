@@ -96,6 +96,8 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
 
+        // laporan dashboard admin
+    Route::get('laporan-admin',[LaporanHarianController::class,'getallLaporan']);
     Route::get('laporan', [LaporanHarianController::class, 'index']);
     Route::post('laporan', [LaporanHarianController::class, 'store']);
     Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);

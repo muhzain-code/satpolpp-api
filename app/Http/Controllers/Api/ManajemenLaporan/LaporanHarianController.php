@@ -49,4 +49,13 @@ class LaporanHarianController extends Controller
         $result = $this->service->delete($id);
         return $this->successResponse($result['message']);
     }
+
+    public function getallLaporan(Request $request): JsonResponse
+    {
+        $perPage = $request->input('per_page', 25);
+        $currentPage = $request->input('page', 1);
+        $result = $this->service->getallLaporan($perPage, $currentPage, $request);
+
+        return $this->successResponse($result['data'], $result['message']);
+    }
 }

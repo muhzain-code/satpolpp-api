@@ -2,6 +2,7 @@
 
 namespace App\Models\Pengaduan;
 
+use App\Models\ManajemenLaporan\LaporanHarian;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
@@ -17,6 +18,11 @@ class KategoriPengaduan extends Model
         'updated_by',
         'deleted_by'
     ];
+
+    public function LaporanHarian()
+    {
+        return $this->hasMany(LaporanHarian::class, 'kategori_pelanggaran_id', 'id');
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -50,5 +56,4 @@ class KategoriPengaduan extends Model
     {
         return $this->hasMany(Pengaduan::class, 'kategori_id');
     }
-
 }

@@ -3,6 +3,8 @@
 namespace App\Models\ManajemenLaporan;
 
 use App\Models\Anggota\Anggota;
+use App\Models\DokumenRegulasi\Regulasi;
+use App\Models\Pengaduan\KategoriPengaduan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
@@ -19,17 +21,29 @@ class LaporanHarian extends Model
         'catatan',
         'lat',
         'lng',
+        'kategori_pelanggaran_id',
+        'regulasi_indikatif_id',
+        'severity',
+        'telah_dieskalasi',
         'status_validasi',
         'divalidasi_oleh',
     ];
 
     public function anggota()
     {
-        return $this->belongsTo(Anggota::class,'anggota_id', 'id');
+        return $this->belongsTo(Anggota::class, 'anggota_id', 'id');
     }
     public function lampiran()
     {
-        return $this->hasMany(LaporanLampiran::class,'laporan_id','id');
+        return $this->hasMany(LaporanLampiran::class, 'laporan_id', 'id');
+    }
+    public function kategoripengaduan()
+    {
+        return $this->belongsTo(KategoriPengaduan::class, 'kategori_pelanggaran_id', 'id');
+    }
+    public function regulasi()
+    {
+        return $this->belongsTo(Regulasi::class, 'regulasi_indikatif_id', 'id');
     }
     public function getActivitylogOptions(): LogOptions
     {
@@ -52,5 +66,9 @@ class LaporanHarian extends Model
     protected static function booted()
     {
         static::creating(fn($model) => $model->anggota_id ??= Auth::id());
+    }
+    public function validator()
+    {
+        return $this->belongsTo(Anggota::class, 'divalidasi_oleh');
     }
 }

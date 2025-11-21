@@ -24,32 +24,42 @@ class LaporanHarianAnggotaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis'        => 'required|in:aman,insiden',
-            'catatan'      => 'nullable|string',
-            'lat'          => 'nullable|numeric',
-            'lng'          => 'nullable|numeric',
+            'jenis'      => 'required|in:aman,insiden',
+            'catatan'    => 'nullable|string',
+            'lat'        => 'required|numeric',
+            'lng'        => 'required|numeric',
+            'lampiran'   => 'nullable|array',
+            'lampiran.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
 
-            'lampiran'     => 'nullable|array',
-            'lampiran.*'   => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+            'kategori_pelanggaran_id' => 'required_if:jenis,insiden|nullable|exists:kategori_pengaduan,id',
+            'severity'                => 'required_if:jenis,insiden|nullable|in:rendah,sedang,tinggi',
+            'regulasi_indikatif_id'   => 'nullable|exists:regulasi,id',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'jenis.required' => 'Jenis laporan wajib diisi',
-            'jenis.in'       => 'Jenis laporan harus aman atau insiden',
+            'jenis.required' => 'Jenis laporan wajib diisi.',
+            'jenis.in'       => 'Jenis laporan harus berupa "aman" atau "insiden".',
+            'catatan.string' => 'Catatan harus berupa teks.',
+            'lat.required'   => 'Lokasi latitude wajib disertakan.',
+            'lat.numeric'    => 'Latitude harus berupa angka.',
+            'lng.required'   => 'Lokasi longitude wajib disertakan.',
+            'lng.numeric'    => 'Longitude harus berupa angka.',
 
-            'catatan.string' => 'Catatan harus berupa teks yang valid',
+            'lampiran.array'       => 'Lampiran harus dalam format array.',
+            'lampiran.*.file'      => 'Lampiran harus berupa file yang valid.',
+            'lampiran.*.mimes'     => 'Format lampiran hanya boleh: jpg, jpeg, png, mp4, mov.',
+            'lampiran.*.max'       => 'Ukuran lampiran maksimal 10MB per file.',
 
-            'lat.numeric'    => 'Latitude harus berupa angka',
-            'lng.numeric'    => 'Longitude harus berupa angka',
+            'kategori_pelanggaran_id.required_if' => 'Kategori pelanggaran wajib dipilih jika status laporan adalah Insiden.',
+            'kategori_pelanggaran_id.exists'      => 'Kategori pelanggaran yang dipilih tidak valid.',
 
-            'lampiran.array' => 'Lampiran harus dalam format array',
+            'severity.required_if' => 'Tingkat keparahan (severity) wajib dipilih jika status laporan adalah Insiden.',
+            'severity.in'          => 'Tingkat keparahan harus salah satu dari: rendah, sedang, atau tinggi.',
 
-            'lampiran.*.file'  => 'Lampiran harus berupa file',
-            'lampiran.*.mimes' => 'Lampiran hanya boleh: jpg, jpeg, png, mp4, mov',
-            'lampiran.*.max'   => 'Ukuran lampiran maksimal 10MB per file',
+            'regulasi_indikatif_id.exists' => 'Regulasi yang dipilih tidak ditemukan di database.',
         ];
     }
     protected function failedValidation(Validator $validator)
