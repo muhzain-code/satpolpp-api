@@ -57,4 +57,13 @@ class DisposisiController extends Controller
         $result = $this->service->delete($id);
         return $this->successResponse($result['data'], $result['message']);
     }
+
+    public function disposisiAnggota(Request $request)
+    {
+        $request->input('per_page', 25);
+        $request->input('page', 1);
+        
+        $result = $this->service->disposisiAnggota($request);
+        return $this->successResponse($result['data'], $result['message']);
+    }
 }

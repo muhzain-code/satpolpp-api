@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
 use App\Http\Controllers\Operasi\OperasiPenugasanController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Penindakan\PenindakanController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,6 +29,64 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 
+Route::middleware('auth:sanctum', 'role:super_admin,operator')->group(function () {
+    Route::get('pengaduan', [PengaduanController::class, 'index']);
+    Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
+    Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
+    Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
+    Route::get('pengaduan-tolak', [PengaduanController::class, 'setDitolak']);
+
+    Route::get('disposisi', [DisposisiController::class, 'index']);
+    Route::post('disposisi', [DisposisiController::class, 'store']);
+    Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
+    Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
+    Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum', 'role:super_admin,komandan_regu')->group(function () {
+    Route::get('operasi', [OperasiController::class, 'index']);
+    Route::post('operasi', [OperasiController::class, 'store']);
+    Route::get('operasi/{id}', [OperasiController::class, 'show']);
+    Route::put('operasi/{id}', [OperasiController::class, 'update']);
+    Route::delete('operasi/{id}', [OperasiController::class, 'destroy']);
+
+    // Route::get('operasi-penugasan', [OperasiPenugasanController::class, 'index']);
+    // Route::post('operasi-penugasan', [OperasiPenugasanController::class, 'store']);
+    // Route::get('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'show']);
+    // Route::put('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'update']);
+    // Route::delete('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    // semua role bisa melihat penindakan & detail
+    Route::middleware(['role:super_admin,komandan_regu,anggota_regu,ppns'])->group(function () {
+        Route::get('penindakan', [PenindakanController::class, 'index']);
+        Route::get('penindakan/{id}', [PenindakanController::class, 'show']);
+
+        Route::get('disposisi-anggota', [DisposisiController::class, 'disposisiAnggota'])
+            ->middleware('role:super_admin,komandan_regu,anggota_regu');
+
+        Route::get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])
+            ->middleware('role:super_admin,anggota_regu');
+    });
+
+    // hanya super_admin & anggota_regu boleh create/update/delete
+    Route::middleware(['role:super_admin,anggota_regu'])->prefix('penindakan')->group(function () {
+        Route::post('/', [PenindakanController::class, 'store']);
+        Route::put('/{id}', [PenindakanController::class, 'update']);
+        Route::delete('/{id}', [PenindakanController::class, 'destroy']);
+    });
+
+    // khusus PPNS untuk validasi
+    Route::middleware(['role:ppns'])->group(function () {
+        Route::post('penindakan/{id}/validasi-ppns', [PenindakanController::class, 'validasiPPNS']);
+    });
+});
+
+Route::middleware('auth:sanctum', 'role:super_admin,ppns')->group(function () {
+    Route::put('penindakan-validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS']);
+});
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -57,31 +116,6 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
     Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
 
-
-    Route::get('pengaduan', [PengaduanController::class, 'index']);
-    Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
-    Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
-    Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
-    Route::get('pengaduan-tolak', [PengaduanController::class, 'setDitolak']);
-
-    Route::get('disposisi', [DisposisiController::class, 'index']);
-    Route::post('disposisi', [DisposisiController::class, 'store']);
-    Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
-    Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
-    Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
-
-    Route::get('operasi', [OperasiController::class, 'index']);
-    Route::post('operasi', [OperasiController::class, 'store']);
-    Route::get('operasi/{id}', [OperasiController::class, 'show']);
-    Route::put('operasi/{id}', [OperasiController::class, 'update']);
-    Route::delete('operasi/{id}', [OperasiController::class, 'destroy']);
-
-    Route::get('operasi-penugasan', [OperasiPenugasanController::class, 'index']);
-    Route::post('operasi-penugasan', [OperasiPenugasanController::class, 'store']);
-    Route::get('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'show']);
-    Route::put('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'update']);
-    Route::delete('operasi-penugasan/{id}', [OperasiPenugasanController::class, 'destroy']);
-
     Route::get('regulasi', [RegulasiController::class, 'index']);
     Route::post('regulasi', [RegulasiController::class, 'store']);
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
@@ -95,9 +129,8 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
-
-        // laporan dashboard admin
-    Route::get('laporan-admin',[LaporanHarianController::class,'getallLaporan']);
+    // laporan dashboard admin
+    Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
     Route::get('laporan', [LaporanHarianController::class, 'index']);
     Route::post('laporan', [LaporanHarianController::class, 'store']);
     Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);

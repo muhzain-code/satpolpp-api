@@ -304,4 +304,15 @@ class OperasiService
             'data' => null
         ];
     }
+
+    public function getOperasiAnggota()
+    {
+        $anggotaId = Auth::user()->anggota_id;
+        $operasi = OperasiPenugasan::with('operasi', 'anggota.jabatan')->whereHas('operasi')->where('anggota_id', $anggotaId)->get();
+
+        return [
+            'message' => 'Data operasi anggota berhasil ditemukan',
+            'data' => $operasi
+        ];
+    }
 }

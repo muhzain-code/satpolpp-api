@@ -52,29 +52,6 @@ class DisposisiService
         ];
     }
 
-    // public function create($data)
-    // {
-    //     $pengaduan = Pengaduan::find($data['pengaduan_id']);
-
-    //     if (!$pengaduan) {
-    //         throw new CustomException('Pengaduan tidak ditemukan', 404);
-    //     }
-
-    //     if ($pengaduan->status !== 'diterima') {
-    //         throw new CustomException("Hanya pengaduan diterima yang bisa diproses", 422);
-    //     }
-
-    //     $pengaduan->update(['status' => 'diproses']);
-
-    //     $data['created_by'] = Auth::id();
-    //     $disposisi = Disposisi::create($data);
-
-    //     return [
-    //         'message' => 'Disposisi berhasil dibuat',
-    //         'data' => $disposisi
-    //     ];
-    // }
-
     public function create($data)
     {
         try {
@@ -103,7 +80,7 @@ class DisposisiService
             Log::error('Gagal membuat disposisi: ' . $e->getMessage());
             throw $e;
 
-             throw new CustomException('Gagal membuat disposisi', 422);
+            throw new CustomException('Gagal membuat disposisi', 422);
         }
     }
 
@@ -154,6 +131,61 @@ class DisposisiService
         return [
             'message' => 'Disposisi berhasil dihapus',
             'data' => null
+        ];
+    }
+
+    public function disposisiAnggota($request)
+    {
+        $user = Auth::user();
+
+        if (! $user->anggota || ! $user->anggota->id) {
+            return [
+                'message' => 'User tidak memiliki anggota terkait',
+                'data' => collect()
+            ];
+        }
+
+        $anggota = $user->anggota;
+
+        $disposisiQuery = Disposisi::with('pengaduan', 'keAnggota', 'keUnit')
+            ->whereHas('pengaduan', function ($q) {
+                $q->where('status', 'diproses');
+            })
+            ->where(function ($q) use ($anggota) {
+                $q->where('ke_anggota_id', $anggota->id)
+                    ->orWhere('ke_unit_id', $anggota->unit_id);
+            })
+            ->orderBy('created_at', 'desc');
+
+        $disposisi = $disposisiQuery->paginate($request->per_page, ['*'], 'page', $request->page);
+
+        $disposisi->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'pengaduan' => [
+                    'id' => $item->pengaduan->id,
+                    'nomor_tiket' => $item->pengaduan->nomor_tiket,
+                    'kategori' => $item->pengaduan->kategoriPengaduan->nama ?? null,
+                    'deskripsi' => $item->pengaduan->deskripsi,
+                    'lat' => $item->pengaduan->lat,
+                    'lng' => $item->pengaduan->lng,
+                    'alamat' => $item->pengaduan->alamat,
+                ] ?? null,
+                'ke_anggota' => $item->keAnggota->kode_anggota ?? null,
+                'ke_unit' => $item->keUnit->nama ?? null,
+                'catatan' => $item->catatan,
+            ];
+        });
+
+        return [
+            'message' => $disposisi->isEmpty() ? 'Tidak ada disposisi untuk anggota ini' : 'Disposisi berhasil ditampilkan',
+            'data' => [
+                'current_page' => $disposisi->currentPage(),
+                'per_page' => $disposisi->perPage(),
+                'total' => $disposisi->total(),
+                'last_page' => $disposisi->lastPage(),
+                'items' => $disposisi->items()
+            ]
         ];
     }
 }

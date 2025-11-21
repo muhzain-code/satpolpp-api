@@ -1,39 +1,36 @@
 <?php
 
-namespace App\Http\Controllers\Operasi;
+namespace App\Http\Controllers\Penindakan;
 
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\Operasi\OperasiService;
-use App\Http\Requests\Operasi\OperasiRequest;
-use App\Http\Requests\Operasi\StoreOperasiRequest;
-use App\Http\Requests\Operasi\UpdateOperasiRequest;
+use App\Http\Requests\Penindakan\PenindakanRequest;
+use App\Services\Penindakan\PenindakanService;
+use App\Http\Requests\Penindakan\ValidasiPpnsRequest;
 
-class OperasiController extends Controller
+class PenindakanController extends Controller
 {
     use ApiResponse;
+    protected PenindakanService $service;
 
-    protected OperasiService $service;
-
-    public function __construct(OperasiService $service)
+    public function __construct(PenindakanService $service)
     {
         $this->service = $service;
     }
 
     public function index(Request $request)
     {
+        $request->merge([
+            'per_page' => $request->input('per_page', 25),
+            'page' => $request->input('page', 1),
+        ]);
 
-        $request->input('per_page', 25);
-        $request->input('page', 1);
-
-        $result = $this->service->getAll($request);
-
+        $result = $this->service->getAll($request->all());
         return $this->successResponse($result['data'], $result['message']);
     }
 
-
-    public function store(StoreOperasiRequest $request)
+    public function store(PenindakanRequest $request)
     {
         $result = $this->service->create($request->validated());
         return $this->successResponse($result['data'], $result['message']);
@@ -45,9 +42,9 @@ class OperasiController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(UpdateOperasiRequest $request, $id)
+    public function update(PenindakanRequest $request, $id)
     {
-        $result = $this->service->update($request->validated(), $id);
+        $result = $this->service->update($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
@@ -57,9 +54,9 @@ class OperasiController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function getOperasiAnggota()
+    public function validasiPPNS(ValidasiPpnsRequest $request, $id)
     {
-        $result = $this->service->getOperasiAnggota();
+        $result = $this->service->validasiPPNS($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 }

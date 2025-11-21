@@ -37,26 +37,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Schema::create('anggota', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('kode_anggota', 50)->unique()->nullable();
-        //     $table->string('nik', 32)->unique()->nullable();
-        //     $table->string('nama');
-        //     $table->enum('jenis_kelamin', ['l', 'p'])->nullable();
-        //     $table->string('tempat_lahir')->nullable();
-        //     $table->date('tanggal_lahir')->nullable();
-        //     $table->string('alamat')->nullable();
-        //     $table->string('foto')->nullable();
-        //     $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->nullOnDelete();
-        //     $table->foreignId('unit_id')->nullable()->constrained('unit')->nullOnDelete();
-        //     $table->enum('status', ['aktif', 'nonaktif', 'cuti'])->default('aktif');
-        //     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->timestamps();
-        //     $table->softDeletes();
-        // });
-
         Schema::create('anggota', function (Blueprint $table) {
             $table->id();
 
@@ -135,6 +115,7 @@ return new class extends Migration
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('pengaduan', function (Blueprint $table) {
@@ -144,21 +125,21 @@ return new class extends Migration
             $table->string('kontak_pelapor')->nullable();
             $table->foreignId('kategori_id')->nullable()->constrained('kategori_pengaduan')->nullOnDelete();
             $table->text('deskripsi')->nullable();
+
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
             $table->text('alamat')->nullable();
-            $table->enum('status', [
-                'diterima',
-                'diproses',
-                'selesai',
-                'ditolak',
-            ])->default('diterima');
 
-            // TIMESTAMP STATUS
+            $table->enum('status', ['baru', 'valid', 'diterima', 'diproses', 'selesai', 'ditolak'])->default('baru');
+            $table->timestamp('baru_at')->nullable();
+            $table->timestamp('valid_at')->nullable();
             $table->timestamp('diterima_at')->nullable();
             $table->timestamp('diproses_at')->nullable();
             $table->timestamp('selesai_at')->nullable();
             $table->timestamp('ditolak_at')->nullable();
+
+            // cache monitoring
+            $table->foreignId('penindakan_terakhir_id')->nullable()->constrained('penindakan')->nullOnDelete();
 
             $table->timestamps();
             $table->softDeletes();
@@ -169,105 +150,100 @@ return new class extends Migration
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
             $table->string('path_file', 1000);
             $table->string('nama_file')->nullable();
-            $table->enum('jenis', ['foto', 'video'])->default('foto');
+            $table->enum('jenis', ['foto', 'video', 'dokumen'])->default('foto');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
 
         /**
          * ============================================================
          * 4. DISPOSISI & OPERASI
          * ============================================================
          */
+
         Schema::create('disposisi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
             $table->foreignId('ke_anggota_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->foreignId('ke_unit_id')->nullable()->constrained('unit')->nullOnDelete();
             $table->text('catatan')->nullable();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->softDeletes();
+
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('operasi', function (Blueprint $table) {
             $table->id();
             $table->string('kode_operasi')->unique();
-
-            // nomor surat tugas
-            $table->string('nomor_surat_tugas')->unique()->nullable();
-
-            // file PDF surat tugas
+            $table->string('nomor_surat_tugas')->nullable()->unique();
             $table->string('surat_tugas_pdf')->nullable();
-
-            // tanggal diterbitkan surat tugas
             $table->date('tanggal_surat_tugas')->nullable();
 
             $table->enum('jenis_operasi', ['rutin', 'pengaduan'])->nullable();
-
-            $table->foreignId('pengaduan_id')
-                ->nullable()
-                ->constrained('pengaduan')
-                ->nullOnDelete();
+            $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
 
             $table->string('judul');
             $table->text('uraian')->nullable();
-
             $table->dateTime('mulai')->nullable();
             $table->dateTime('selesai')->nullable();
 
-            $table->foreignId('created_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->enum('status', ['draft', 'aktif', 'selesai', 'batal'])->default('draft');
+            $table->integer('jumlah_penindakan')->default(0);
 
-            $table->foreignId('updated_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
-
-            $table->foreignId('deleted_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
             $table->softDeletes();
         });
-
 
         Schema::create('operasi_penugasan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('operasi_id')->constrained('operasi')->cascadeOnDelete();
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
             $table->string('peran')->nullable();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->softDeletes();
+
             $table->timestamps();
+            $table->softDeletes();
         });
+
 
         /**
          * ============================================================
-         * 5. LAPORAN HARIAN (Mobile Field Report)
+         * 5. LAPORAN HARIAN
          * ============================================================
          */
+
         Schema::create('laporan_harian', function (Blueprint $table) {
             $table->id();
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
             $table->enum('jenis', ['aman', 'insiden'])->default('aman');
             $table->text('catatan')->nullable();
+
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
+
             $table->foreignId('kategori_pelanggaran_id')->nullable()->constrained('kategori_pengaduan')->nullOnDelete();
             $table->foreignId('regulasi_indikatif_id')->nullable()->constrained('regulasi')->nullOnDelete();
+
             $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->nullable();
             $table->enum('status_validasi', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
             $table->foreignId('divalidasi_oleh')->nullable()->constrained('anggota')->nullOnDelete();
+
             $table->boolean('telah_dieskalasi')->default(false);
+
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('laporan_harian_lampiran', function (Blueprint $table) {
@@ -275,29 +251,51 @@ return new class extends Migration
             $table->foreignId('laporan_id')->constrained('laporan_harian')->cascadeOnDelete();
             $table->string('path_file', 1000);
             $table->string('nama_file')->nullable();
-            $table->enum('jenis', ['foto', 'video'])->default('foto');
+            $table->enum('jenis', ['foto', 'video', 'dokumen'])->default('foto');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
 
         /**
          * ============================================================
          * 6. PENINDAKAN & BAP
          * ============================================================
          */
+
         Schema::create('penindakan', function (Blueprint $table) {
             $table->id();
+
+            // 1 dan hanya 1 sumber
             $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->foreignId('laporan_harian_id')->nullable()->constrained('laporan_harian')->nullOnDelete();
+            $table->check('
+            (operasi_id IS NOT NULL AND pengaduan_id IS NULL AND laporan_harian_id IS NULL) OR
+            (operasi_id IS NULL AND pengaduan_id IS NOT NULL AND laporan_harian_id IS NULL) OR
+            (operasi_id IS NULL AND pengaduan_id IS NULL AND laporan_harian_id IS NOT NULL)
+            ');
+
             $table->foreignId('anggota_pelapor_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->text('uraian')->nullable();
             $table->string('barang_bukti')->nullable();
             $table->decimal('denda', 12, 2)->nullable();
-            $table->timestamps();
+
+            // status proses penindakan
+            $table->enum('status', ['draft', 'pelaksanaan', 'menunggu_validasi', 'selesai'])->default('draft');
+
+            // Validasi PPNS
+            $table->enum('status_validasi_ppns', ['menunggu', 'ditolak', 'disetujui'])->default('menunggu');
+            $table->text('catatan_validasi_ppns')->nullable();
+            $table->foreignId('ppns_validator_id')->nullable()->constrained('anggota')->nullOnDelete();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
             $table->softDeletes();
+            $table->index(['operasi_id', 'pengaduan_id', 'laporan_harian_id']);
         });
 
         Schema::create('penindakan_regulasi', function (Blueprint $table) {
@@ -306,6 +304,7 @@ return new class extends Migration
             $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
             $table->string('pasal_dilanggar')->nullable();
             $table->timestamps();
+            $table->unique(['penindakan_id', 'regulasi_id']);
         });
 
         Schema::create('penindakan_lampiran', function (Blueprint $table) {
@@ -313,21 +312,24 @@ return new class extends Migration
             $table->foreignId('penindakan_id')->constrained('penindakan')->cascadeOnDelete();
             $table->string('path_file', 1000);
             $table->string('nama_file')->nullable();
-            $table->enum('jenis', ['foto', 'video'])->default('foto');
+            $table->enum('jenis', ['foto', 'video', 'dokumen'])->default('foto');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 
         Schema::create('bap', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_bap')->unique();
-            $table->foreignId('penindakan_id')->constrained('penindakan')->cascadeOnDelete();
-            $table->foreignId('dibuat_oleh')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('penindakan_id')->unique()->constrained('penindakan')->cascadeOnDelete();
             $table->string('path_pdf', 1000)->nullable();
             $table->string('data_qr', 1000)->nullable();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
+            $table->softDeletes();
         });
 
         /**
