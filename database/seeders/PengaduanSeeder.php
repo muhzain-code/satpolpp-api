@@ -22,6 +22,7 @@ class PengaduanSeeder extends Seeder
                 'lng' => 107.619125,
                 'alamat' => 'Taman Kota Bandung',
                 'status' => 'diterima',
+                'diterima_at' => now(),
             ],
             [
                 'nama_pelapor' => 'Rina',
@@ -32,6 +33,7 @@ class PengaduanSeeder extends Seeder
                 'lng' => 107.607656,
                 'alamat' => 'Jl. Asia Afrika',
                 'status' => 'diterima',
+                'diterima_at' => now(),
             ],
         ];
 

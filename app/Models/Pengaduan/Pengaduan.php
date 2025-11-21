@@ -18,6 +18,10 @@ class Pengaduan extends Model
         'lng',
         'alamat',
         'status',
+        'diterima_at',
+        'diproses_at',
+        'selesai_at',
+        'ditolak_at'
     ];
 
     public function pengaduanLampiran()

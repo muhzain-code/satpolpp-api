@@ -62,7 +62,7 @@ return new class extends Migration
 
             $table->string('kode_anggota', 50)->unique();
             $table->string('nik', 16)->unique()->nullable();
-            $table->string('nip', 18)->unique()->nullable(); 
+            $table->string('nip', 18)->unique()->nullable();
 
             $table->string('nama');
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
@@ -89,7 +89,7 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
-        }); 
+        });
 
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('anggota_id')
@@ -124,13 +124,16 @@ return new class extends Migration
          * 3. PENGADUAN PUBLIK
          * ============================================================
          */
+
         Schema::create('kategori_pengaduan', function (Blueprint $table) {
             $table->id();
             $table->string('nama')->unique();
             $table->string('keterangan')->nullable();
+
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
 
@@ -150,6 +153,12 @@ return new class extends Migration
                 'selesai',
                 'ditolak',
             ])->default('diterima');
+
+            // TIMESTAMP STATUS
+            $table->timestamp('diterima_at')->nullable();
+            $table->timestamp('diproses_at')->nullable();
+            $table->timestamp('selesai_at')->nullable();
+            $table->timestamp('ditolak_at')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
@@ -186,7 +195,7 @@ return new class extends Migration
             $table->id();
             $table->string('kode_operasi')->unique();
             $table->string('nomor_surat_tugas')->unique()->nullable();
-            $table->enum('jenis_operasi', ['rutin', 'pengaduan', 'gabungan', 'penertiban', 'yustisi'])->nullable();
+            $table->enum('jenis_operasi', ['rutin', 'pengaduan'])->nullable();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
             $table->string('judul');
             $table->text('uraian')->nullable();

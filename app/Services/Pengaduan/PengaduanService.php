@@ -74,6 +74,7 @@ class PengaduanService
                     'lng' => $data['lng'] ?? null,
                     'alamat' => $data['alamat'] ?? null,
                     'status' => 'diterima',
+                    'diterima_at' => now(),
                 ]);
 
                 if (!$pengaduan) {

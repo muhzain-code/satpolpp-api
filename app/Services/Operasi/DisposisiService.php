@@ -89,7 +89,7 @@ class DisposisiService
                     throw new CustomException("Hanya pengaduan dengan status 'diterima' yang bisa diproses", 422);
                 }
 
-                $pengaduan->update(['status' => 'diproses']);
+                $pengaduan->update(['status' => 'diproses', 'diproses_at' => now()]);
 
                 $data['created_by'] = Auth::id();
                 $disposisi = Disposisi::create($data);

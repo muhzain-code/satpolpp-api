@@ -28,7 +28,7 @@ class UpdateOperasiRequest extends FormRequest
 
         return [
             'pengaduan_id'       => 'nullable|integer|exists:pengaduan,id',
-            'jenis_operasi'      => 'required|string|in:rutin,pengaduan,gabungan,penertiban,yustisi',
+            'jenis_operasi'      => 'required|string|in:rutin,pengaduan',
             'judul'              => 'required|string|max:255',
             'uraian'             => 'nullable|string',
             'mulai'              => 'nullable|date',
