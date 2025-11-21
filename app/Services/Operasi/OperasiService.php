@@ -8,6 +8,7 @@ use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\NomorGeneratorService;
+use App\Models\Operasi\OperasiPenugasan;
 
 class OperasiService
 {
@@ -73,34 +74,90 @@ class OperasiService
         ];
     }
 
+    // public function create(array $data): array
+    // {
+    //     try {
+    //         return DB::transaction(function () use ($data) {
+    //             $kodeOperasi = $this->service->generateKodeOperasi();
+    //             $nomorSuratTugas = $this->service->generateNomorSuratTugas();
+
+
+    //             $operasi = Operasi::create([
+    //                 'kode_operasi'       => $kodeOperasi,
+    //                 'nomor_surat_tugas' => $nomorSuratTugas,
+    //                 'pengaduan_id'      => $data['pengaduan_id'] ?? null,
+    //                 'jenis_operasi'      => $data['jenis_operasi'] ?? null,
+    //                 'judul'             => $data['judul'],
+    //                 'uraian'            => $data['uraian'] ?? null,
+    //                 'mulai'             => $data['mulai'] ?? null,
+    //                 'selesai'           => $data['selesai'] ?? null,
+    //                 'created_by'        => Auth::id(),
+    //             ]);
+
+    //             if (!$operasi) {
+    //                 throw new CustomException('Gagal membuat operasi', 422);
+    //             }
+
+    //             return [
+    //                 'success' => true,
+    //                 'message' => 'Operasi berhasil dibuat',
+    //                 'data' => $operasi
+    //             ];
+    //         });
+    //     } catch (\Exception $e) {
+    //         Log::error('Gagal membuat operasi', [
+    //             'error' => $e->getMessage(),
+    //         ]);
+
+    //         throw new CustomException('Gagal membuat operasi', 422);
+    //     }
+    // }
+
     public function create(array $data): array
     {
         try {
             return DB::transaction(function () use ($data) {
+
                 $kodeOperasi = $this->service->generateKodeOperasi();
                 $nomorSuratTugas = $this->service->generateNomorSuratTugas();
-                
 
+                // ----------------------
+                // 1. SIMPAN OPERASI
+                // ----------------------
                 $operasi = Operasi::create([
                     'kode_operasi'       => $kodeOperasi,
-                    'nomor_surat_tugas' => $nomorSuratTugas,
-                    'pengaduan_id'      => $data['pengaduan_id'] ?? null,
+                    'nomor_surat_tugas'  => $nomorSuratTugas,
+                    'pengaduan_id'       => $data['pengaduan_id'] ?? null,
                     'jenis_operasi'      => $data['jenis_operasi'] ?? null,
-                    'judul'             => $data['judul'],
-                    'uraian'            => $data['uraian'] ?? null,
-                    'mulai'             => $data['mulai'] ?? null,
-                    'selesai'           => $data['selesai'] ?? null,
-                    'created_by'        => Auth::id(),
+                    'judul'              => $data['judul'],
+                    'uraian'             => $data['uraian'] ?? null,
+                    'mulai'              => $data['mulai'] ?? null,
+                    'selesai'            => $data['selesai'] ?? null,
+                    'created_by'         => Auth::id(),
                 ]);
 
                 if (!$operasi) {
                     throw new CustomException('Gagal membuat operasi', 422);
                 }
 
+                // -------------------------------------------------
+                // 2. SIMPAN OPERASI PENUGASAN (ANGGOTA + PERAN)
+                // -------------------------------------------------
+                if (!empty($data['anggota'])) {
+                    foreach ($data['anggota'] as $anggotaId) {
+                        OperasiPenugasan::create([
+                            'operasi_id' => $operasi->id,
+                            'anggota_id' => $anggotaId,
+                            'peran'      => $data['peran'][$anggotaId] ?? null, // wajib 1 anggota 1 peran
+                            'created_by' => Auth::id(),
+                        ]);
+                    }
+                }
+
                 return [
                     'success' => true,
-                    'message' => 'Operasi berhasil dibuat',
-                    'data' => $operasi
+                    'message' => 'Operasi dan penugasan berhasil dibuat',
+                    'data'    => $operasi
                 ];
             });
         } catch (\Exception $e) {
@@ -111,6 +168,7 @@ class OperasiService
             throw new CustomException('Gagal membuat operasi', 422);
         }
     }
+
 
     public function getById($id)
     {
@@ -133,7 +191,7 @@ class OperasiService
         if (!$operasi) {
             throw new CustomException('Data operasi tidak ditemukan', 404);
         }
-        
+
         $data['updated_by'] = Auth::id();
         $operasi->update($data);
 

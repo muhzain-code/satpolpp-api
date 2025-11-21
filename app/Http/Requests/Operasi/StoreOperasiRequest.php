@@ -24,14 +24,23 @@ class StoreOperasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pengaduan_id'       => 'nullable|integer|exists:pengaduan,id',
-            'jenis_operasi'      => 'required|string|in:rutin,pengaduan',
-            'judul'              => 'required|string|max:255',
-            'uraian'             => 'nullable|string',
-            'mulai'              => 'nullable|date',
-            'selesai'            => 'nullable|date|after_or_equal:mulai',
+            'pengaduan_id'  => 'nullable|integer|exists:pengaduan,id',
+            'jenis_operasi' => 'required|string|in:rutin,pengaduan',
+            'judul'         => 'required|string|max:255',
+            'uraian'        => 'nullable|string',
+            'mulai'         => 'nullable|date',
+            'selesai'       => 'nullable|date|after_or_equal:mulai',
+
+            // ---- Tambahan untuk memilih banyak anggota ----
+            'anggota'       => 'nullable|array',            
+            'anggota.*'     => 'integer|exists:anggota,id', 
+
+            // Jika Anda ingin peran tiap anggota dimasukkan juga:
+            'peran'         => 'nullable|array',
+            'peran.*'       => 'nullable|string|max:255',
         ];
     }
+
 
     protected function failedValidation(Validator $validator)
     {
