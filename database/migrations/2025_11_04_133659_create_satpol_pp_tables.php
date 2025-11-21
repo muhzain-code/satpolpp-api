@@ -130,9 +130,7 @@ return new class extends Migration
             $table->decimal('lng', 10, 7)->nullable();
             $table->text('alamat')->nullable();
 
-            $table->enum('status', ['baru', 'valid', 'diterima', 'diproses', 'selesai', 'ditolak'])->default('baru');
-            $table->timestamp('baru_at')->nullable();
-            $table->timestamp('valid_at')->nullable();
+            $table->enum('status', ['diterima', 'diproses', 'selesai', 'ditolak'])->default('diterima');
             $table->timestamp('diterima_at')->nullable();
             $table->timestamp('diproses_at')->nullable();
             $table->timestamp('selesai_at')->nullable();

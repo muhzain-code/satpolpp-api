@@ -26,6 +26,10 @@ Route::get('/user', function (Request $request) {
 
 Route::post('login', [AuthController::class, 'login']);
 
+
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 
@@ -90,7 +94,6 @@ Route::middleware('auth:sanctum', 'role:super_admin,ppns')->group(function () {
 
 Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
-    Route::post('logout', [AuthController::class, 'logout']);
 
     Route::get('jabatan', [JabatanController::class, 'index']);
     Route::post('jabatan', [JabatanController::class, 'store']);
