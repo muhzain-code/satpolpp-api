@@ -251,25 +251,29 @@ class PenindakanService
                     throw new CustomException('Akun PPNS tidak terautentikasi', 401);
                 }
 
-                // 🔥 Update data validasi PPNS
+                // 🔥 Update validasi PPNS
                 $penindakan->update([
-                    'status_validasi_ppns' => $data['status_validasi_ppns'],
-                    'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? null,
-                    'ppns_validator_id' => $ppnsId,
+                    'status_validasi_ppns'   => $data['status_validasi_ppns'],
+                    'catatan_validasi_ppns'  => $data['catatan_validasi_ppns'] ?? null,
+                    'ppns_validator_id'      => $ppnsId,
                 ]);
 
-                // Jika penindakan langsung memiliki pengaduan_id
+                // Jika disetujui → buat BAP
+                if ($data['status_validasi_ppns'] === 'disetujui') {
+                    app(\App\Services\BAPGeneratorService::class)->generate($penindakan);
+                }
+
+                // Update status pengaduan jika ada
                 if ($penindakan->pengaduan_id) {
                     Pengaduan::where('id', $penindakan->pengaduan_id)
                         ->update(['status' => 'selesai', 'selesai_at' => now()]);
                 }
 
-                // Jika penindakan berasal dari operasi_id
+                // Atau update dari operasi
                 if ($penindakan->operasi_id && !$penindakan->pengaduan_id) {
                     $operasi = Operasi::with('pengaduan:id,operasi_id,status')
                         ->find($penindakan->operasi_id);
 
-                    // Jika operasi punya pengaduan, maka set pengaduan selesai
                     if ($operasi && $operasi->pengaduan) {
                         Pengaduan::where('id', $operasi->pengaduan->id)
                             ->update(['status' => 'selesai', 'selesai_at' => now()]);
@@ -282,14 +286,80 @@ class PenindakanService
                 ];
             });
         } catch (Exception $e) {
+
             Log::error('Gagal melakukan validasi PPNS', [
                 'penindakan_id' => $id,
-                'error' => $e->getMessage()
+                'error'         => $e->getMessage()
             ]);
 
             throw new CustomException('Gagal melakukan validasi PPNS', 422);
         }
     }
+
+
+    // public function validasiPPNS($id, array $data): array
+    // {
+    //     try {
+    //         return DB::transaction(function () use ($id, $data) {
+
+    //             $penindakan = Penindakan::find($id);
+
+    //             if (!$penindakan) {
+    //                 throw new CustomException('Penindakan tidak ditemukan', 404);
+    //             }
+
+    //             if ($penindakan->status_validasi_ppns !== 'menunggu') {
+    //                 throw new CustomException('Validasi hanya dapat dilakukan ketika status masih menunggu', 422);
+    //             }
+
+    //             if (!in_array($data['status_validasi_ppns'], ['disetujui', 'ditolak'])) {
+    //                 throw new CustomException('Status validasi hanya boleh disetujui atau ditolak', 422);
+    //             }
+
+    //             $ppnsId = Auth::id();
+    //             if (!$ppnsId) {
+    //                 throw new CustomException('Akun PPNS tidak terautentikasi', 401);
+    //             }
+
+    //             // 🔥 Update data validasi PPNS
+    //             $penindakan->update([
+    //                 'status_validasi_ppns' => $data['status_validasi_ppns'],
+    //                 'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? null,
+    //                 'ppns_validator_id' => $ppnsId,
+    //             ]);
+
+    //             // Jika penindakan langsung memiliki pengaduan_id
+    //             if ($penindakan->pengaduan_id) {
+    //                 Pengaduan::where('id', $penindakan->pengaduan_id)
+    //                     ->update(['status' => 'selesai', 'selesai_at' => now()]);
+    //             }
+
+    //             // Jika penindakan berasal dari operasi_id
+    //             if ($penindakan->operasi_id && !$penindakan->pengaduan_id) {
+    //                 $operasi = Operasi::with('pengaduan:id,operasi_id,status')
+    //                     ->find($penindakan->operasi_id);
+
+    //                 // Jika operasi punya pengaduan, maka set pengaduan selesai
+    //                 if ($operasi && $operasi->pengaduan) {
+    //                     Pengaduan::where('id', $operasi->pengaduan->id)
+    //                         ->update(['status' => 'selesai', 'selesai_at' => now()]);
+    //                 }
+    //             }
+
+    //             return [
+    //                 'message' => 'Validasi PPNS berhasil diproses',
+    //                 'data' => $penindakan->load('regulasi', 'lampiran'),
+    //             ];
+    //         });
+    //     } catch (Exception $e) {
+    //         Log::error('Gagal melakukan validasi PPNS', [
+    //             'penindakan_id' => $id,
+    //             'error' => $e->getMessage()
+    //         ]);
+
+    //         throw new CustomException('Gagal melakukan validasi PPNS', 422);
+    //     }
+    // }
 
 
     // public function validasiPPNS($id, array $data): array

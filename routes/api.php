@@ -19,7 +19,6 @@ use App\Http\Controllers\Operasi\DisposisiController;
 use App\Http\Controllers\Operasi\OperasiPenugasanController;
 use App\Http\Controllers\Penindakan\PenindakanController;
 
-
 /**
  * ==========================
  *  PUBLIC ROUTES
@@ -41,19 +40,17 @@ Route::get('konten-publik/{slug}', [KontenController::class, 'detailKonten']);
  */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // user login
     Route::get('/user', fn(Request $request) => $request->user());
-
     Route::post('logout', [AuthController::class, 'logout']);
 
 
     /**
      * ==========================
      * PENGADUAN & DISPOSISI
-     * role: super_admin, operator
+     * role: super_admin | operator
      * ==========================
      */
-    Route::middleware('role:super_admin,operator')->group(function () {
+    Route::middleware('role:super_admin|operator')->group(function () {
         Route::get('pengaduan', [PengaduanController::class, 'index']);
         Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
         Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
@@ -71,10 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
     /**
      * ==========================
      * OPERASI
-     * role: super_admin, komandan_regu
+     * role: super_admin | komandan_regu
      * ==========================
      */
-    Route::middleware('role:super_admin,komandan_regu')->group(function () {
+    Route::middleware('role:super_admin|komandan_regu')->group(function () {
         Route::get('operasi', [OperasiController::class, 'index']);
         Route::post('operasi', [OperasiController::class, 'store']);
         Route::get('operasi/{id}', [OperasiController::class, 'show']);
@@ -88,20 +85,19 @@ Route::middleware('auth:sanctum')->group(function () {
      * PENINDAKAN
      * ==========================
      */
-    // semua role: melihat penindakan
-    Route::middleware('role:super_admin,komandan_regu,anggota_regu,ppns')->group(function () {
+    Route::middleware('role:super_admin|komandan_regu|anggota_regu|ppns')->group(function () {
         Route::get('penindakan', [PenindakanController::class, 'index']);
         Route::get('penindakan/{id}', [PenindakanController::class, 'show']);
 
         Route::get('disposisi-anggota', [DisposisiController::class, 'disposisiAnggota'])
-            ->middleware('role:super_admin,komandan_regu,anggota_regu');
+            ->middleware('role:super_admin|komandan_regu|anggota_regu');
 
         Route::get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])
-            ->middleware('role:super_admin,anggota_regu');
+            ->middleware('role:super_admin|anggota_regu');
     });
 
-    // super_admin + anggota_regu: create/update/delete penindakan
-    Route::middleware('role:super_admin,anggota_regu')
+    // CRUD penindakan
+    Route::middleware('role:super_admin|anggota_regu')
         ->prefix('penindakan')
         ->group(function () {
             Route::post('/', [PenindakanController::class, 'store']);
@@ -109,17 +105,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}', [PenindakanController::class, 'destroy']);
         });
 
-    // PPNS validasi
+    // Validasi PPNS
     Route::middleware('role:ppns')->post('penindakan/{id}/validasi-ppns', [PenindakanController::class, 'validasiPPNS']);
 });
 
 
 /**
  * ==========================
- * VALIDASI PENINDAKAN GLOBAL (super_admin & ppns)
+ * VALIDASI PENINDAKAN GLOBAL
+ * role: super_admin | ppns
  * ==========================
  */
-Route::middleware('auth:sanctum', 'role:super_admin,ppns')
+Route::middleware('auth:sanctum', 'role:super_admin|ppns')
     ->put('penindakan-validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS']);
 
 
@@ -177,7 +174,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
-    // laporan & humas
+    // laporan
     Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
     Route::get('laporan', [LaporanHarianController::class, 'index']);
     Route::post('laporan', [LaporanHarianController::class, 'store']);

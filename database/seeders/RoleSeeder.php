@@ -10,6 +10,7 @@ use App\Models\Anggota\Jabatan;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use App\Services\NomorGeneratorService;
 use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -79,9 +80,10 @@ class RoleSeeder extends Seeder
         }
 
         /* =================================================
-         * 4. Create anggota sample
-         * (Khusus anggota yang akan dipasang ke user)
-         * ================================================= */
+ * 4. Create anggota sample
+ * ================================================= */
+        $generator = app(NomorGeneratorService::class);
+
         $anggotaSamples = [
             [
                 'nama' => 'Budi Santoso',
@@ -102,10 +104,13 @@ class RoleSeeder extends Seeder
 
         $anggotaIds = [];
         foreach ($anggotaSamples as $i => $a) {
+
+            $kodeAnggota = $generator->generateKodeAnggota();   // <-- PAKAI GENERATOR
+
             $anggota = Anggota::updateOrCreate(
                 ['nama' => $a['nama']],
                 [
-                    'kode_anggota' => Str::uuid(),
+                    'kode_anggota' => $kodeAnggota, // <-- BUKAN UUID LAGI
                     'nik' => fake()->numerify('################'),
                     'nip' => fake()->numerify('##################'),
                     'nama' => $a['nama'],
@@ -118,6 +123,7 @@ class RoleSeeder extends Seeder
                     'jenis_kepegawaian' => 'asn',
                 ]
             );
+
             $anggotaIds[$a['nama']] = $anggota->id;
         }
 
@@ -127,43 +133,43 @@ class RoleSeeder extends Seeder
         $userList = [
             [
                 'name' => 'Super Admin',
-                'email' => 'superadmin@app.test',
+                'email' => 'superadmin@example.com',
                 'role' => 'super_admin',
                 'anggota' => null,
             ],
             [
                 'name' => 'Admin Dinas',
-                'email' => 'admin@app.test',
+                'email' => 'admin@example.com',
                 'role' => 'admin_dinas',
                 'anggota' => null,
             ],
             [
                 'name' => 'Operator',
-                'email' => 'operator@app.test',
+                'email' => 'operator@example.com',
                 'role' => 'operator',
                 'anggota' => null,
             ],
             [
                 'name' => 'Komandan Regu',
-                'email' => 'komandan@app.test',
+                'email' => 'komandan@example.com',
                 'role' => 'komandan_regu',
                 'anggota' => 'Budi Santoso',
             ],
             [
                 'name' => 'Anggota Regu',
-                'email' => 'anggota@app.test',
+                'email' => 'anggota@example.com',
                 'role' => 'anggota_regu',
                 'anggota' => 'Agus Wijaya',
             ],
             [
                 'name' => 'PPNS',
-                'email' => 'ppns@app.test',
+                'email' => 'ppns@example.com',
                 'role' => 'ppns',
                 'anggota' => 'Dewi Mulyani',
             ],
             [
                 'name' => 'Humas',
-                'email' => 'humas@app.test',
+                'email' => 'humas@example.com',
                 'role' => 'humas',
                 'anggota' => null,
             ],
@@ -183,7 +189,7 @@ class RoleSeeder extends Seeder
         }
 
         $this->command->info('🔥 MasterOrganizationSeeder berhasil dijalankan: Role, Jabatan, Unit, Anggota, User lengkap!');
-        $this->command->info('➡ User login contoh: email = superadmin@app.test & password = password');
+        $this->command->info('➡ User login contoh: email = superadmin@example.com & password = password');
     }
     // public function run(): void
     // {

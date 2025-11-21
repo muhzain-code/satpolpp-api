@@ -114,4 +114,19 @@ class NomorGeneratorService
 
         return "AGT-{$year}-{$seq}";
     }
+
+    public function generateNomorBAP(): string
+    {
+        $now   = CarbonImmutable::now();
+        $year  = $now->year;
+        $month = $now->month;
+
+        // Counter untuk BAP
+        $nomor = $this->getNextSequenceValue('bap', $year, $month);
+
+        // 4 digit
+        $seq = str_pad($nomor, 4, '0', STR_PAD_LEFT);
+
+        return "BAP-{$now->format('Ym')}-{$seq}";
+    }
 }
