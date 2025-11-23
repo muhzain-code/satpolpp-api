@@ -41,12 +41,13 @@ Route::post('lacak-permohonan-ppid', [PPIDController::class, 'lacakPPID']);
  * AUTH SANCTUM
  * ==========================
  */
+Route::get('search-lokasi', [LokasiController::class, 'search']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', fn(Request $request) => $request->user());
     Route::post('logout', [AuthController::class, 'logout']);
 
-    Route::get('search-lokasi', [LokasiController::class, 'search']);
 
 
     /**
