@@ -72,7 +72,10 @@ class PengaduanService
                     'deskripsi' => $data['deskripsi'],
                     'lat' => $data['lat'] ?? null,
                     'lng' => $data['lng'] ?? null,
-                    'alamat' => $data['alamat'] ?? null,
+                    'provinsi_id' => $data['provinsi_id'] ?? null,
+                    'kabupaten_id' => $data['kabupaten_id'] ?? null,
+                    'kecamatan_id' => $data['kecamatan_id'] ?? null,
+                    'desa_id' => $data['desa_id'] ?? null,
                     'status' => 'diterima',
                     'diterima_at' => now(),
                 ]);
@@ -147,7 +150,10 @@ class PengaduanService
                     'deskripsi' => $data['deskripsi'] ?? $pengaduan->deskripsi,
                     'lat' => $data['lat'] ?? $pengaduan->lat,
                     'lng' => $data['lng'] ?? $pengaduan->lng,
-                    'alamat' => $data['alamat'] ?? $pengaduan->alamat,
+                    'provinsi_id' => $data['provinsi_id'] ?? $pengaduan->provinsi_id,
+                    'kabupaten_id' => $data['kabupaten_id'] ?? $pengaduan->kabupaten_id,
+                    'kecamatan_id' => $data['kecamatan_id'] ?? $pengaduan->kecamatan_id,
+                    'desa_id' => $data['desa_id'] ?? $pengaduan->desa_id,
                 ]);
 
                 if (!empty($data['lampiran']) && is_array($data['lampiran'])) {

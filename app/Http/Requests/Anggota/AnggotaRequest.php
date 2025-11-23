@@ -25,29 +25,28 @@ class AnggotaRequest extends FormRequest
 
     public function rules(): array
     {
-        // gunakan id dari route (default Laravel)
         $anggotaId = $this->route('id');
 
         return [
             'kode_anggota' => [
-                'nullable',
+                'required',
                 'string',
                 'max:50',
-                Rule::unique('anggota')->ignore($anggotaId),
+                Rule::unique('anggota', 'kode_anggota')->ignore($anggotaId),
             ],
 
             'nik' => [
                 'nullable',
                 'string',
                 'max:16',
-                Rule::unique('anggota')->ignore($anggotaId),
+                Rule::unique('anggota', 'nik')->ignore($anggotaId),
             ],
 
             'nip' => [
                 'nullable',
                 'string',
                 'max:18',
-                Rule::unique('anggota')->ignore($anggotaId),
+                Rule::unique('anggota', 'nip')->ignore($anggotaId),
             ],
 
             'nama' => 'required|string|max:255',
@@ -57,14 +56,17 @@ class AnggotaRequest extends FormRequest
             'tempat_lahir' => 'nullable|string|max:255',
             'tanggal_lahir' => 'nullable|date',
 
-            'alamat' => 'nullable|string',
+            'provinsi_id'  => 'nullable|exists:provinsi,id',
+            'kabupaten_id' => 'nullable|exists:kabupaten,id',
+            'kecamatan_id' => 'nullable|exists:kecamatan,id',
+            'desa_id'      => 'nullable|exists:desa,id',
 
             'no_hp' => 'nullable|string|max:20',
 
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
             'jabatan_id' => 'nullable|exists:jabatan,id',
-            'unit_id' => 'nullable|exists:unit,id',
+            'unit_id'    => 'nullable|exists:unit,id',
 
             'status' => 'required|in:aktif,nonaktif,cuti,mutasi,pensiun,meninggal',
 
@@ -72,27 +74,44 @@ class AnggotaRequest extends FormRequest
         ];
     }
 
-
     public function messages(): array
     {
         return [
-            'kode_anggota.unique' => 'Kode anggota sudah digunakan.',
-            'kode_anggota.max' => 'Kode anggota maksimal 50 karakter.',
+            'kode_anggota.required' => 'Kode anggota wajib diisi.',
+            'kode_anggota.unique'   => 'Kode anggota sudah digunakan.',
+            'kode_anggota.max'      => 'Kode anggota maksimal 50 karakter.',
+
             'nik.unique' => 'NIK sudah terdaftar.',
-            'nik.max' => 'NIK maksimal 32 karakter.',
+            'nik.max'    => 'NIK maksimal 16 karakter.',
+
+            'nip.unique' => 'NIP sudah terdaftar.',
+            'nip.max'    => 'NIP maksimal 18 karakter.',
+
             'nama.required' => 'Nama wajib diisi.',
-            'nama.max' => 'Nama maksimal 255 karakter.',
-            'jenis_kelamin.in' => 'Jenis kelamin harus "l" atau "p".',
+
+            'jenis_kelamin.in' => 'Jenis kelamin harus L atau P.',
+
             'tempat_lahir.max' => 'Tempat lahir maksimal 255 karakter.',
-            'tanggal_lahir.date' => 'Tanggal lahir harus berupa tanggal yang valid.',
-            'alamat.max' => 'Alamat maksimal 255 karakter.',
+            'tanggal_lahir.date' => 'Tanggal lahir harus berupa tanggal valid.',
+
+            'provinsi_id.exists'  => 'Provinsi tidak valid.',
+            'kabupaten_id.exists' => 'Kabupaten tidak valid.',
+            'kecamatan_id.exists' => 'Kecamatan tidak valid.',
+            'desa_id.exists'      => 'Desa tidak valid.',
+
+            'no_hp.max' => 'Nomor HP maksimal 20 karakter.',
+
             'foto.image' => 'Foto harus berupa file gambar.',
             'foto.mimes' => 'Foto harus berekstensi jpg, jpeg, atau png.',
-            'foto.max' => 'Foto maksimal 2MB.',
+            'foto.max'   => 'Foto maksimal 2MB.',
+
             'jabatan_id.exists' => 'Jabatan tidak valid.',
-            'unit_id.exists' => 'Unit tidak valid.',
-            'status.required' => 'Status wajib diisi',
-            'status.in' => 'Status harus "aktif", "nonaktif", atau "cuti".',
+            'unit_id.exists'    => 'Unit tidak valid.',
+
+            'status.required' => 'Status wajib diisi.',
+            'status.in'       => 'Status tidak valid.',
+
+            'jenis_kepegawaian.in' => 'Jenis kepegawaian tidak valid.',
         ];
     }
 
