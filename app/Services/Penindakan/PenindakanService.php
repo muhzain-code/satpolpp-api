@@ -14,7 +14,6 @@ use App\Models\Penindakan\Penindakan;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Penindakan\PenindakanLampiran;
 use App\Models\Penindakan\PenindakanRegulasi;
-use App\Models\ManajemenLaporan\LaporanHarian;
 
 class PenindakanService
 {
@@ -22,12 +21,12 @@ class PenindakanService
     {
         $user = Auth::user();
 
-        if ($user->hasRole('super_admin') || $user->hasRole('komandan_regu') || $user->hasRole('ppns')) {
-            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket', 'laporanHarian:id,judul']);
+        if ($user->hasRole('super_admin') ||  $user->hasRole('ppns')) {
+            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket']);
         }
 
-        if ($user->hasRole('anggota_regu')) {
-            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket', 'laporanHarian:id,judul'])->where('anggota_pelapor_id', $user->anggota?->id);
+        if ($user->hasRole('komandan_regu')) {
+            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket'])->where('anggota_pelapor_id', $user->anggota?->id);
         }
 
         if (isset($filter['status_validasi_ppns'])) {
@@ -52,13 +51,6 @@ class PenindakanService
     {
         try {
             return DB::transaction(function () use ($data) {
-
-                // Ambil pelapor dari laporan harian bila sumber laporan_harian
-                if (!empty($data['laporan_harian_id'])) {
-                    $laporan = LaporanHarian::find($data['laporan_harian_id']);
-                    $data['anggota_pelapor_id'] = $laporan?->anggota_id;
-                }
-
                 // Jika sumber OPERASI → status_validasi otomatis menunggu
                 if (!empty($data['operasi_id'])) {
                     $data['status_validasi_ppns'] = 'menunggu';
@@ -67,14 +59,12 @@ class PenindakanService
                 $penindakan = Penindakan::create([
                     'operasi_id'         => $data['operasi_id'] ?? null,
                     'pengaduan_id'       => $data['pengaduan_id'] ?? null,
-                    'laporan_harian_id'  => $data['laporan_harian_id'] ?? null,
-                    'anggota_pelapor_id' => $data['anggota_pelapor_id'],
                     'uraian'             => $data['uraian'] ?? null,
-                    'barang_bukti'       => $data['barang_bukti'] ?? null,
                     'denda'              => $data['denda'] ?? null,
-                    'status_validasi_ppns'  => $data['status_validasi_ppns'],
+                    'status_validasi_ppns'  => 'menunggu',
                     'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? null,
                     'ppns_validator_id'     => $data['ppns_validator_id'] ?? null,
+                    'created_by'        => Auth::id(),
                 ]);
 
                 if (!$penindakan) {
@@ -113,11 +103,13 @@ class PenindakanService
     {
         $user  = Auth::user();
 
-        if ($user->hasRole('super_admin') || $user->hasRole('komandan_regu') || $user->hasRole('ppns')) {
+        if ($user->hasRole('super_admin') ||  $user->hasRole('ppns')) {
             $penindakan = Penindakan::with('regulasi', 'lampiran')->find($id);
-        } else if ($user->hasRole('anggota_regu')) {
+        }
+
+        if ($user->hasRole('komandan_regu')) {
             $penindakan = Penindakan::with('regulasi', 'lampiran')
-                ->where('anggota_pelapor_id', $user->anggota?->id)
+                ->where('created_by', $user->id)
                 ->find($id);
         }
 
@@ -137,51 +129,58 @@ class PenindakanService
             return DB::transaction(function () use ($id, $data) {
                 $user = Auth::user();
 
+                // Ambil data sesuai role
                 if ($user->hasRole('super_admin')) {
                     $penindakan = Penindakan::find($id);
-                } else if ($user->hasRole('anggota_regu')) {
-                    $penindakan = Penindakan::where('anggota_pelapor_id', $user->anggota?->id)->find($id);
+                } elseif ($user->hasRole('komandan_regu')) {
+                    $penindakan = Penindakan::where('created_by', $user->id)->find($id);
                 }
 
                 if (!$penindakan) {
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                $penindakan->update([
-                    'anggota_pelapor_id' => $data['anggota_pelapor_id'] ?? $penindakan->anggota_pelapor_id,
-                    'uraian' => $data['uraian'] ?? $penindakan->uraian,
-                    'barang_bukti' => $data['barang_bukti'] ?? $penindakan->barang_bukti,
-                    'denda' => $data['denda'] ?? $penindakan->denda,
-                    'status_validasi_ppns' => $data['status_validasi_ppns'] ?? $penindakan->status_validasi_ppns,
-                    'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? $penindakan->catatan_validasi_ppns,
-                    'ppns_validator_id' => $data['ppns_validator_id'] ?? $penindakan->ppns_validator_id,
-                ]);
-
-                if (isset($data['regulasi'])) {
-                    PenindakanRegulasi::where('penindakan_id', $id)->delete();
-                    foreach ($data['regulasi'] as $item) {
-                        PenindakanRegulasi::create([
-                            'penindakan_id' => $id,
-                            'regulasi_id' => $item['regulasi_id'],
-                            'pasal_dilanggar' => $item['pasal_dilanggar'] ?? null,
-                        ]);
-                    }
+                // 🚫 --- Batasi update hanya jika status_validasi_ppns = revisi ---
+                if ($penindakan->status_validasi_ppns !== 'revisi') {
+                    throw new CustomException(
+                        'Penindakan tidak dapat diperbarui karena belum direvisi oleh PPNS',
+                        403
+                    );
                 }
 
+                // --- 🔥 HANDLE OPERASI_ID & PENGADUAN_ID (mutually exclusive) ---
+                $updateData = [];
+
+                if (!empty($data['operasi_id'])) {
+                    $updateData['operasi_id'] = $data['operasi_id'];
+                    $updateData['pengaduan_id'] = null;
+                }
+
+                if (!empty($data['pengaduan_id'])) {
+                    $updateData['pengaduan_id'] = $data['pengaduan_id'];
+                    $updateData['operasi_id'] = null;
+                }
+
+                // Update field lain
+                $updateData['uraian'] = $data['uraian'] ?? $penindakan->uraian;
+                $updateData['denda'] = $data['denda'] ?? $penindakan->denda;
+
+                $penindakan->update($updateData);
+
+                // --- Update Regulasi ---
+                if (isset($data['regulasi'])) {
+                    PenindakanRegulasi::where('penindakan_id', $id)->delete();
+                    $penindakan->regulasi()->createMany($data['regulasi']);
+                }
+
+                // --- Tambah Lampiran Baru ---
                 if (!empty($data['lampiran'])) {
-                    foreach ($data['lampiran'] as $file) {
-                        PenindakanLampiran::create([
-                            'penindakan_id' => $id,
-                            'nama_file' => $file['nama_file'] ?? null,
-                            'path_file' => $file['path_file'],
-                            'jenis' => $file['jenis'] ?? null,
-                        ]);
-                    }
+                    $penindakan->lampiran()->createMany($data['lampiran']);
                 }
 
                 return [
                     'message' => 'Penindakan berhasil diperbarui',
-                    'data' => $penindakan->load('regulasi', 'lampiran')
+                    'data' => $penindakan->load('regulasi', 'lampiran'),
                 ];
             });
         } catch (Exception $e) {
@@ -189,6 +188,121 @@ class PenindakanService
             throw new CustomException('Gagal memperbarui penindakan', 422);
         }
     }
+
+    // public function update($id, array $data): array
+    // {
+    //     try {
+    //         return DB::transaction(function () use ($id, $data) {
+    //             $user = Auth::user();
+
+    //             // Ambil data sesuai role
+    //             if ($user->hasRole('super_admin')) {
+    //                 $penindakan = Penindakan::find($id);
+    //             } elseif ($user->hasRole('komandan_regu')) {
+    //                 $penindakan = Penindakan::where('created_by', $user->id)->find($id);
+    //             }
+
+    //             if (!$penindakan) {
+    //                 throw new CustomException('Penindakan tidak ditemukan', 404);
+    //             }
+
+    //             // --- 🔥 HANDLE OPERASI_ID & PENGADUAN_ID (mutually exclusive) ---
+    //             $updateData = [];
+
+    //             if (array_key_exists('operasi_id', $data) && !empty($data['operasi_id'])) {
+    //                 $updateData['operasi_id'] = $data['operasi_id'];
+    //                 $updateData['pengaduan_id'] = null; // wajib null
+    //             }
+
+    //             if (array_key_exists('pengaduan_id', $data) && !empty($data['pengaduan_id'])) {
+    //                 $updateData['pengaduan_id'] = $data['pengaduan_id'];
+    //                 $updateData['operasi_id'] = null; // wajib null
+    //             }
+
+    //             // Update field lain
+    //             $updateData['uraian'] = $data['uraian'] ?? $penindakan->uraian;
+    //             $updateData['denda'] = $data['denda'] ?? $penindakan->denda;
+
+    //             $penindakan->update($updateData);
+
+    //             // --- Update Regulasi ---
+    //             if (isset($data['regulasi'])) {
+    //                 PenindakanRegulasi::where('penindakan_id', $id)->delete();
+    //                 $penindakan->regulasi()->createMany($data['regulasi']);
+    //             }
+
+    //             // --- Tambah Lampiran Baru ---
+    //             if (!empty($data['lampiran'])) {
+    //                 $penindakan->lampiran()->createMany($data['lampiran']);
+    //             }
+
+    //             return [
+    //                 'message' => 'Penindakan berhasil diperbarui',
+    //                 'data' => $penindakan->load('regulasi', 'lampiran'),
+    //             ];
+    //         });
+    //     } catch (Exception $e) {
+    //         Log::error('Gagal memperbarui penindakan', ['error' => $e->getMessage()]);
+    //         throw new CustomException('Gagal memperbarui penindakan', 422);
+    //     }
+    // }
+
+
+    // public function update($id, array $data): array
+    // {
+    //     try {
+    //         return DB::transaction(function () use ($id, $data) {
+    //             $user = Auth::user();
+
+    //             if ($user->hasRole('super_admin')) {
+    //                 $penindakan = Penindakan::find($id);
+    //             } 
+
+    //             if ($user->hasRole('komandan_regu')) {
+    //                 $penindakan = Penindakan::where('created_by', $user->id)->find($id);
+    //             }
+
+    //             if (!$penindakan) {
+    //                 throw new CustomException('Penindakan tidak ditemukan', 404);
+    //             }
+
+    //             $penindakan->update([
+    //                 'uraian' => $data['uraian'] ?? $penindakan->uraian,
+    //                 'denda' => $data['denda'] ?? $penindakan->denda,
+    //             ]);
+
+    //             if (isset($data['regulasi'])) {
+    //                 PenindakanRegulasi::where('penindakan_id', $id)->delete();
+    //                 foreach ($data['regulasi'] as $item) {
+    //                     PenindakanRegulasi::create([
+    //                         'penindakan_id' => $id,
+    //                         'regulasi_id' => $item['regulasi_id'],
+    //                         'pasal_dilanggar' => $item['pasal_dilanggar'] ?? null,
+    //                     ]);
+    //                 }
+    //             }
+
+    //             if (!empty($data['lampiran'])) {
+    //                 foreach ($data['lampiran'] as $file) {
+    //                     PenindakanLampiran::create([
+    //                         'penindakan_id' => $id,
+    //                         'nama_file' => $file['nama_file'] ?? null,
+    //                         'path_file' => $file['path_file'],
+    //                         'jenis' => $file['jenis'] ?? null,
+    //                     ]);
+    //                 }
+    //             }
+
+    //             return [
+    //                 'message' => 'Penindakan berhasil diperbarui',
+    //                 'data' => $penindakan->load('regulasi', 'lampiran')
+    //             ];
+    //         });
+    //     } catch (Exception $e) {
+    //         Log::error('Gagal memperbarui penindakan', ['error' => $e->getMessage()]);
+    //         throw new CustomException('Gagal memperbarui penindakan', 422);
+    //     }
+    // }
 
     public function delete($id): array
     {
@@ -198,9 +312,11 @@ class PenindakanService
 
                 if ($user->hasRole('super_admin')) {
                     $penindakan = Penindakan::with('lampiran')->find($id);
-                } else if ($user->hasRole('anggota_regu')) {
+                }
+
+                if ($user->hasRole('komandan_regu')) {
                     $penindakan = Penindakan::with('lampiran')
-                        ->where('anggota_pelapor_id', $user->anggota?->id)
+                        ->where('created_by', $user->id)
                         ->find($id);
                 }
 
@@ -295,115 +411,4 @@ class PenindakanService
             throw new CustomException('Gagal melakukan validasi PPNS', 422);
         }
     }
-
-
-    // public function validasiPPNS($id, array $data): array
-    // {
-    //     try {
-    //         return DB::transaction(function () use ($id, $data) {
-
-    //             $penindakan = Penindakan::find($id);
-
-    //             if (!$penindakan) {
-    //                 throw new CustomException('Penindakan tidak ditemukan', 404);
-    //             }
-
-    //             if ($penindakan->status_validasi_ppns !== 'menunggu') {
-    //                 throw new CustomException('Validasi hanya dapat dilakukan ketika status masih menunggu', 422);
-    //             }
-
-    //             if (!in_array($data['status_validasi_ppns'], ['disetujui', 'ditolak'])) {
-    //                 throw new CustomException('Status validasi hanya boleh disetujui atau ditolak', 422);
-    //             }
-
-    //             $ppnsId = Auth::id();
-    //             if (!$ppnsId) {
-    //                 throw new CustomException('Akun PPNS tidak terautentikasi', 401);
-    //             }
-
-    //             // 🔥 Update data validasi PPNS
-    //             $penindakan->update([
-    //                 'status_validasi_ppns' => $data['status_validasi_ppns'],
-    //                 'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? null,
-    //                 'ppns_validator_id' => $ppnsId,
-    //             ]);
-
-    //             // Jika penindakan langsung memiliki pengaduan_id
-    //             if ($penindakan->pengaduan_id) {
-    //                 Pengaduan::where('id', $penindakan->pengaduan_id)
-    //                     ->update(['status' => 'selesai', 'selesai_at' => now()]);
-    //             }
-
-    //             // Jika penindakan berasal dari operasi_id
-    //             if ($penindakan->operasi_id && !$penindakan->pengaduan_id) {
-    //                 $operasi = Operasi::with('pengaduan:id,operasi_id,status')
-    //                     ->find($penindakan->operasi_id);
-
-    //                 // Jika operasi punya pengaduan, maka set pengaduan selesai
-    //                 if ($operasi && $operasi->pengaduan) {
-    //                     Pengaduan::where('id', $operasi->pengaduan->id)
-    //                         ->update(['status' => 'selesai', 'selesai_at' => now()]);
-    //                 }
-    //             }
-
-    //             return [
-    //                 'message' => 'Validasi PPNS berhasil diproses',
-    //                 'data' => $penindakan->load('regulasi', 'lampiran'),
-    //             ];
-    //         });
-    //     } catch (Exception $e) {
-    //         Log::error('Gagal melakukan validasi PPNS', [
-    //             'penindakan_id' => $id,
-    //             'error' => $e->getMessage()
-    //         ]);
-
-    //         throw new CustomException('Gagal melakukan validasi PPNS', 422);
-    //     }
-    // }
-
-
-    // public function validasiPPNS($id, array $data): array
-    // {
-    //     try {
-    //         return DB::transaction(function () use ($id, $data) {
-
-    //             $penindakan = Penindakan::find($id);
-
-    //             if (!$penindakan) {
-    //                 throw new CustomException('Penindakan tidak ditemukan', 404);
-    //             }
-
-    //             if ($penindakan->status_validasi_ppns !== 'menunggu') {
-    //                 throw new CustomException('Validasi hanya dapat dilakukan ketika status masih menunggu', 422);
-    //             }
-
-    //             if (!in_array($data['status_validasi_ppns'], ['disetujui', 'ditolak'])) {
-    //                 throw new CustomException('Status validasi hanya boleh disetujui atau ditolak', 422);
-    //             }
-
-    //             $ppnsId = Auth::id();
-    //             if (!$ppnsId) {
-    //                 throw new CustomException('Akun PPNS tidak terautentikasi', 401);
-    //             }
-
-    //             $penindakan->update([
-    //                 'status_validasi_ppns' => $data['status_validasi_ppns'],
-    //                 'catatan_validasi_ppns' => $data['catatan_validasi_ppns'] ?? null,
-    //                 'ppns_validator_id' => $ppnsId,
-    //             ]);
-
-    //             return [
-    //                 'message' => 'Validasi PPNS berhasil diproses',
-    //                 'data' => $penindakan->load('regulasi', 'lampiran'),
-    //             ];
-    //         });
-    //     } catch (Exception $e) {
-    //         Log::error('Gagal melakukan validasi PPNS', [
-    //             'penindakan_id' => $id,
-    //             'error' => $e->getMessage()
-    //         ]);
-
-    //         throw new CustomException('Gagal melakukan validasi PPNS', 422);
-    //     }
-    // }
 }

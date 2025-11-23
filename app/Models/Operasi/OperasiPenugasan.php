@@ -27,6 +27,10 @@ class OperasiPenugasan extends Model
     {
         return $this->belongsTo(Operasi::class);
     }
+    public function operasiActive()
+    {
+        return $this->belongsTo(Operasi::class)->where('status', 'aktif');
+    }   
 
     public function anggota()
     {

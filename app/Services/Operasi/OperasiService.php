@@ -23,7 +23,15 @@ class OperasiService
 
     public function getAll($request)
     {
-        $operasi = Operasi::with('pengaduan');
+        $user = Auth::user();
+
+        if ($user->hasRole('super_admin')) {
+            $operasi = Operasi::with('pengaduan');
+        }
+
+        if ($user->hasRole('komandan_regu')) {
+            $operasi = Operasi::with('pengaduan')->where('created_by', $user->id);
+        }
 
         if ($request->filled('pengaduan_id')) {
             $operasi->where('pengaduan_id', $request->pengaduan_id);
@@ -164,7 +172,19 @@ class OperasiService
 
     public function getById($id)
     {
-        $operasi = Operasi::find($id);
+        $user = Auth::user();
+
+        if ($user->hasRole('super_admin')) {
+            $operasi = Operasi::find($id);
+        }
+
+        if ($user->hasRole('komandan_regu')) {
+            $operasi = Operasi::where('created_by', $user->id)->find($id);
+        }
+
+        if (!$operasi) {
+            throw new CustomException('Data operasi tidak ditemukan', 404);
+        }
 
         $data =  [
             'id' => $operasi->id,
@@ -178,10 +198,6 @@ class OperasiService
             'selesai' => $operasi->selesai,
         ];
 
-        if (!$operasi) {
-            throw new CustomException('Data operasi tidak ditemukan', 404);
-        }
-
         return [
             'message' => 'Operasi berhasil ditemukan',
             'data' => $data
@@ -193,7 +209,16 @@ class OperasiService
         try {
             return DB::transaction(function () use ($data, $id) {
 
-                $operasi = Operasi::find($id);
+                $user = Auth::user();
+
+                if ($user->hasRole('super_admin')) {
+                    $operasi = Operasi::find($id);
+                }
+
+                if ($user->hasRole('komandan_regu')) {
+                    $operasi = Operasi::where('created_by', $user->id)->find($id);
+                }
+
                 if (!$operasi) {
                     throw new CustomException('Data operasi tidak ditemukan', 404);
                 }
@@ -288,7 +313,15 @@ class OperasiService
 
     public function delete($id)
     {
-        $operasi = Operasi::find($id);
+        $user = Auth::user();
+
+        if ($user->hasRole('super_admin')) {
+            $operasi = Operasi::find($id);
+        }
+
+        if ($user->hasRole('komandan_regu')) {
+            $operasi = Operasi::where('created_by', $user->id)->find($id);
+        }
 
         if (!$operasi) {
             throw new CustomException('Data operasi tidak ditemukan', 404);
@@ -308,7 +341,7 @@ class OperasiService
     public function getOperasiAnggota()
     {
         $anggotaId = Auth::user()->anggota_id;
-        $operasi = OperasiPenugasan::with('operasi', 'anggota.jabatan')->whereHas('operasi')->where('anggota_id', $anggotaId)->get();
+        $operasi = OperasiPenugasan::with('operasiActive', 'creator', 'updater')->where('anggota_id', $anggotaId)->get();
 
         return [
             'message' => 'Data operasi anggota berhasil ditemukan',

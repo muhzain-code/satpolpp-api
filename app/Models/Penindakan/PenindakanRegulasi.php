@@ -16,6 +16,10 @@ class PenindakanRegulasi extends Model
         'pasal_dilanggar',
     ];
 
+    protected $casts = [
+        'pasal_dilanggar' => 'array',
+    ];
+
     public function penindakan(): BelongsTo
     {
         return $this->belongsTo(Penindakan::class);

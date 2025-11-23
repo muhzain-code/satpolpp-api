@@ -91,19 +91,19 @@ Route::middleware('auth:sanctum')->group(function () {
      * PENINDAKAN
      * ==========================
      */
-    Route::middleware('role:super_admin|komandan_regu|anggota_regu|ppns')->group(function () {
+    Route::middleware('role:super_admin|komandan_regu|ppns')->group(function () {
         Route::get('penindakan', [PenindakanController::class, 'index']);
         Route::get('penindakan/{id}', [PenindakanController::class, 'show']);
 
         Route::get('disposisi-anggota', [DisposisiController::class, 'disposisiAnggota'])
-            ->middleware('role:super_admin|komandan_regu|anggota_regu');
+            ->middleware('role:super_admin|komandan_regu');
 
         Route::get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])
             ->middleware('role:super_admin|anggota_regu');
     });
 
     // CRUD penindakan
-    Route::middleware('role:super_admin|anggota_regu')
+    Route::middleware('role:super_admin|komandan_regu')
         ->prefix('penindakan')
         ->group(function () {
             Route::post('/', [PenindakanController::class, 'store']);
@@ -181,12 +181,12 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
     // laporan
-    Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
-    Route::get('laporan', [LaporanHarianController::class, 'index']);
-    Route::post('laporan', [LaporanHarianController::class, 'store']);
-    Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
-    Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
-    Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+    // Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
+    // Route::get('laporan', [LaporanHarianController::class, 'index']);
+    // Route::post('laporan', [LaporanHarianController::class, 'store']);
+    // Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
+    // Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
+    // Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
 
     Route::get('galeri', [GaleriController::class, 'index']);
     Route::post('galeri', [GaleriController::class, 'store']);
