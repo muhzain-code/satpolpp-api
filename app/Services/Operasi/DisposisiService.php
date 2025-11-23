@@ -14,14 +14,10 @@ class DisposisiService
 {
     public function getAll($filter)
     {
-        $disposisi = Disposisi::with('pengaduan', 'keAnggota', 'keUnit');
+        $disposisi = Disposisi::with('pengaduan', 'keUnit');
 
         if (isset($filter['pengaduan_id'])) {
             $disposisi->where('pengaduan_id', $filter['pengaduan_id']);
-        }
-
-        if (isset($filter['ke_anggota_id'])) {
-            $disposisi->where('ke_anggota_id', $filter['ke_anggota_id']);
         }
 
         if (isset($filter['ke_unit_id'])) {
@@ -34,9 +30,10 @@ class DisposisiService
             return [
                 'id' => $item->id,
                 'pengaduan_id' => $item->pengaduan->nomor_tiket,
-                'ke_anggota_id' => $item->keAnggota->kode_anggota ?? null,
                 'ke_unit_id' => $item->keUnit->nama ?? null,
                 'catatan' => $item->catatan,
+                'batas_waktu' => $item->batas_waktu,
+                'status' => $item->status,
             ];
         });
 
@@ -134,46 +131,41 @@ class DisposisiService
         ];
     }
 
-    public function disposisiAnggota($request)
+    public function getDisposisiUnit($request)
     {
         $user = Auth::user();
 
-        if (! $user->anggota || ! $user->anggota->id) {
-            return [
-                'message' => 'User tidak memiliki anggota terkait',
-                'data' => collect()
-            ];
+        if (!$user->anggota || !$user->anggota->id || !$user->anggota->unit_id) {
+            throw new CustomException('User tidak terkait dengan anggota', 403);
         }
 
         $anggota = $user->anggota;
 
-        $disposisiQuery = Disposisi::with('pengaduan', 'keAnggota', 'keUnit')
-            ->whereHas('pengaduan', function ($q) {
-                $q->where('status', 'diproses');
-            })
-            ->where(function ($q) use ($anggota) {
-                $q->where('ke_anggota_id', $anggota->id)
-                    ->orWhere('ke_unit_id', $anggota->unit_id);
-            })
+        $disposisiQuery = Disposisi::with(['pengaduan.kategoriPengaduan', 'keUnit'])
+            ->whereHas('pengaduan', fn($q) => $q->where('status', 'diproses'))
+            ->where('ke_unit_id', $anggota->unit_id)
             ->orderBy('created_at', 'desc');
 
         $disposisi = $disposisiQuery->paginate($request->per_page, ['*'], 'page', $request->page);
 
         $disposisi->getCollection()->transform(function ($item) {
+            $pengaduan = $item->pengaduan;
             return [
                 'id' => $item->id,
-                'pengaduan' => [
-                    'id' => $item->pengaduan->id,
-                    'nomor_tiket' => $item->pengaduan->nomor_tiket,
-                    'kategori' => $item->pengaduan->kategoriPengaduan->nama ?? null,
-                    'deskripsi' => $item->pengaduan->deskripsi,
-                    'lat' => $item->pengaduan->lat,
-                    'lng' => $item->pengaduan->lng,
-                    'alamat' => $item->pengaduan->alamat,
-                ] ?? null,
-                'ke_anggota' => $item->keAnggota->kode_anggota ?? null,
+                'pengaduan' => $pengaduan ? [
+                    'id' => $pengaduan->id,
+                    'nomor_tiket' => $pengaduan->nomor_tiket,
+                    'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
+                    'deskripsi' => $pengaduan->deskripsi,
+                    'lat' => $pengaduan->lat,
+                    'lng' => $pengaduan->lng,
+                    'kecamatan' => $pengaduan->kecamatan ? $pengaduan->kecamatan->nama : null,
+                    'desa' => $pengaduan->desa ? $pengaduan->desa->nama : null,
+                ] : null,
                 'ke_unit' => $item->keUnit->nama ?? null,
                 'catatan' => $item->catatan,
+                'batas_waktu' => $item->batas_waktu,
+                'status' => $item->status,
             ];
         });
 
@@ -184,7 +176,7 @@ class DisposisiService
                 'per_page' => $disposisi->perPage(),
                 'total' => $disposisi->total(),
                 'last_page' => $disposisi->lastPage(),
-                'items' => $disposisi->items()
+                'items' => $disposisi->getCollection()->toArray()
             ]
         ];
     }

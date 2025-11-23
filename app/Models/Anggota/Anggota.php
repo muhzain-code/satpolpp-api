@@ -87,11 +87,6 @@ class Anggota extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    public function LaporanHarian()
-    {
-        return $this->hasMany(LaporanHarian::class, 'anggota_id', 'id');
-    }
-
     public function user()
     {
         return $this->hasOne(User::class, 'anggota_id', 'id');

@@ -33,8 +33,6 @@ class PengaduanRequest extends FormRequest
             'lat'            => 'nullable|numeric|between:-90,90',
             'lng'            => 'nullable|numeric|between:-180,180',
 
-            'provinsi_id'    => 'nullable|exists:provinsi,id',
-            'kabupaten_id'   => 'nullable|exists:kabupaten,id',
             'kecamatan_id'   => 'nullable|exists:kecamatan,id',
             'desa_id'        => 'nullable|exists:desa,id',
 

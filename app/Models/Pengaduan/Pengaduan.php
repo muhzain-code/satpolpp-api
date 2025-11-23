@@ -20,8 +20,6 @@ class Pengaduan extends Model
         'deskripsi',
         'lat',
         'lng',
-        'provinsi_id',
-        'kabupaten_id',
         'kecamatan_id',
         'desa_id',
         'status',
@@ -39,16 +37,6 @@ class Pengaduan extends Model
     public function kategoriPengaduan()
     {
         return $this->belongsTo(KategoriPengaduan::class, 'kategori_id');
-    }
-
-    public function provinsi()
-    {
-        return $this->belongsTo(Provinsi::class, 'provinsi_id', 'id');
-    }
-
-    public function kabupaten()
-    {
-        return $this->belongsTo(Kabupaten::class, 'kabupaten_id', 'id');
     }
 
     public function kecamatan()

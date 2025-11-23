@@ -25,9 +25,10 @@ class DisposisiRequest extends FormRequest
     {
         return [
             'pengaduan_id' => 'required|exists:pengaduan,id',
-            'ke_anggota_id' => 'nullable|exists:anggota,id',
             'ke_unit_id' => 'nullable|exists:unit,id',
             'catatan' => 'nullable|string|max:500',
+            'batas_waktu' => 'nullable|date',
+            'status' => 'nullable|in:pending,completed',
         ];
     }
 

@@ -103,7 +103,6 @@ class OperasiService
                     'nomor_surat_tugas'  => $nomorSuratTugas,
                     'tanggal_surat_tugas' => now()->toDateString(),
                     'pengaduan_id'       => $data['pengaduan_id'] ?? null,
-                    'jenis_operasi'      => $data['jenis_operasi'] ?? null,
                     'judul'              => $data['judul'],
                     'uraian'             => $data['uraian'] ?? null,
                     'mulai'              => $data['mulai'] ?? null,
@@ -228,7 +227,6 @@ class OperasiService
                 // -------------------------------------------------
                 $operasi->update([
                     'pengaduan_id'       => $data['pengaduan_id'] ?? $operasi->pengaduan_id,
-                    'jenis_operasi'      => $data['jenis_operasi'] ?? $operasi->jenis_operasi,
                     'judul'              => $data['judul'] ?? $operasi->judul,
                     'uraian'             => $data['uraian'] ?? $operasi->uraian,
                     'mulai'              => $data['mulai'] ?? $operasi->mulai,

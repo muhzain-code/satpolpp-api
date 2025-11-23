@@ -18,9 +18,10 @@ class Disposisi extends Model
 
     protected $fillable = [
         'pengaduan_id',
-        'ke_anggota_id',
         'ke_unit_id',
         'catatan',
+        'batas_waktu',
+        'status',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -28,7 +29,6 @@ class Disposisi extends Model
 
     protected $casts = [
         'pengaduan_id'   => 'integer',
-        'ke_anggota_id'  => 'integer',
         'ke_unit_id'     => 'integer',
         'created_by'     => 'integer',
         'updated_by'     => 'integer',
@@ -38,11 +38,6 @@ class Disposisi extends Model
     public function pengaduan()
     {
         return $this->belongsTo(Pengaduan::class);
-    }
-
-    public function keAnggota()
-    {
-        return $this->belongsTo(Anggota::class, 'ke_anggota_id');
     }
 
     public function keUnit()

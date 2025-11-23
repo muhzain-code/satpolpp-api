@@ -72,8 +72,6 @@ class PengaduanService
                     'deskripsi' => $data['deskripsi'],
                     'lat' => $data['lat'] ?? null,
                     'lng' => $data['lng'] ?? null,
-                    'provinsi_id' => $data['provinsi_id'] ?? null,
-                    'kabupaten_id' => $data['kabupaten_id'] ?? null,
                     'kecamatan_id' => $data['kecamatan_id'] ?? null,
                     'desa_id' => $data['desa_id'] ?? null,
                     'status' => 'diterima',
@@ -121,15 +119,44 @@ class PengaduanService
 
     public function getById($id): array
     {
-        $pengaduan = Pengaduan::with('pengaduanLampiran', 'kategoriPengaduan:id,nama')->find($id);
+        $pengaduan = Pengaduan::with([
+            'pengaduanLampiran:id,pengaduan_id,path_file,nama_file,jenis,created_by',
+            'kategoriPengaduan:id,nama'
+        ])->find($id);
 
         if (!$pengaduan) {
             throw new CustomException('Pengaduan tidak ditemukan', 404);
         }
 
+        $data = [
+            'id' => $pengaduan->id,
+            'nomor_tiket' => $pengaduan->nomor_tiket,
+            'nama_pelapor' => $pengaduan->nama_pelapor,
+            'kontak_pelapor' => $pengaduan->kontak_pelapor,
+            'kategori' => $pengaduan->kategoriPengaduan->nama,
+            'deskripsi' => $pengaduan->deskripsi,
+            'lat' => $pengaduan->lat,
+            'lng' => $pengaduan->lng,
+            'kecamatan_id' => $pengaduan->kecamatan_id,
+            'desa_id' => $pengaduan->desa_id,
+            'status' => $pengaduan->status,
+            'diterima_at' => $pengaduan->diterima_at,
+            'diproses_at' => $pengaduan->diproses_at,
+            'selesai_at' => $pengaduan->selesai_at,
+            'ditolak_at' => $pengaduan->ditolak_at,
+            'lampiran' => $pengaduan->pengaduanLampiran->map(fn($lampiran) => [
+                'id' => $lampiran->id,
+                'nama_file' => $lampiran->nama_file,
+                'path_file' => $lampiran->path_file,
+                'jenis' => $lampiran->jenis,
+            ]),
+            'created_at' => $pengaduan->created_at,
+            'updated_at' => $pengaduan->updated_at,
+        ];
+
         return [
             'message' => 'Detail pengaduan berhasil ditampilkan',
-            'data' => $pengaduan
+            'data' => $data
         ];
     }
 
@@ -150,8 +177,6 @@ class PengaduanService
                     'deskripsi' => $data['deskripsi'] ?? $pengaduan->deskripsi,
                     'lat' => $data['lat'] ?? $pengaduan->lat,
                     'lng' => $data['lng'] ?? $pengaduan->lng,
-                    'provinsi_id' => $data['provinsi_id'] ?? $pengaduan->provinsi_id,
-                    'kabupaten_id' => $data['kabupaten_id'] ?? $pengaduan->kabupaten_id,
                     'kecamatan_id' => $data['kecamatan_id'] ?? $pengaduan->kecamatan_id,
                     'desa_id' => $data['desa_id'] ?? $pengaduan->desa_id,
                 ]);

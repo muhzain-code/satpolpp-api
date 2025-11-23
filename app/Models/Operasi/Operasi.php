@@ -20,7 +20,6 @@ class Operasi extends Model
         'tanggal_surat_tugas',
         'surat_tugas_pdf',
         'pengaduan_id',
-        'jenis_operasi',
         'judul',
         'uraian',
         'mulai',

@@ -165,8 +165,7 @@ return new class extends Migration
 
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
-            $table->foreignId('provinsi_id')->nullable()->constrained('provinsi')->nullOnDelete();
-            $table->foreignId('kabupaten_id')->nullable()->constrained('kabupaten')->nullOnDelete();
+            
             $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
             $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
 
@@ -200,9 +199,11 @@ return new class extends Migration
         Schema::create('disposisi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
-            $table->foreignId('ke_anggota_id')->nullable()->constrained('anggota')->nullOnDelete();
             $table->foreignId('ke_unit_id')->nullable()->constrained('unit')->nullOnDelete();
             $table->text('catatan')->nullable();
+
+            $table->dateTime('batas_waktu')->nullable()->comment('Batas waktu SLA disposisi');
+            $table->enum('status', ['pending', 'selesai'])->default('pending');
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
@@ -218,8 +219,6 @@ return new class extends Migration
             $table->string('nomor_surat_tugas')->nullable()->unique();
             $table->string('surat_tugas_pdf')->nullable();
             $table->date('tanggal_surat_tugas')->nullable();
-
-            $table->enum('jenis_operasi', ['rutin', 'pengaduan'])->nullable();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
 
             $table->string('judul');
@@ -250,46 +249,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-
-
-        /**
-         * ============================================================
-         * 5. LAPORAN HARIAN
-         * ============================================================
-         */
-
-        // Schema::create('laporan_harian', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
-        //     $table->enum('jenis', ['aman', 'insiden'])->default('aman');
-        //     $table->text('catatan')->nullable();
-
-        //     $table->decimal('lat', 10, 7)->nullable();
-        //     $table->decimal('lng', 10, 7)->nullable();
-
-        //     $table->foreignId('kategori_pelanggaran_id')->nullable()->constrained('kategori_pengaduan')->nullOnDelete();
-        //     $table->foreignId('regulasi_indikatif_id')->nullable()->constrained('regulasi')->nullOnDelete();
-
-        //     $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->nullable();
-        //     $table->enum('status_validasi', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
-        //     $table->foreignId('divalidasi_oleh')->nullable()->constrained('anggota')->nullOnDelete();
-
-        //     $table->boolean('telah_dieskalasi')->default(false);
-
-        //     $table->timestamps();
-        //     $table->softDeletes();
-        // });
-
-        // Schema::create('laporan_harian_lampiran', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('laporan_id')->constrained('laporan_harian')->cascadeOnDelete();
-        //     $table->string('path_file', 1000);
-        //     $table->string('nama_file')->nullable();
-        //     $table->enum('jenis', ['foto', 'video', 'dokumen'])->default('foto');
-        //     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-        //     $table->timestamps();
-        // });
-
 
         /**
          * ============================================================
