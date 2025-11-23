@@ -1,65 +1,65 @@
 <?php
 
-namespace App\Http\Controllers\Operasi;
+namespace App\Http\Controllers\Api\Operasi;
 
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\Operasi\OperasiPenugasanService;
-use App\Http\Requests\Operasi\StoreOperasiPenugasanRequest;
-use App\Http\Requests\Operasi\UpdateOperasiPenugasanRequest;
+use App\Services\Operasi\OperasiService;
+use App\Http\Requests\Operasi\OperasiRequest;
+use App\Http\Requests\Operasi\StoreOperasiRequest;
+use App\Http\Requests\Operasi\UpdateOperasiRequest;
 
-class OperasiPenugasanController extends Controller
+class OperasiController extends Controller
 {
     use ApiResponse;
 
-    protected OperasiPenugasanService $service;
+    protected OperasiService $service;
 
-    public function __construct(OperasiPenugasanService $service)
+    public function __construct(OperasiService $service)
     {
         $this->service = $service;
     }
 
     public function index(Request $request)
     {
-        $filter = [
-            'per_page'   => $request->input('per_page', 25),
-            'page'       => $request->input('page', 1),
-            'operasi_id' => $request->input('operasi_id'),
-            'anggota_id' => $request->input('anggota_id'),
-            'peran'      => $request->input('peran'),
-        ];
 
-        $result = $this->service->getAll($filter);
+        $request->input('per_page', 25);
+        $request->input('page', 1);
+
+        $result = $this->service->getAll($request);
 
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function store(StoreOperasiPenugasanRequest $request)
+
+    public function store(StoreOperasiRequest $request)
     {
         $result = $this->service->create($request->validated());
-
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function show($id)
     {
         $result = $this->service->getById($id);
-
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(UpdateOperasiPenugasanRequest $request, $id)
+    public function update(UpdateOperasiRequest $request, $id)
     {
         $result = $this->service->update($request->validated(), $id);
-
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function destroy($id)
     {
         $result = $this->service->delete($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
 
+    public function getOperasiAnggota()
+    {
+        $result = $this->service->getOperasiAnggota();
         return $this->successResponse($result['data'], $result['message']);
     }
 }

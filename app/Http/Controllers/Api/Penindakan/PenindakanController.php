@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Penindakan;
+namespace App\Http\Controllers\Api\Penindakan;
 
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;

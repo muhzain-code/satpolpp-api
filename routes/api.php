@@ -2,23 +2,23 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Pengaduan\PengaduanController;
-use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Api\PPID\PPIDController;
 use App\Http\Controllers\Api\Anggota\UnitController;
-use App\Http\Controllers\Api\Anggota\AnggotaController;
-use App\Http\Controllers\Api\Anggota\JabatanController;
-use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
-use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
-use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
-use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\Humas\GaleriController;
 use App\Http\Controllers\Api\Humas\KontenController;
-use App\Http\Controllers\Api\PPID\PPIDController;
-use App\Http\Controllers\Operasi\OperasiController;
-use App\Http\Controllers\Operasi\DisposisiController;
-use App\Http\Controllers\Operasi\OperasiPenugasanController;
-use App\Http\Controllers\Penindakan\PenindakanController;
+use App\Http\Controllers\Api\Anggota\AnggotaController;
+use App\Http\Controllers\Api\Anggota\JabatanController;
+use App\Http\Controllers\Api\Operasi\OperasiController;
+use App\Http\Controllers\Api\Operasi\DisposisiController;
+use App\Http\Controllers\Api\Pengaduan\PengaduanController;
+use App\Http\Controllers\Api\Penindakan\PenindakanController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
+use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
+use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
+use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
+use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 
 /**
  * ==========================
@@ -45,6 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', fn(Request $request) => $request->user());
     Route::post('logout', [AuthController::class, 'logout']);
+
+    Route::get('search-lokasi', [LokasiController::class, 'search']);
 
 
     /**

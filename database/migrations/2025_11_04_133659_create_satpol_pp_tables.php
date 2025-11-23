@@ -12,6 +12,40 @@ return new class extends Migration
 
     public function up(): void
     {
+        Schema::create('provinsi', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_provinsi')->index();
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('kabupaten', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_kabupaten')->index();
+            $table->foreignId('provinsi_id')->nullable()->constrained('provinsi')->nullOnDelete();
+            $table->softDeletes();
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('kecamatan', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_kecamatan')->index();
+            $table->foreignId('kabupaten_id')->nullable()->constrained('kabupaten')->nullOnDelete();
+            $table->softDeletes();
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('desa', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_desa')->index();
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
+            $table->softDeletes();
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+
         /**
          * ============================================================
          * 1. ANGGOTA & STRUKTUR ORGANISASI
@@ -50,7 +84,11 @@ return new class extends Migration
             $table->string('tempat_lahir')->nullable();
             $table->date('tanggal_lahir')->nullable();
 
-            $table->text('alamat')->nullable();
+            $table->foreignId('provinsi_id')->nullable()->constrained('provinsi')->nullOnDelete();
+            $table->foreignId('kabupaten_id')->nullable()->constrained('kabupaten')->nullOnDelete();
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
+            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
+
             $table->string('no_hp', 20)->nullable();
 
             $table->text('foto')->nullable();
@@ -128,7 +166,10 @@ return new class extends Migration
 
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
-            $table->text('alamat')->nullable();
+            $table->foreignId('provinsi_id')->nullable()->constrained('provinsi')->nullOnDelete();
+            $table->foreignId('kabupaten_id')->nullable()->constrained('kabupaten')->nullOnDelete();
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
+            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
 
             $table->enum('status', ['diterima', 'diproses', 'selesai', 'ditolak'])->default('diterima');
             $table->timestamp('diterima_at')->nullable();

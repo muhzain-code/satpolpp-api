@@ -260,7 +260,7 @@ class PenindakanService
 
                 // Jika disetujui → buat BAP
                 if ($data['status_validasi_ppns'] === 'disetujui') {
-                    app(\App\Services\BAPGeneratorService::class)->generate($penindakan);
+                    app(\App\Services\BAPGeneratorService::class)->generate($penindakan->load('regulasi', 'lampiran'));
                 }
 
                 // Update status pengaduan jika ada
