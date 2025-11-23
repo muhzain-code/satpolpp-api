@@ -24,48 +24,59 @@ class PengaduanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_pelapor'     => 'required|string|max:100',
-            'kontak_pelapor'   => 'required|string|max:50',
-            'kategori_id'      => 'required|exists:kategori_pengaduan,id',
-            'deskripsi'        => 'required|string',
-            'lat'              => 'nullable|numeric|between:-90,90',
-            'lng'              => 'nullable|numeric|between:-180,180',
-            'alamat'           => 'required|string',
+            'nama_pelapor'   => 'nullable|string|max:255',
+            'kontak_pelapor' => 'nullable|string|max:50',
 
-            'lampiran'         => 'nullable|array|max:3',
-            'lampiran.*'       => 'file|mimes:jpg,jpeg,png|max:2048',
+            'kategori_id'    => 'required|exists:kategori_pengaduan,id',
+            'deskripsi'      => 'required|string',
+
+            'lat'            => 'nullable|numeric|between:-90,90',
+            'lng'            => 'nullable|numeric|between:-180,180',
+
+            'provinsi_id'    => 'nullable|exists:provinsi,id',
+            'kabupaten_id'   => 'nullable|exists:kabupaten,id',
+            'kecamatan_id'   => 'nullable|exists:kecamatan,id',
+            'desa_id'        => 'nullable|exists:desa,id',
+
+            'status'         => 'nullable|in:diterima,diproses,selesai,ditolak',
+
+            'lampiran'       => 'nullable|array|max:3',
+            'lampiran.*'     => 'file|mimes:jpg,jpeg,png,pdf|max:2048', 
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nama_pelapor.required' => 'Nama pelapor wajib diisi.',
             'nama_pelapor.string'   => 'Nama pelapor harus berupa teks.',
-            'nama_pelapor.max'      => 'Nama pelapor maksimal 100 karakter.',
+            'nama_pelapor.max'      => 'Nama pelapor maksimal 255 karakter.',
 
-            'kontak_pelapor.required' => 'Kontak pelapor wajib diisi.',
-            'kontak_pelapor.string'   => 'Kontak pelapor harus berupa teks.',
-            'kontak_pelapor.max'      => 'Kontak pelapor maksimal 50 karakter.',
+            'kontak_pelapor.string' => 'Kontak pelapor harus berupa teks.',
+            'kontak_pelapor.max'    => 'Kontak pelapor maksimal 50 karakter.',
 
-            'kategori_id.exists' => 'Kategori pengaduan yang dipilih tidak valid.',
+            'kategori_id.required'  => 'Kategori pengaduan wajib dipilih.',
+            'kategori_id.exists'    => 'Kategori pengaduan tidak ditemukan.',
 
-            'deskripsi.required' => 'Deskripsi pengaduan wajib diisi.',
-            'deskripsi.string'   => 'Deskripsi harus berupa teks.',
+            'deskripsi.required'    => 'Deskripsi pengaduan wajib diisi.',
+            'deskripsi.string'      => 'Deskripsi harus berupa teks.',
 
-            'lat.numeric'   => 'Latitude harus berupa angka.',
-            'lat.between'   => 'Latitude harus berada di antara -90 dan 90.',
-            'lng.numeric'   => 'Longitude harus berupa angka.',
-            'lng.between'   => 'Longitude harus berada di antara -180 dan 180.',
+            'lat.numeric'           => 'Latitude harus berupa angka.',
+            'lat.between'           => 'Latitude harus valid (-90 s/d 90).',
+            'lng.numeric'           => 'Longitude harus berupa angka.',
+            'lng.between'           => 'Longitude harus valid (-180 s/d 180).',
 
-            'alamat.required' => 'Alamat wajib diisi.',
-            'alamat.string'   => 'Alamat harus berupa teks.',
+            'provinsi_id.exists'    => 'Data Provinsi tidak valid.',
+            'kabupaten_id.exists'   => 'Data Kabupaten tidak valid.',
+            'kecamatan_id.exists'   => 'Data Kecamatan tidak valid.',
+            'desa_id.exists'        => 'Data Desa tidak valid.',
 
-            'lampiran.array'  => 'Lampiran harus berupa array file.',
-            'lampiran.max'    => 'Maksimal hanya boleh mengunggah 3 file lampiran.',
-            'lampiran.*.file' => 'Setiap lampiran harus berupa file yang valid.',
-            'lampiran.*.mimes' => 'Setiap lampiran harus berupa gambar berformat JPG, JPEG, atau PNG.',
-            'lampiran.*.max'  => 'Ukuran setiap file lampiran tidak boleh melebihi 2MB.',
+            'status.in'             => 'Status tidak valid (diterima, diproses, selesai, ditolak).',
+
+            'lampiran.array'        => 'Lampiran harus berupa list file.',
+            'lampiran.max'          => 'Maksimal upload 3 file lampiran.',
+            'lampiran.*.file'       => 'Lampiran harus berupa file.',
+            'lampiran.*.mimes'      => 'Format lampiran harus jpg, jpeg, png, atau pdf.',
+            'lampiran.*.max'        => 'Ukuran file maksimal 2MB per file.',
         ];
     }
 

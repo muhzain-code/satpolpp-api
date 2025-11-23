@@ -2,6 +2,10 @@
 
 namespace App\Models\Anggota;
 
+use App\Models\Alamat\Desa;
+use App\Models\Alamat\Kabupaten;
+use App\Models\Alamat\Kecamatan;
+use App\Models\Alamat\Provinsi;
 use App\Models\User;
 use App\Models\Anggota\Jabatan;
 use App\Models\ManajemenLaporan\LaporanHarian;
@@ -23,7 +27,10 @@ class Anggota extends Model
         'jenis_kelamin',
         'tempat_lahir',
         'tanggal_lahir',
-        'alamat',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
         'no_hp',
         'foto',
         'jabatan_id',
@@ -35,6 +42,25 @@ class Anggota extends Model
         'deleted_by',
     ];
 
+    public function provinsi()
+    {
+        return $this->belongsTo(Provinsi::class, 'provinsi_id', 'id');
+    }
+
+    public function kabupaten()
+    {
+        return $this->belongsTo(Kabupaten::class, 'kabupaten_id', 'id');
+    }
+
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id', 'id');
+    }
+
+    public function desa()
+    {
+        return $this->belongsTo(Desa::class, 'desa_id', 'id');
+    }
 
     public function jabatan()
     {
@@ -68,7 +94,7 @@ class Anggota extends Model
 
     public function user()
     {
-        return $this->hasOne(User::class,'anggota_id','id');
+        return $this->hasOne(User::class, 'anggota_id', 'id');
     }
     public function getActivitylogOptions(): LogOptions
     {

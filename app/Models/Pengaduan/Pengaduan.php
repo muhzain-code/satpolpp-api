@@ -2,6 +2,10 @@
 
 namespace App\Models\Pengaduan;
 
+use App\Models\Alamat\Desa;
+use App\Models\Alamat\Kabupaten;
+use App\Models\Alamat\Kecamatan;
+use App\Models\Alamat\Provinsi;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengaduan extends Model
@@ -16,7 +20,10 @@ class Pengaduan extends Model
         'deskripsi',
         'lat',
         'lng',
-        'alamat',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
         'status',
         'diterima_at',
         'diproses_at',
@@ -32,5 +39,25 @@ class Pengaduan extends Model
     public function kategoriPengaduan()
     {
         return $this->belongsTo(KategoriPengaduan::class, 'kategori_id');
+    }
+
+    public function provinsi()
+    {
+        return $this->belongsTo(Provinsi::class, 'provinsi_id', 'id');
+    }
+
+    public function kabupaten()
+    {
+        return $this->belongsTo(Kabupaten::class, 'kabupaten_id', 'id');
+    }
+
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class, 'kecamatan_id', 'id');
+    }
+
+    public function desa()
+    {
+        return $this->belongsTo(Desa::class, 'desa_id', 'id');
     }
 }
