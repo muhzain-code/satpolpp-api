@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
         Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
         Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
-        Route::get('pengaduan-tolak', [PengaduanController::class, 'setDitolak']);
+        Route::post('pengaduan-tolak/{id}', [PengaduanController::class, 'setDitolak']);
 
         Route::get('disposisi', [DisposisiController::class, 'index']);
         Route::post('disposisi', [DisposisiController::class, 'store']);
