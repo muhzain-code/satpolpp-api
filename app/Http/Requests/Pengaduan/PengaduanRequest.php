@@ -62,9 +62,7 @@ class PengaduanRequest extends FormRequest
             'lat.between'           => 'Latitude harus valid (-90 s/d 90).',
             'lng.numeric'           => 'Longitude harus berupa angka.',
             'lng.between'           => 'Longitude harus valid (-180 s/d 180).',
-
-            'provinsi_id.exists'    => 'Data Provinsi tidak valid.',
-            'kabupaten_id.exists'   => 'Data Kabupaten tidak valid.',
+            
             'kecamatan_id.exists'   => 'Data Kecamatan tidak valid.',
             'desa_id.exists'        => 'Data Desa tidak valid.',
 
