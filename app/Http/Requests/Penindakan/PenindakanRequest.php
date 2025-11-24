@@ -22,6 +22,7 @@ class PenindakanRequest extends FormRequest
             // Salah satu wajib diisi
             'operasi_id'     => ['nullable', 'integer', 'exists:operasi,id'],
             'pengaduan_id'   => ['nullable', 'integer', 'exists:pengaduan,id'],
+            'laporan_harian_id' => ['nullable', 'integer', 'exists:laporan_harian,id'],
 
             'uraian' => ['nullable', 'string'],
 

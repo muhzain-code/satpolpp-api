@@ -163,6 +163,14 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
     Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
 
+    // laporan
+    Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
+    Route::get('laporan', [LaporanHarianController::class, 'index']);
+    Route::post('laporan', [LaporanHarianController::class, 'store']);
+    Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
+    Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
+    Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+
     // regulasi
     Route::get('regulasi', [RegulasiController::class, 'index']);
     Route::post('regulasi', [RegulasiController::class, 'store']);

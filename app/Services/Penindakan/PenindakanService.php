@@ -59,6 +59,7 @@ class PenindakanService
 
                 $penindakan = Penindakan::create([
                     'operasi_id'  => $data['operasi_id'] ?? null,
+                    'laporan_harian_id'  => $data['laporan_harian_id'] ?? null,
                     'pengaduan_id' => $data['pengaduan_id'] ?? null,
                     'uraian'      => $data['uraian'] ?? null,
                     'denda'       => $data['denda'] ?? 0,

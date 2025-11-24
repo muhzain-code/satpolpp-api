@@ -19,6 +19,7 @@ class Penindakan extends Model
 
     protected $fillable = [
         'operasi_id',
+        'laporan_harian_id',
         'pengaduan_id',
         'anggota_pelapor_id',
         'uraian',
