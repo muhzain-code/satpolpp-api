@@ -458,15 +458,16 @@ return new class extends Migration
             $table->string('nama_pemohon');
             $table->string('no_ktp')->nullable();
             $table->string('email')->nullable();
+            $table->string('jenis_informasi')->nullable();
             $table->string('kontak_pemohon');
             $table->text('informasi_diminta');
             $table->text('alasan_permintaan');
+            $table->text('alamat_lengkap');
             $table->enum('status', ['diajukan', 'diproses', 'dijawab', 'ditolak'])->default('diajukan');
+            $table->enum('cara_memberikan', ['mengambil_langsung', 'kurir', 'pos', 'email', 'File']);
             $table->text('jawaban_ppid')->nullable();
             $table->string('file_jawaban')->nullable();
             $table->foreignId('ditangani_oleh')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
-            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
             $table->timestamps();
         });
     }

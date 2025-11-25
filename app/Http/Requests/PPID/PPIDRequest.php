@@ -25,13 +25,14 @@ class PPIDRequest extends FormRequest
     {
         return [
             'nama_pemohon'      => 'required|string|max:150',
-            'no_ktp' => 'nullable|string|numeric|digits:16',
+            'no_ktp'            => 'nullable|string|numeric|digits:16',
             'email'             => 'nullable|email|max:100',
             'kontak_pemohon'    => 'required|string|max:50',
+            'jenis_informasi'   => 'nullable|string|max:255',
             'informasi_diminta' => 'required|string',
             'alasan_permintaan' => 'required|string',
-            'kecamatan_id'      => 'nullable|integer|exists:kecamatan,id',
-            'desa_id'           => 'nullable|integer|exists:desa,id',
+            'alamat_lengkap'    => 'required|string',
+            'cara_memberikan'   => 'required|in:mengambil_langsung,kurir,pos,email,File',
         ];
     }
 
@@ -41,7 +42,8 @@ class PPIDRequest extends FormRequest
             'nama_pemohon.required'      => 'Nama pemohon wajib diisi.',
             'nama_pemohon.max'           => 'Nama pemohon tidak boleh lebih dari 150 karakter.',
 
-            'no_ktp.max'                 => 'Nomor KTP tidak boleh lebih dari 16 karakter.',
+            'no_ktp.numeric'             => 'Nomor KTP harus berupa angka.',
+            'no_ktp.digits'              => 'Nomor KTP harus berjumlah 16 digit.',
 
             'email.email'                => 'Format email tidak valid.',
             'email.max'                  => 'Email tidak boleh lebih dari 100 karakter.',
@@ -49,15 +51,16 @@ class PPIDRequest extends FormRequest
             'kontak_pemohon.required'    => 'Kontak pemohon wajib diisi.',
             'kontak_pemohon.max'         => 'Kontak pemohon tidak boleh lebih dari 50 karakter.',
 
+            'jenis_informasi.max'        => 'Jenis informasi tidak boleh lebih dari 255 karakter.',
+
             'informasi_diminta.required' => 'Informasi yang diminta wajib diisi.',
 
             'alasan_permintaan.required' => 'Alasan permintaan wajib diisi.',
 
-            'kecamatan_id.exists'        => 'Data kecamatan yang dipilih tidak valid.',
-            'kecamatan_id.integer'       => 'ID Kecamatan harus berupa angka.',
+            'alamat_lengkap.required'    => 'Alamat lengkap wajib diisi.',
 
-            'desa_id.exists'             => 'Data desa yang dipilih tidak valid.',
-            'desa_id.integer'            => 'ID Desa harus berupa angka.',
+            'cara_memberikan.required'   => 'Cara memberikan informasi wajib dipilih.',
+            'cara_memberikan.in'         => 'Pilihan cara memberikan informasi tidak valid (Pilih: mengambil_langsung, kurir, pos, email, atau File).',
         ];
     }
 
