@@ -36,6 +36,8 @@ class PengaduanRequest extends FormRequest
             'kecamatan_id'   => 'nullable|exists:kecamatan,id',
             'desa_id'        => 'nullable|exists:desa,id',
 
+            'lokasi'         => 'nullable|string',
+
             'status'         => 'nullable|in:diterima,diproses,selesai,ditolak',
 
             'lampiran'       => 'nullable|array|max:3',

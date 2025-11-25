@@ -172,6 +172,8 @@ return new class extends Migration
             $table->text('lokasi')->nullable();
 
             $table->enum('status', ['diterima', 'diproses', 'selesai', 'ditolak'])->default('diterima');
+            $table->text('catatan_tolak')->nullable();
+
             $table->timestamp('diterima_at')->nullable();
             $table->timestamp('diproses_at')->nullable();
             $table->timestamp('selesai_at')->nullable();

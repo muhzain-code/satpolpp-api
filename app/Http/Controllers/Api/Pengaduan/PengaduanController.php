@@ -61,9 +61,13 @@ class PengaduanController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function setDitolak($id): JsonResponse
+    public function setDitolak($id, Request $request): JsonResponse
     {
-        $result = $this->service->setDitolak($id);
+        $request->validate([
+            'catatan_tolak' => 'nullable|string',
+        ]);
+
+        $result = $this->service->setDitolak($id, $request);
         return $this->successResponse($result['data'], $result['message']);
     }
 

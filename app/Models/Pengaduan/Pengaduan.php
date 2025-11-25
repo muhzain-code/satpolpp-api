@@ -3,9 +3,10 @@
 namespace App\Models\Pengaduan;
 
 use App\Models\Alamat\Desa;
+use App\Models\Alamat\Provinsi;
 use App\Models\Alamat\Kabupaten;
 use App\Models\Alamat\Kecamatan;
-use App\Models\Alamat\Provinsi;
+use App\Models\Operasi\Disposisi;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengaduan extends Model
@@ -27,8 +28,14 @@ class Pengaduan extends Model
         'diterima_at',
         'diproses_at',
         'selesai_at',
-        'ditolak_at'
+        'ditolak_at',
+        'catatan_tolak',
     ];
+
+    public function disposisi()
+    {
+        return $this->hasMany(Disposisi::class, 'pengaduan_id');
+    }
 
     public function pengaduanLampiran()
     {
