@@ -203,7 +203,7 @@ return new class extends Migration
         Schema::create('disposisi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
-            $table->foreignId('ke_unit_id')->nullable()->constrained('unit')->nullOnDelete();
+            $table->foreignId('komandan_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('catatan')->nullable();
 
             $table->dateTime('batas_waktu')->nullable()->comment('Batas waktu SLA disposisi');
