@@ -14,14 +14,14 @@ class DisposisiService
 {
     public function getAll($filter)
     {
-        $disposisi = Disposisi::with('pengaduan', 'keUnit');
+        $disposisi = Disposisi::with('pengaduan', 'komandan')->orderBy('created_at', 'desc');
 
         if (isset($filter['pengaduan_id'])) {
             $disposisi->where('pengaduan_id', $filter['pengaduan_id']);
         }
 
-        if (isset($filter['ke_unit_id'])) {
-            $disposisi->where('ke_unit_id', $filter['ke_unit_id']);
+        if (isset($filter['komandan_id'])) {
+            $disposisi->where('komandan_id', $filter['komandan_id']);
         }
 
         $disposisi = $disposisi->paginate($filter['per_page'], ['*'], 'page', $filter['page']);
@@ -30,7 +30,7 @@ class DisposisiService
             return [
                 'id' => $item->id,
                 'pengaduan_id' => $item->pengaduan->nomor_tiket,
-                'ke_unit_id' => $item->keUnit->nama ?? null,
+                'komandan_id' => $item->komandan->name ?? null,
                 'catatan' => $item->catatan,
                 'batas_waktu' => $item->batas_waktu,
                 'status' => $item->status,
@@ -89,6 +89,27 @@ class DisposisiService
             throw new CustomException('Data disposisi tidak ditemukan', 404);
         }
 
+        $disposisi->getCollection()->transform(function ($item) {
+            $pengaduan = $item->pengaduan;
+            return [
+                'id' => $item->id,
+                'pengaduan' => $pengaduan ? [
+                    'id' => $pengaduan->id,
+                    'nomor_tiket' => $pengaduan->nomor_tiket,
+                    'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
+                    'deskripsi' => $pengaduan->deskripsi,
+                    'lat' => $pengaduan->lat,
+                    'lng' => $pengaduan->lng,
+                    'kecamatan' => $pengaduan->kecamatan ? $pengaduan->kecamatan->nama : null,
+                    'desa' => $pengaduan->desa ? $pengaduan->desa->nama : null,
+                ] : null,
+                'komandan' => $item->komandan->name ?? null,
+                'catatan' => $item->catatan,
+                'batas_waktu' => $item->batas_waktu,
+                'status' => $item->status,
+            ];
+        });
+
         return [
             'message' => 'Disposisi berhasil ditemukan',
             'data' => $disposisi
@@ -131,7 +152,7 @@ class DisposisiService
         ];
     }
 
-    public function getDisposisiUnit($request)
+    public function getDisposisiKomandan($request)
     {
         $user = Auth::user();
 
@@ -141,9 +162,9 @@ class DisposisiService
 
         $anggota = $user->anggota;
 
-        $disposisiQuery = Disposisi::with(['pengaduan.kategoriPengaduan', 'keUnit'])
+        $disposisiQuery = Disposisi::with(['pengaduan.kategoriPengaduan', 'komandan'])
             ->whereHas('pengaduan', fn($q) => $q->where('status', 'diproses'))
-            ->where('ke_unit_id', $anggota->unit_id)
+            ->where('komandan_id', $anggota->unit_id)
             ->orderBy('created_at', 'desc');
 
         $disposisi = $disposisiQuery->paginate($request->per_page, ['*'], 'page', $request->page);
@@ -162,7 +183,7 @@ class DisposisiService
                     'kecamatan' => $pengaduan->kecamatan ? $pengaduan->kecamatan->nama : null,
                     'desa' => $pengaduan->desa ? $pengaduan->desa->nama : null,
                 ] : null,
-                'ke_unit' => $item->keUnit->nama ?? null,
+                'komandan' => $item->komandan->name ?? null,
                 'catatan' => $item->catatan,
                 'batas_waktu' => $item->batas_waktu,
                 'status' => $item->status,

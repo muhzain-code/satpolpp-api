@@ -18,7 +18,7 @@ class Disposisi extends Model
 
     protected $fillable = [
         'pengaduan_id',
-        'ke_unit_id',
+        'komandan_id',
         'catatan',
         'batas_waktu',
         'status',
@@ -29,7 +29,7 @@ class Disposisi extends Model
 
     protected $casts = [
         'pengaduan_id'   => 'integer',
-        'ke_unit_id'     => 'integer',
+        'komandan_id'     => 'integer',
         'created_by'     => 'integer',
         'updated_by'     => 'integer',
         'deleted_by'     => 'integer',
@@ -40,9 +40,9 @@ class Disposisi extends Model
         return $this->belongsTo(Pengaduan::class);
     }
 
-    public function keUnit()
+    public function komandan()
     {
-        return $this->belongsTo(Unit::class, 'ke_unit_id');
+        return $this->belongsTo(User::class, 'komandan_id');
     }
 
     public function createdBy()

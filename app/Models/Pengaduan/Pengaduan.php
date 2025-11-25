@@ -22,6 +22,7 @@ class Pengaduan extends Model
         'lng',
         'kecamatan_id',
         'desa_id',
+        'lokasi',
         'status',
         'diterima_at',
         'diproses_at',

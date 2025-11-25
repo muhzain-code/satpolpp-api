@@ -95,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('penindakan', [PenindakanController::class, 'index']);
         Route::get('penindakan/{id}', [PenindakanController::class, 'show']);
 
-        Route::get('disposisi-anggota', [DisposisiController::class, 'disposisiAnggota'])
+        Route::get('disposisi-komandan', [DisposisiController::class, 'getDisposisiKomandan'])
             ->middleware('role:super_admin|komandan_regu');
 
         Route::get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])

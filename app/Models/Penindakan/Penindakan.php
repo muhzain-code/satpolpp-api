@@ -21,9 +21,14 @@ class Penindakan extends Model
         'operasi_id',
         'laporan_harian_id',
         'pengaduan_id',
-        'anggota_pelapor_id',
+        'jenis_penindakan',
+        'kecamatan_id',
+        'desa_id',
+        'lokasi',
+        'lat',
+        'lng',
         'uraian',
-        'denda',
+        'butuh_validasi_ppns',
         'status_validasi_ppns',
         'catatan_validasi_ppns',
         'ppns_validator_id',
@@ -31,10 +36,6 @@ class Penindakan extends Model
         'created_by',
         'updated_by',
         'deleted_by',
-    ];
-
-    protected $casts = [
-        'denda' => 'decimal:2',
     ];
 
     public function operasi()

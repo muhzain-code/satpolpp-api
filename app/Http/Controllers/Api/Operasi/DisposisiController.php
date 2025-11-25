@@ -58,12 +58,12 @@ class DisposisiController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function disposisiAnggota(Request $request)
+    public function getDisposisiKomandan(Request $request)
     {
         $request->input('per_page', 25);
         $request->input('page', 1);
         
-        $result = $this->service->disposisiAnggota($request);
+        $result = $this->service->getDisposisiKomandan($request);
         return $this->successResponse($result['data'], $result['message']);
     }
 }
