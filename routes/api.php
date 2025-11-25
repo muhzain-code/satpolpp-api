@@ -175,7 +175,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
 
     // regulasi
     Route::get('regulasi', [RegulasiController::class, 'index']);
-    Route::post('regulasi', [RegulasiController::class, 'store']);
+    Route::post('regulasi', [RegulasiController::class, 'storeRegulasi']);
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
     Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
     Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
