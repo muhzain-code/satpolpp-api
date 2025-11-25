@@ -6,15 +6,23 @@ use App\Exceptions\CustomException;
 use App\Models\Pengaduan\KategoriPengaduan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+
 class KategoriPengaduanService
 {
-    public function getAll()
+    public function getAll($perPage, $currentPage): array
     {
-        $kategori = KategoriPengaduan::all();
+        $kategori = KategoriPengaduan::orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
 
         return [
             'message' => 'Data kategori pengaduan berhasil diambil',
-            'data' => $kategori
+            'data' => [
+                'current_page' => $kategori->currentPage(),
+                'per_page' => $kategori->perPage(),
+                'total' => $kategori->total(),
+                'last_page' => $kategori->lastPage(),
+                'items' => $kategori->items()
+            ]
         ];
     }
 

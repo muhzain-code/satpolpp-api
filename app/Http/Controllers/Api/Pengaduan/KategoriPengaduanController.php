@@ -20,9 +20,12 @@ class KategoriPengaduanController extends Controller
         $this->service = $service;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $result = $this->service->getAll();
+        $perPage = $request->input('per_page', 25);
+        $currentPage = $request->input('page', 1);
+
+        $result = $this->service->getAll($perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 
