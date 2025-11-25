@@ -19,8 +19,9 @@ class PPIDService
     }
     public function getAll($perPage, $currentPage): array
     {
-        $PPID = PPID::with(['user.anggota', 'kecamatan', 'desa'])
+        $PPID = PPID::with(['user'])
             ->orderByRaw("FIELD(status, 'diajukan', 'diproses', 'dijawab', 'ditolak')")
+            ->latest()
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
         $PPID->getCollection()->transform(function ($item) {
@@ -28,21 +29,19 @@ class PPIDService
                 'id'                => $item->id,
                 'nomor_registrasi'  => $item->nomor_registrasi,
                 'nama_pemohon'      => $item->nama_pemohon,
-                'no_ktp'            => $item->no_ktp, // Baru
-                'email'             => $item->email,  // Baru
+                'no_ktp'            => $item->no_ktp,
+                'email'             => $item->email,
                 'kontak_pemohon'    => $item->kontak_pemohon,
+                'jenis_informasi'   => $item->jenis_informasi,
                 'informasi_diminta' => $item->informasi_diminta,
                 'alasan_permintaan' => $item->alasan_permintaan,
-
-                'kecamatan'         => optional($item->kecamatan)->nama ?? null,
-                'desa'              => optional($item->desa)->nama ?? null,
-
+                'alamat_lengkap'    => $item->alamat_lengkap,
+                'cara_memberikan'   => $item->cara_memberikan,
                 'status'            => $item->status,
                 'jawaban_ppid'      => $item->jawaban_ppid,
                 'file_jawaban'      => $item->file_jawaban ? asset('storage/' . $item->file_jawaban) : null,
                 'ditangani_oleh'    => optional(optional($item->user)->anggota)->nama
-                    ?? optional($item->user)->name
-                    ?? 'Belum ditangani',
+                    ?? optional($item->user)->name?? 'Belum ditangani',
             ];
         });
 
@@ -62,19 +61,17 @@ class PPIDService
     {
         DB::beginTransaction();
         try {
-
             $nomorRegistrasi = $this->service->generateNomorRegistrasiPPID();
-
             $PPID = PPID::create([
                 'nomor_registrasi'  => $nomorRegistrasi,
                 'nama_pemohon'      => $data['nama_pemohon'],
                 'no_ktp'            => $data['no_ktp'] ?? null,
                 'email'             => $data['email'] ?? null,
+                'jenis_informasi'   => $data['jenis_informasi'] ?? null,
                 'kontak_pemohon'    => $data['kontak_pemohon'],
                 'informasi_diminta' => $data['informasi_diminta'],
                 'alasan_permintaan' => $data['alasan_permintaan'],
-                'kecamatan_id'      => $data['kecamatan_id'] ?? null,
-                'desa_id'           => $data['desa_id'] ?? null,
+                'alamat_lengkap'    => $data['alamat_lengkap'],
                 'status'            => 'diajukan',
             ]);
 
@@ -87,6 +84,7 @@ class PPIDService
             DB::rollBack();
             Log::error('Gagal membuat permohonan PPID', [
                 'error' => $e->getMessage(),
+                'line'  => $e->getLine()
             ]);
 
             if ($e instanceof CustomException) {
@@ -101,9 +99,7 @@ class PPIDService
     {
         DB::beginTransaction();
         try {
-            $PPID = PPID::with(['kecamatan', 'desa'])
-                ->where('nomor_registrasi', $data['nomor_registrasi'])
-                ->first();
+            $PPID = PPID::where('nomor_registrasi', $data['nomor_registrasi'])->first();
 
             if (!$PPID) {
                 throw new CustomException('Data tidak ditemukan');
@@ -114,21 +110,22 @@ class PPIDService
                 'diproses' => 'Permohonan Anda sedang dalam proses pemeriksaan.',
                 'dijawab'  => $PPID->file_jawaban
                     ? 'Permohonan Anda telah dijawab. Silakan unduh file jawaban.'
-                    : 'Permohonan Anda telah dijawab.',
+                    : 'Permohonan Anda telah dijawab. Cek rincian jawaban di bawah.',
                 'ditolak'  => 'Permohonan Anda ditolak. Silakan baca alasan pada kolom jawaban.',
                 default    => 'Status tidak diketahui.',
             };
 
             $response = [
-                'nomor_registrasi' => $PPID->nomor_registrasi,
-                'nama_pemohon'     => $PPID->nama_pemohon,
-                'status'           => $PPID->status,
-                'kecamatan'        => optional($PPID->kecamatan)->nama,
-                'desa'             => optional($PPID->desa)->nama,    
-                'jawaban_ppid'     => $PPID->jawaban_ppid,
-                'file_jawaban'     => $PPID->file_jawaban ? asset('storage/' . $PPID->file_jawaban) : null,
-                'catatan'          => $catatan,
+                'nomor_registrasi'  => $PPID->nomor_registrasi,
+                'nama_pemohon'      => $PPID->nama_pemohon,
+                'status'            => $PPID->status,
+                'alamat_lengkap'    => $PPID->alamat_lengkap,
+                'cara_memberikan'   => $PPID->cara_memberikan,
+                'jawaban_ppid'      => $PPID->jawaban_ppid,
+                'file_jawaban'      => $PPID->file_jawaban ? asset('storage/' . $PPID->file_jawaban) : null,
+                'catatan'           => $catatan,
             ];
+
             DB::commit();
 
             return [
@@ -137,9 +134,7 @@ class PPIDService
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Gagal melacak permohonan PPID', [
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Gagal melacak permohonan PPID', ['error' => $e->getMessage()]);
 
             if ($e instanceof CustomException) {
                 throw $e;
@@ -168,20 +163,21 @@ class PPIDService
                 throw new CustomException('File jawaban tidak boleh diisi jika status ditolak.');
             }
 
-            if ($data['status'] === 'dijawab' && empty($data['jawaban_ppid'])) {
-                throw new CustomException('Jawaban PPID wajib diisi jika status dijawab.');
+            if ($data['status'] === 'dijawab' && empty($data['jawaban_ppid']) && empty($data['file_jawaban'])) {
             }
-            if (!empty($data['file_jawaban'])) {
+
+            if (!empty($data['file_jawaban']) && $data['file_jawaban'] instanceof \Illuminate\Http\UploadedFile) {
                 $filePath = $data['file_jawaban']->store('ppid/jawaban', 'public');
                 $data['file_jawaban'] = $filePath;
+            } elseif (isset($data['file_jawaban']) && is_string($data['file_jawaban'])) {
             } else {
-                $data['file_jawaban'] = null;
+                $data['file_jawaban'] = $PPID->file_jawaban; 
             }
 
             $PPID->update([
-                'status' => $data['status'],
-                'jawaban_ppid' => $data['jawaban_ppid'],
-                'file_jawaban' => $data['file_jawaban'] ?? null,
+                'status'         => $data['status'],
+                'jawaban_ppid'   => $data['jawaban_ppid'] ?? $PPID->jawaban_ppid,
+                'file_jawaban'   => $data['file_jawaban'],
                 'ditangani_oleh' => $UserId
             ]);
 
@@ -192,9 +188,7 @@ class PPIDService
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Gagal membuat Validasi PPID', [
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('Gagal membuat Validasi PPID', ['error' => $e->getMessage()]);
 
             if ($e instanceof CustomException) {
                 throw $e;
