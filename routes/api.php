@@ -115,7 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
     // Validasi PPNS
-    Route::middleware('role:ppns')->post('penindakan/{id}/validasi-ppns', [PenindakanController::class, 'validasiPPNS']);
 });
 
 
@@ -126,7 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
  * ==========================
  */
 Route::middleware('auth:sanctum', 'role:super_admin|ppns')
-    ->put('penindakan-validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS']);
+    ->post('penindakan-validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS']);
 
 
 /**
