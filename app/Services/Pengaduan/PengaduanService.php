@@ -74,6 +74,7 @@ class PengaduanService
                     'lng' => $data['lng'] ?? null,
                     'kecamatan_id' => $data['kecamatan_id'] ?? null,
                     'desa_id' => $data['desa_id'] ?? null,
+                    'lokasi' => $data['lokasi'] ?? null,
                     'status' => 'diterima',
                     'diterima_at' => now(),
                 ]);
@@ -140,6 +141,7 @@ class PengaduanService
             'kecamatan_id' => $pengaduan->kecamatan_id,
             'desa_id' => $pengaduan->desa_id,
             'status' => $pengaduan->status,
+            'lokasi' => $pengaduan->lokasi,
             'diterima_at' => $pengaduan->diterima_at,
             'diproses_at' => $pengaduan->diproses_at,
             'selesai_at' => $pengaduan->selesai_at,
@@ -179,6 +181,7 @@ class PengaduanService
                     'lng' => $data['lng'] ?? $pengaduan->lng,
                     'kecamatan_id' => $data['kecamatan_id'] ?? $pengaduan->kecamatan_id,
                     'desa_id' => $data['desa_id'] ?? $pengaduan->desa_id,
+                    'lokasi' => $data['lokasi'] ?? $pengaduan->lokasi,
                 ]);
 
                 if (!empty($data['lampiran']) && is_array($data['lampiran'])) {
@@ -246,7 +249,7 @@ class PengaduanService
         }
     }
 
-    public function setDitolak($id): array
+    public function setDitolak($id, $data): array
     {
         $pengaduan = Pengaduan::find($id);
         if (!$pengaduan) {
@@ -258,6 +261,7 @@ class PengaduanService
         }
 
         $pengaduan->update([
+            'catatan_tolak' => $data['catatan_tolak'] ?? 'Pengaduan ditolak oleh sistem',
             'status' => 'ditolak',
         ]);
 
@@ -269,24 +273,58 @@ class PengaduanService
 
     public function lacakNomorTiket($nomor)
     {
-        $pengaduan = Pengaduan::with('kategoriPengaduan:id,nama')->where('nomor_tiket', $nomor)->first();
+        $pengaduan = Pengaduan::with([
+            'kategoriPengaduan:id,nama',
+            'disposisi.komandan.anggota.unit'
+        ])
+            ->where('nomor_tiket', $nomor)
+            ->first();
 
         if (! $pengaduan) {
-            throw new CustomException('Data pengaduan tidak ditemukan', 404);
+            throw new CustomException('Nomor tiket tidak ditemukan. Silakan periksa kembali nomor yang Anda masukkan.', 404);
         }
 
+        $unitDisposisi = optional($pengaduan->disposisi)
+            ->komandan
+            ->anggota
+            ->unit
+            ->nama ?? null;
+
+        $statusDescriptions = [
+            'diterima' => 'Pengaduan Anda telah diterima dan sedang menunggu penugasan petugas.',
+            'diproses' => 'Pengaduan Anda sedang ditindaklanjuti oleh petugas di lapangan.',
+            'selesai'  => 'Pengaduan Anda telah selesai ditangani.',
+            'ditolak'  => 'Pengaduan Anda tidak dapat diproses. Lihat catatan penolakan untuk informasi lebih lanjut.'
+        ];
+
         $data = [
-            'id' => $pengaduan->id,
-            'nomor_tiket' => $pengaduan->nomor_tiket,
-            'nama_pelapor' => $pengaduan->nama_pelapor,
-            'kontak_pelapor' => $pengaduan->kontak_pelapor,
-            'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
-            'status' => $pengaduan->status,
+            'id'               => $pengaduan->id,
+            'nomor_tiket'      => $pengaduan->nomor_tiket,
+            'nama_pelapor'     => $pengaduan->nama_pelapor,
+            'kontak_pelapor'   => $pengaduan->kontak_pelapor,
+            'kategori'         => $pengaduan->kategoriPengaduan->nama ?? null,
+            'deskripsi'        => $pengaduan->deskripsi,
+            'lokasi'           => $pengaduan->lokasi,
+
+            'diterima_at'      => $pengaduan->diterima_at,
+            'diproses_at'      => $pengaduan->diproses_at,
+            'selesai_at'       => $pengaduan->selesai_at,
+            'ditolak_at'       => $pengaduan->ditolak_at,
+            'status'           => $pengaduan->status,
+
+            // Unit yang menangani
+            'disposisi_unit'   => $unitDisposisi,
+
+            // Penjelasan yang mudah dipahami
+            'status_informasi' => $statusDescriptions[$pengaduan->status] ?? null,
+
+            // Catatan penolakan jika ada
+            'catatan_tolak'    => $pengaduan->catatan_tolak,
         ];
 
         return [
-            'message' => 'Data pengaduan berhasil ditemukan',
-            'data' => $data
+            'message' => 'Pengaduan berhasil ditemukan. Berikut perkembangan pengaduan Anda.',
+            'data'    => $data
         ];
     }
 }
