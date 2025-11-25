@@ -26,11 +26,11 @@ class OperasiService
         $user = Auth::user();
 
         if ($user->hasRole('super_admin')) {
-            $operasi = Operasi::with('pengaduan');
+            $operasi = Operasi::with('pengaduan')->orderBy('created_at', 'desc');
         }
 
         if ($user->hasRole('komandan_regu')) {
-            $operasi = Operasi::with('pengaduan')->where('created_by', $user->id);
+            $operasi = Operasi::with('pengaduan')->where('created_by', $user->id)->orderBy('created_at', 'desc');
         }
 
         if ($request->filled('pengaduan_id')) {

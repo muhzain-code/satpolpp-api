@@ -9,18 +9,34 @@ use Illuminate\Support\Facades\Log;
 
 class JabatanService
 {
-    public function getAll()
+   public function getAll($perPage, $currentPage): array
     {
-        $jabatans = Jabatan::all();
+        $jabatans = Jabatan::orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
 
         if ($jabatans->isEmpty()) {
             throw new CustomException('Data jabatan tidak ditemukan', 404);
         }
 
+       
+        $jabatans->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'keterangan' => $item->keterangan,
+            ];
+        });
+
         return [
             'status' => true,
             'message' => 'Data jabatan berhasil diambil',
-            'data' => $jabatans
+            'data' => [
+                'current_page' => $jabatans->currentPage(),
+                'per_page' => $jabatans->perPage(),
+                'total' => $jabatans->total(),
+                'last_page' => $jabatans->lastPage(),
+                'items' => $jabatans->items()
+            ]
         ];
     }
 

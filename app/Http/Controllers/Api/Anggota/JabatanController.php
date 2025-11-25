@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\Anggota;
 
+use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\Anggota\JabatanService;
 use App\Http\Requests\Anggota\StoreJabatanRequest;
 use App\Http\Requests\Anggota\UpdateJabatanRequest;
-use App\Services\Anggota\JabatanService;
-use App\Traits\ApiResponse;
 
 class JabatanController extends Controller
 {
@@ -18,9 +19,11 @@ class JabatanController extends Controller
         $this->service = $service;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $result = $this->service->getAll();
+        $perPage = $request->input('per_page', 25); 
+        $currentPage = $request->input('page', 1);
+        $result = $this->service->getAll($perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 

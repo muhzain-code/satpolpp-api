@@ -9,14 +9,31 @@ use Illuminate\Support\Facades\Auth;
 
 class UnitService
 {
-    public function getAll()
+    public function getAll($perPage, $currentPage): array
     {
-        $units = Unit::all();
+        $units = Unit::orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        // Opsional: Transformasi data jika ingin membatasi field yang dikirim
+        
+        $units->getCollection()->transform(function ($item) {
+            return [
+                'id' => $item->id,
+                'nama' => $item->nama,
+                'keterangan' => $item->keterangan,
+            ];
+        });
 
         return [
             'status' => true,
             'message' => 'Data unit berhasil diambil',
-            'data' => $units
+            'data' => [
+                'current_page' => $units->currentPage(),
+                'per_page' => $units->perPage(),
+                'total' => $units->total(),
+                'last_page' => $units->lastPage(),
+                'items' => $units->items()
+            ]
         ];
     }
 

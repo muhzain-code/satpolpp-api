@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api\Anggota;
 
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Anggota\StoreUnitRequest;
 use App\Services\Anggota\UnitService;
+use App\Http\Requests\Anggota\StoreUnitRequest;
 
 class UnitController extends Controller
 {
@@ -17,9 +18,12 @@ class UnitController extends Controller
         $this->service = $service;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $result = $this->service->getAll();
+        $perPage = $request->input('per_page', 25);
+        $currentPage = $request->input('page', 1);
+        
+        $result = $this->service->getAll($perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 

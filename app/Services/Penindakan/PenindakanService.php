@@ -18,11 +18,11 @@ class PenindakanService
         $user = Auth::user();
 
         if ($user->hasRole('super_admin') ||  $user->hasRole('ppns')) {
-            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket']);
+            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket'])->orderBy('created_at', 'desc');
         }
 
         if ($user->hasRole('komandan_regu')) {
-            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket'])->where('anggota_pelapor_id', $user->anggota?->id);
+            $query = Penindakan::with(['operasi:id,nama', 'pengaduan:id,nomor_tiket'])->where('created_by', $user->id)->orderBy('created_at', 'desc');
         }
 
         if (isset($filter['status_validasi_ppns'])) {

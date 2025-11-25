@@ -23,7 +23,7 @@ class PengaduanService
 
     public function getAll($filter): array
     {
-        $pengaduan = Pengaduan::with('kategoriPengaduan:id,nama');
+        $pengaduan = Pengaduan::with('kategoriPengaduan:id,nama')->where('status', 'diterima')->orderBy('created_at', 'desc');
 
         if (isset($filter['status'])) {
             $pengaduan->where('status', strtolower($filter['status']));

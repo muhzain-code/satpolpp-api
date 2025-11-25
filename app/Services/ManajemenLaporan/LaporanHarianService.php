@@ -16,7 +16,7 @@ class LaporanHarianService
     {
         $lap = LaporanHarian::with(['anggota' => function ($query) {
             $query->where('status', 'aktif');
-        }])
+        }])->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
         $lap->getCollection()->transform(function ($item) {

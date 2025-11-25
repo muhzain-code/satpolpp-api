@@ -24,6 +24,7 @@ class AnggotaService
     {
         $anggota = Anggota::with('unit:id,nama', 'jabatan:id,nama')
             ->where('status', 'aktif')
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
         $anggota->getCollection()->transform(function ($item) {
