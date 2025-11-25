@@ -201,7 +201,7 @@ return new class extends Migration
         Schema::create('disposisi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pengaduan_id')->constrained('pengaduan')->cascadeOnDelete();
-            $table->foreignId('komandan_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('ke_unit_id')->nullable()->constrained('unit')->nullOnDelete();
             $table->text('catatan')->nullable();
 
             $table->dateTime('batas_waktu')->nullable()->comment('Batas waktu SLA disposisi');
@@ -264,9 +264,6 @@ return new class extends Migration
             $table->enum('jenis', ['aman', 'insiden'])->default('aman');
             $table->text('catatan')->nullable();
 
-            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
-            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
-            $table->text('lokasi')->nullable();
             $table->decimal('lat', 10, 7)->nullable();
             $table->decimal('lng', 10, 7)->nullable();
 
@@ -457,6 +454,8 @@ return new class extends Migration
             $table->id();
             $table->string('nomor_registrasi')->unique();
             $table->string('nama_pemohon');
+            $table->string('no_ktp')->nullable();
+            $table->string('email')->nullable();
             $table->string('kontak_pemohon');
             $table->text('informasi_diminta');
             $table->text('alasan_permintaan');
@@ -464,6 +463,8 @@ return new class extends Migration
             $table->text('jawaban_ppid')->nullable();
             $table->string('file_jawaban')->nullable();
             $table->foreignId('ditangani_oleh')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
+            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
             $table->timestamps();
         });
     }
