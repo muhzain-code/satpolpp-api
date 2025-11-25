@@ -274,7 +274,7 @@ class PengaduanService
     public function lacakNomorTiket($nomor)
     {
         $pengaduan = Pengaduan::with([
-            'kategori:id,nama',
+            'kategoriPengaduan:id,nama',
             'disposisi.komandan.anggota.unit'
         ])
             ->where('nomor_tiket', $nomor)
@@ -302,7 +302,7 @@ class PengaduanService
             'nomor_tiket'      => $pengaduan->nomor_tiket,
             'nama_pelapor'     => $pengaduan->nama_pelapor,
             'kontak_pelapor'   => $pengaduan->kontak_pelapor,
-            'kategori'         => $pengaduan->kategori->nama ?? null,
+            'kategori'         => $pengaduan->kategoriPengaduan->nama ?? null,
             'deskripsi'        => $pengaduan->deskripsi,
             'lokasi'           => $pengaduan->lokasi,
 
