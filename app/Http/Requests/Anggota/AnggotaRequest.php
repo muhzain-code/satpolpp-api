@@ -28,12 +28,6 @@ class AnggotaRequest extends FormRequest
         $anggotaId = $this->route('id');
 
         return [
-            'kode_anggota' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('anggota', 'kode_anggota')->ignore($anggotaId),
-            ],
 
             'nik' => [
                 'nullable',
