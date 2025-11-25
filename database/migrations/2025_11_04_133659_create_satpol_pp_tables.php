@@ -169,6 +169,8 @@ return new class extends Migration
             $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
             $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
 
+            $table->text('lokasi')->nullable();
+
             $table->enum('status', ['diterima', 'diproses', 'selesai', 'ditolak'])->default('diterima');
             $table->timestamp('diterima_at')->nullable();
             $table->timestamp('diproses_at')->nullable();
@@ -270,7 +272,7 @@ return new class extends Migration
 
             $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->nullable();
             $table->enum('status_validasi', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
-            $table->foreignId('divalidasi_oleh')->nullable()->constrained('anggota')->nullOnDelete();
+            $table->foreignId('divalidasi_oleh')->nullable()->constrained('users')->nullOnDelete();
 
             $table->boolean('telah_dieskalasi')->default(false);
 
@@ -297,18 +299,26 @@ return new class extends Migration
         Schema::create('penindakan', function (Blueprint $table) {
             $table->id();
 
-            // Sumber (WAJIB salah satu)
+            // 1 dan hanya 1 sumber
             $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
             $table->foreignId('laporan_harian_id')->nullable()->constrained('laporan_harian')->nullOnDelete();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
 
+            // Jenis penindakan
+            $table->enum('jenis_penindakan', ['teguran', 'pembinaan', 'penyitaan', 'proses_hukum'])->default('teguran');
+
+            // Lokasi
+            $table->foreignId('kecamatan_id')->nullable()->constrained('kecamatan')->nullOnDelete();
+            $table->foreignId('desa_id')->nullable()->constrained('desa')->nullOnDelete();
+            $table->text('lokasi')->nullable();
+            $table->decimal('lat', 12, 8)->nullable();
+            $table->decimal('lng', 12, 8)->nullable();
+
             $table->text('uraian')->nullable();
 
-            $table->decimal('denda', 12, 2)->default(0);
-
-            // Validasi PPNS
-            $table->enum('status_validasi_ppns', ['menunggu', 'ditolak', 'revisi', 'disetujui'])
-                ->default('menunggu');
+            // Validasi PPNS (aktif hanya saat proses hukum)
+            $table->boolean('butuh_validasi_ppns')->default(false);
+            $table->enum('status_validasi_ppns', ['menunggu', 'ditolak', 'revisi', 'disetujui'])->nullable();
             $table->text('catatan_validasi_ppns')->nullable();
             $table->foreignId('ppns_validator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('tanggal_validasi_ppns')->nullable();
