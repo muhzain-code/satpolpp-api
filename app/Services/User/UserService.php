@@ -30,15 +30,21 @@ class UserService
         $komandan->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->id,
-                'nama_lengkap' => $item->anggota->nama_lengkap,
-                'jabatan' => $item->anggota->jabatan ? $item->anggota->jabatan->nama_jabatan : null,
-                'unit' => $item->anggota->unit ? $item->anggota->unit->nama_unit : null,
+                'nama_lengkap' => $item->anggota->nama,
+                'jabatan' => $item->anggota->jabatan ? $item->anggota->jabatan->nama : null,
+                'unit' => $item->anggota->unit ? $item->anggota->unit->nama : null,
             ];
         });
 
         return [
             'message' => 'Daftar Komandan Regu',
-            'data' => $komandan,
+             'data' => [
+                'current_page' => $komandan->currentPage(),
+                'per_page' => $komandan->perPage(),
+                'total' => $komandan->total(),
+                'last_page' => $komandan->lastPage(),
+                'items' => $komandan->items(),
+            ]
         ];
     }
 }
