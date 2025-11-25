@@ -21,7 +21,7 @@ class UserService
         if ($request->has('q') && !empty($request->q)) {
             $searchTerm = $request->q;
             $query->whereHas('anggota', function ($q2) use ($searchTerm) {
-                $q2->where('nama_lengkap', 'like', '%' . $searchTerm . '%');
+                $q2->where('nama', 'like', '%' . $searchTerm . '%');
             });
         }
 
