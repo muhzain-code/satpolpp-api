@@ -28,7 +28,6 @@ class DisposisiRequest extends FormRequest
             'komandan_id' => 'nullable|exists:users,id',
             'catatan' => 'nullable|string|max:500',
             'batas_waktu' => 'nullable|date',
-            'status' => 'nullable|in:pending,completed',
         ];
     }
 

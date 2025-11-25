@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LokasiController;
+use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\PPID\PPIDController;
 use App\Http\Controllers\Api\Anggota\UnitController;
@@ -62,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
         Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
         Route::post('pengaduan-tolak/{id}', [PengaduanController::class, 'setDitolak']);
+
+        Route::get('list-komandan', [UserController::class, 'getAllKomandan']);
 
         Route::get('disposisi', [DisposisiController::class, 'index']);
         Route::post('disposisi', [DisposisiController::class, 'store']);
