@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\DokumenRegulasi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DokumenRegulasi\CatatanPenandaRequest;
+use App\Http\Requests\DokumenRegulasi\PenandaHalamanRequest;
+use App\Http\Requests\DokumenRegulasi\PenandaPasalRequest;
 use App\Http\Requests\DokumenRegulasi\PenandaRequest;
 use App\Http\Requests\DokumenRegulasi\ProgressRequest;
 use App\Services\DokumenRegulasi\RegulationProgressService;
@@ -20,45 +22,67 @@ class RegulationProgressController extends Controller
     {
         $this->service = $service;
     }
-    public function getProgress(Request $request): JsonResponse
+    public function listregulasi(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 25);
         $currentPage = $request->input('page', 1);
-        $result = $this->service->getProgress($perPage, $currentPage);
+        $result = $this->service->listbacaan($perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function Progress(ProgressRequest $request): JsonResponse
+    public function detailregulasi($id): JsonResponse
     {
-        $result = $this->service->progress($request->validated());
+        $result = $this->service->detailbacaan($id);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function ProgressMembaca(ProgressRequest $request): JsonResponse
+    public function catatprogresbacaan(ProgressRequest $request): JsonResponse
     {
-        $result = $this->service->progressmembaca($request->validated());
+        $result = $this->service->catatbacaan($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function Penanda(PenandaRequest $request): JsonResponse
+    public function bookmartregulasi(Request $request): JsonResponse
     {
-        $result = $this->service->penanda($request->validated());
-        return $this->successResponse($result['data'], $request['message']);
+        $perPage = $request->input('per_page', 25);
+        $currentPage = $request->input('page', 1);
+        $result = $this->service->listtanda($perPage, $currentPage);
+        return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function GetPenanda(string $Id): JsonResponse
+    public function detailbookmark($id): JsonResponse
     {
-        $result = $this->service->GetPenanda($Id);
+        $result = $this->service->detailtanda($id);
         return $this->successResponse($result['data'], $result['message']);
     }
-    public function UpdatePenanda(CatatanPenandaRequest $request, $Id): JsonResponse
+
+    public function tandaiPasal(PenandaPasalRequest $request): JsonResponse
     {
-        $result = $this->service->UpdatePenanda($request->validated(), $Id);
+        $result = $this->service->buatPenandaPasal($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
+
+    public function updatetandaiPasal(PenandaPasalRequest $request, $id): JsonResponse
+    {
+        $result = $this->service->perbaruiPenandaPasal($id, $request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function tandaiHalaman(PenandaHalamanRequest $request): JsonResponse
+    {
+        $result = $this->service->buatPenandaHalaman($request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function updatetandaihalaman(PenandaHalamanRequest $request, $id): JsonResponse
+    {
+        $result = $this->service->perbaruiPenandaHalaman($id, $request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
     public function DestroyPenanda($Id): JsonResponse
     {
-        $result = $this->service->destroyPenanda($Id);
+        $result = $this->service->deletePenanda($Id);
         return $this->successResponse($result['message']);
     }
 }

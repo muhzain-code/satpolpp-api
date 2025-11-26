@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class RegulasiService
 {
-    public function getAll($filters, $perPage, $currentPage): array
+    public function getall($filters, $perPage, $currentPage): array
     {
         $query = Regulasi::with('kategoriRegulasi');
 
@@ -62,7 +62,7 @@ class RegulasiService
         ];
     }
 
-    public function store(array $data): array
+    public function create(array $data): array
     {
         try {
             $data['created_by'] = Auth::id();
@@ -101,7 +101,7 @@ class RegulasiService
         }
     }
 
-    public function getByid($id): array
+    public function getbyid($id): array
     {
         $regulasi = Regulasi::find($id);
 

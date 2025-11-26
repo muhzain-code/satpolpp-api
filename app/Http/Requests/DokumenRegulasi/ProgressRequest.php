@@ -24,16 +24,21 @@ class ProgressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'regulasi_id' => 'required|integer|exists:regulasi,id',
+            'regulasi_id'  => 'required|integer|exists:regulasi,id',
+            'durasi_detik' => 'required|integer|min:0',
         ];
     }
 
+    /**
+     * Custom message for validation errors.
+     */
     public function messages(): array
     {
         return [
-            'regulasi_id.required' => 'Regulasi wajib diisi.',
-            'regulasi_id.integer' => 'ID regulasi harus berupa angka.',
-            'regulasi_id.exists' => 'Regulasi yang dipilih tidak ditemukan.',
+            'regulasi_id.required'  => 'ID Regulasi wajib dikirim.',
+            'regulasi_id.exists'    => 'Regulasi tidak ditemukan dalam database.',
+            'durasi_detik.required' => 'Durasi baca (detik) wajib dikirim.',
+            'durasi_detik.integer'  => 'Durasi baca harus berupa angka.',
         ];
     }
 

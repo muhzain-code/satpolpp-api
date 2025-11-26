@@ -27,19 +27,19 @@ class KategoriRegulasiController extends Controller
             'keyword' => $request->input('keyword', null),
         ];
 
-        $result = $this->service->getAll($filters, $perPage, $currentPage);
+        $result = $this->service->getall($filters, $perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function store(KategoriRegulasiRequest $request): JsonResponse
     {
-        $result = $this->service->store($request->validated());
+        $result = $this->service->create($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function show(string $id): JsonResponse
     {
-        $result = $this->service->getById($id);
+        $result = $this->service->getbyId($id);
         return $this->successResponse($result['data'], $result['message']);
     }
 

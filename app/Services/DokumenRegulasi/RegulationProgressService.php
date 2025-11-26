@@ -3,239 +3,430 @@
 namespace App\Services\DokumenRegulasi;
 
 use App\Exceptions\CustomException;
+use App\Models\DokumenRegulasi\CatatanRegulasi;
 use App\Models\DokumenRegulasi\KemajuanPembacaan;
 use App\Models\DokumenRegulasi\Penanda;
 use App\Models\DokumenRegulasi\Regulasi;
+use App\Models\DokumenRegulasi\RiwayatBaca;
+use App\Models\DokumenRegulasi\StatistikPengguna;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RegulationProgressService
 {
-    public function getProgress($perPage, $currentPage): array
+
+    public function listbacaan($perPage, $currentPage): array
+    {
+        $UserID = Auth::id();
+        if (!$UserID) {
+            throw new CustomException('User tidak ditemukan');
+        }
+        $today = Carbon::today()->toDateString();
+        $Regulasi = Regulasi::where('aktif', true)
+            ->withCount(['riwayatBaca as daily_completed_status' => function ($query) use ($UserID, $today) {
+                $query->where('user_id', $UserID)
+                    ->where('tanggal', $today)
+                    ->where('status_selesai', true);
+            }])
+            ->with([
+                'riwayatBaca' => function ($query) use ($UserID, $today) {
+                    $query->where('user_id', $UserID)
+                        ->where('tanggal', $today);
+                },
+                'kategoriRegulasi'
+            ])
+            ->orderBy('daily_completed_status', 'asc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $Regulasi->getCollection()->transform(function ($item) {
+            $riwayatHarian = $item->riwayatBaca->first();
+            $isCompleted = $riwayatHarian ? (bool) $riwayatHarian->status_selesai : false;
+            if ($isCompleted) {
+                $statusLabel = 'completed';
+            } else {
+                $statusLabel = 'not_started';
+            }
+
+            return [
+                'id'        => $item->id,
+                'kode'      => $item->kode,
+                'judul'     => $item->judul,
+                'tahun'     => $item->tahun,
+                'kategori'  => $item->kategoriRegulasi ? $item->kategoriRegulasi->nama : null,
+                'ringkasan' => $item->ringkasan,
+                'path_pdf'  => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
+                'aktif'     => $item->aktif,
+                'daily_progress' => [
+                    'status_label'   => $statusLabel,
+                    'is_completed'   => $isCompleted,
+                    'durasi_detik'   => $riwayatHarian ? $riwayatHarian->durasi_detik : 0, // Untuk timer resume
+                    'terakhir_akses' => $riwayatHarian ? Carbon::parse($riwayatHarian->updated_at)->diffForHumans() : null,
+                ]
+            ];
+        });
+
+        return [
+            'message' => 'Jadwal review harian berhasil ditampilkan',
+            'data' => [
+                'current_page' => $Regulasi->currentPage(),
+                'per_page'     => $Regulasi->perPage(),
+                'total'        => $Regulasi->total(),
+                'last_page'    => $Regulasi->lastPage(),
+                'items'        => $Regulasi->items()
+            ]
+        ];
+    }
+    public function detailbacaan($id): array
     {
         $UserID = Auth::id();
         if (!$UserID) {
             throw new CustomException('User tidak ditemukan');
         }
 
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $today = Carbon::today()->toDateString();
 
-        $Regulasi = Regulasi::where('aktif', true)
+        $regulasi = Regulasi::where('id', $id)
+            ->where('aktif', true)
             ->with([
-                'kemajuanPembacaan' => function ($query) use ($UserID, $currentMonth, $currentYear) {
+                'riwayatBaca' => function ($query) use ($UserID, $today) {
                     $query->where('user_id', $UserID)
-                        ->where('bulan', $currentMonth)
-                        ->where('tahun', $currentYear);
-                }
-            ])->paginate($perPage, ['*'], 'page', $currentPage);
+                        ->where('tanggal', $today);
+                },
+                'kategoriRegulasi'
+            ])
+            ->first();
 
-        $Regulasi->getCollection()->transform(function ($item) {
-            $progress = $item->kemajuanPembacaan->first();
-            $status = $progress ? $progress->status : 'belum';
-            $terakhir_dibaca = $progress ? $progress->terakhir_dibaca : null;
-            return [
-                'id'        => $item->id,
-                'kode'      => $item->kode,
-                'judul'     => $item->judul,
-                'tahun'     => $item->tahun,
-                'jenis'     => $item->jenis,
-                'ringkasan' => $item->ringkasan,
-                'path_pdf'  => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
-                'aktif'     => $item->aktif,
-                'progress' => [
-                    'status'          => $status,
-                    'terakhir_dibaca' => $terakhir_dibaca
-                        ? Carbon::parse($terakhir_dibaca)->toDateTimeString()
-                        : null,
-                ]
-            ];
-        });
+        if (!$regulasi) {
+            throw new CustomException('Regulasi tidak ditemukan');
+        }
+
+        $riwayatHarian = $regulasi->riwayatBaca->first();
+        $isCompleted = $riwayatHarian ? (bool) $riwayatHarian->status_selesai : false;
+
+        if ($isCompleted) {
+            $statusLabel = 'completed';
+        } else {
+            $statusLabel = 'not_started';
+        }
+
         return [
-            'message' => 'Anggota berhasil ditampilkan',
+            'message' => 'Detail regulasi berhasil ditampilkan',
             'data' => [
-                'current_page' => $Regulasi->currentPage(),
-                'per_page' => $Regulasi->perPage(),
-                'total' => $Regulasi->total(),
-                'last_page' => $Regulasi->lastPage(),
-                'items' => $Regulasi->items()
+                'id'        => $regulasi->id,
+                'kode'      => $regulasi->kode,
+                'judul'     => $regulasi->judul,
+                'tahun'     => $regulasi->tahun,
+                'kategori'  => $regulasi->kategoriRegulasi ? $regulasi->kategoriRegulasi->nama : null,
+                'ringkasan' => $regulasi->ringkasan,
+                'path_pdf'  => $regulasi->path_pdf ? url(Storage::url($regulasi->path_pdf)) : null,
+                'aktif'     => $regulasi->aktif,
+                'daily_progress' => [
+                    'status_label'   => $statusLabel,
+                    'is_completed'   => $isCompleted,
+                    'durasi_detik'   => $riwayatHarian ? $riwayatHarian->durasi_detik : 0,
+                    'terakhir_akses' => $riwayatHarian ? Carbon::parse($riwayatHarian->updated_at)->diffForHumans() : null,
+                ]
             ]
         ];
     }
-    public function progress(array $data): array
-    {
-        try {
-            $userId = Auth::id();
-            if (!$userId) {
-                throw new CustomException('User tidak ditemukan.');
-            }
-
-            $now = now();
-            $month = $now->month;
-            $year = $now->year;
-
-            $progress = KemajuanPembacaan::where([
-                ['user_id', $userId],
-                ['regulasi_id', $data['regulasi_id']],
-                ['bulan', $month],
-                ['tahun', $year],
-            ])->first();
-
-            if (!$progress) {
-                throw new CustomException("Anda belum memulai membaca regulasi ini. Silakan buka/baca materi terlebih dahulu.");
-            }
-
-            if ($progress->status === 'selesai') {
-                $monthName = $now->translatedFormat('F');
-                throw new CustomException("Kewajiban membaca regulasi ini untuk periode {$monthName} {$year} sudah selesai (1x per bulan). Silakan baca lagi bulan depan.");
-            }
-
-            if ($progress->status !== 'sedang') {
-                throw new CustomException("Gagal update: Status saat ini adalah '{$progress->status}', hanya status 'sedang' yang bisa diselesaikan.");
-            }
-
-            $progress->update([
-                'status' => 'selesai',
-                'terakhir_dibaca' => $now,
-            ]);
-
-            return [
-                'message' => 'Selamat! Anda telah menyelesaikan progres membaca regulasi ini.',
-                'data' => $progress
-            ];
-        } catch (\Throwable $e) {
-            Log::error('Gagal update progres ke selesai', [
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id() ?? 'unknown',
-                'regulasi_id' => $data['regulasi_id'] ?? 'unknown'
-            ]);
-
-            if ($e instanceof CustomException) {
-                throw $e;
-            }
-
-            throw new CustomException('Gagal menyelesaikan progres baca.');
-        }
-    }
-
-    public function progressmembaca(array $data): array
-    {
-        try {
-            $userId = Auth::id();
-            if (!$userId) {
-                throw new CustomException('User tidak ditemukan.');
-            }
-
-            $now = now();
-            $month = $now->month;
-            $year = $now->year;
-
-            $progress = KemajuanPembacaan::where([
-                ['user_id', $userId],
-                ['regulasi_id', $data['regulasi_id']],
-                ['bulan', $month],
-                ['tahun', $year],
-            ])->first();
-
-            if ($progress) {
-                if ($progress->status === 'selesai') {
-                    return [
-                        'message' => 'Progres sudah selesai (tidak ada perubahan)',
-                        'data' => $progress
-                    ];
-                }
-
-                $progress->update([
-                    'terakhir_dibaca' => $now
-                ]);
-
-                return [
-                    'message' => 'Melanjutkan membaca',
-                    'data' => $progress
-                ];
-            }
-
-            $newProgress = KemajuanPembacaan::create([
-                'user_id' => $userId,
-                'regulasi_id' => $data['regulasi_id'],
-                'bulan' => $month,
-                'tahun' => $year,
-                'status' => 'sedang',
-                'terakhir_dibaca' => $now,
-            ]);
-
-            return [
-                'message' => 'Mulai membaca',
-                'data' => $newProgress
-            ];
-        } catch (\Throwable $e) {
-            Log::error('Gagal memproses progres membaca', [
-                'error' => $e->getMessage(),
-            ]);
-
-            if ($e instanceof CustomException) {
-                throw $e;
-            }
-
-            throw new CustomException('Gagal memproses progres membaca');
-        }
-    }
-
-    public function GetPenanda($Id): array
+    public function catatbacaan(array $data): array
     {
         $userId = Auth::id();
         if (!$userId) {
             throw new CustomException('User tidak ditemukan.');
         }
 
-        $Penanda = Penanda::where([
-            ['user_id', $userId],
-            ['regulasi_id', $Id],
-        ])->first();
-
-        if (!$Penanda) {
-            throw new CustomException('Data tidak ditemukan');
+        if (!isset($data['durasi_detik'])) {
+            throw new CustomException('Data durasi detik diperlukan.');
         }
 
+        if ($data['durasi_detik'] < 180) {
+            $menitKurang = ceil((180 - $data['durasi_detik']) / 60);
+            throw new CustomException("Belum bisa menyelesaikan. Anda harus membaca minimal 3 menit. (Kurang sekitar {$menitKurang} menit lagi)");
+        }
+
+        $regulasiId = $data['regulasi_id'];
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now();
+
+        return DB::transaction(function () use ($userId, $regulasiId, $data, $today, $now) {
+
+            $riwayat = RiwayatBaca::where('user_id', $userId)
+                ->where('regulasi_id', $regulasiId)
+                ->where('tanggal', $today)
+                ->first();
+
+            $isNewRecord = false;
+            $streakMessage = '';
+
+            if (!$riwayat) {
+                $isNewRecord = true;
+
+                $riwayat = RiwayatBaca::create([
+                    'user_id'        => $userId,
+                    'regulasi_id'    => $regulasiId,
+                    'tanggal'        => $today,
+                    'durasi_detik'   => $data['durasi_detik'],
+                    'status_selesai' => true,
+                ]);
+
+                $statistik = StatistikPengguna::where('user_id', $userId)->first();
+                $yesterday = Carbon::yesterday()->toDateString();
+
+                if (!$statistik) {
+                    $statistik = StatistikPengguna::create([
+                        'user_id' => $userId,
+                        'streak_saat_ini' => 1,
+                        'rekor_streak' => 1,
+                        'tanggal_aktivitas_terakhir' => $today
+                    ]);
+                    $streakMessage = 'Streak dimulai! Ini adalah hari pertama streakmu.';
+                } else {
+                    if ($statistik->tanggal_aktivitas_terakhir === $today) {
+                        $streakMessage = 'Progress tercatat! Kamu sudah mengamankan streak hari ini sebelumnya.';
+                    } else {
+                        if ($statistik->tanggal_aktivitas_terakhir === $yesterday) {
+                            $statistik->streak_saat_ini += 1;
+                            $streakMessage = 'Luar biasa! Streak bertambah menjadi ' . $statistik->streak_saat_ini . ' hari!';
+                        } else {
+                            $statistik->streak_saat_ini = 1;
+                            $streakMessage = 'Streak dimulai kembali! Semangat membangun kebiasaan baru.';
+                        }
+                        if ($statistik->streak_saat_ini > $statistik->rekor_streak) {
+                            $statistik->rekor_streak = $statistik->streak_saat_ini;
+                            $streakMessage .= ' Rekor baru tercapai!';
+                        }
+                        $statistik->tanggal_aktivitas_terakhir = $today;
+                        $statistik->save();
+                    }
+                }
+            } else {
+                $newDuration = $riwayat->durasi_detik;
+                if ($data['durasi_detik'] > $riwayat->durasi_detik) {
+                    $newDuration = $data['durasi_detik'];
+                }
+
+                $riwayat->update([
+                    'status_selesai' => true,
+                    'durasi_detik'   => $newDuration,
+                    'updated_at'     => $now,
+                ]);
+
+                $streakMessage = 'Progress diperbarui. Teruslah membaca!';
+            }
+
+            return [
+                'message' => $isNewRecord ? 'Selamat! Anda telah menyelesaikan bacaan ini. ' . $streakMessage : 'Data bacaan berhasil diperbarui.',
+                'data' => [
+                    'riwayat' => $riwayat,
+                    'is_new_record' => $isNewRecord
+                ]
+            ];
+        });
+    }
+
+    public function listtanda($perPage, $currentPage): array
+    {
+        $UserID = Auth::id();
+        if (!$UserID) {
+            throw new CustomException('User tidak di temukan');
+        }
+
+        $tanda = CatatanRegulasi::with('regulasi')
+            ->where('user_id', $UserID)
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $tanda->getCollection()->transform(function ($item) {
+            return [
+                'id'        => $item->id,
+                'halaman'   => $item->halaman,
+                'type'      => $item->type,
+                'regulasi'  => $item->regulasi->judul ?? null,
+            ];
+        });
+
         return [
-            'message' => 'Data berhasil diambil',
-            'data' => $Penanda
+            'message' => 'data berhasil ditampilkan',
+            'data'    => [
+                'current_page'  => $tanda->currentPage(),
+                'per_page'      => $tanda->perPage(),
+                'total'         => $tanda->total(),
+                'last_page'     => $tanda->lastPage(),
+                'items'         => $tanda->items(),
+            ]
         ];
     }
 
-    public function penanda(array $data): array
+
+    public function detailtanda($id): array
+    {
+        $UserID = Auth::id();
+        if (!$UserID) {
+            throw new CustomException('User tidak di temukan');
+        }
+
+        $tanda = CatatanRegulasi::with('regulasi')
+            ->where('id', $id)
+            ->where('user_id', $UserID)
+            ->first();
+
+        if (!$tanda) {
+            throw new CustomException('data tidak ditemukan');
+        }
+
+        return [
+            'message' => 'data berhasil di tampilkan',
+            'data'    => [
+                'id'            => $tanda->id,
+                'halaman'       => $tanda->halaman,
+                'type'          => $tanda->type,
+                'regulasi_judul' => $tanda->regulasi->judul ?? null,
+                'path_pdf' => $tanda->regulasi->path_pdf
+                    ? url(Storage::url($tanda->regulasi->path_pdf))
+                    : null,
+                'data'          => $tanda->data,
+            ]
+        ];
+    }
+
+    public function buatPenandaPasal(array $data): array
     {
         try {
-            $userId = Auth::id();
-            if (!$userId) {
-                throw new CustomException('User tidak ditemukan.');
+            $UserID = Auth::id();
+            if (!$UserID) {
+                throw new CustomException('User tidak di temukan');
             }
 
-            $alreadyMarked = Penanda::where([
-                ['user_id', $userId],
-                ['regulasi_id', $data['regulasi_id']],
-            ])->exists();
-
-            if ($alreadyMarked) {
-                throw new CustomException('Regulasi ini sudah Anda tandai sebelumnya, sehingga tidak dapat ditandai ulang.');
-            }
-
-            $penanda = Penanda::create([
-                'user_id' => $userId,
+            $pasal = CatatanRegulasi::create([
+                'user_id' => $UserID,
                 'regulasi_id' => $data['regulasi_id'],
-                'catatan' => $data['catatan'] ?? null,
-                'pasal_atau_halaman' => $data['pasal_atau_halaman'] ?? null,
-                'created_by' => $userId,
+                'halaman' => $data['halaman'],
+                'type' => 'highlight',
+                'data' => $data['data'],
             ]);
 
             return [
-                'message' => 'Data berhasil ditambahkan',
-                'data' => $penanda
+                'message' => 'data berhasil di tambahkan',
+                'data' => $pasal
             ];
         } catch (\Throwable $e) {
-            Log::error('Gagal menambahkan penanda', [
+            Log::error('Gagal menambahkan penanda pasal', [
+                'error' => $e->getMessage(),
+            ]);
+            if ($e instanceof CustomException) {
+                throw $e;
+            }
+            throw new CustomException('Gagal menambahkan penanda pasal', 422);
+        }
+    }
+
+    public function perbaruiPenandaPasal(int $id, array $data): array
+    {
+        try {
+            $UserID = Auth::id();
+            if (!$UserID) {
+                throw new CustomException('User tidak ditemukan');
+            }
+
+            $pasal = CatatanRegulasi::where('id', $id)
+                ->where('user_id', $UserID)
+                ->first();
+
+            if (!$pasal) {
+                throw new CustomException('Data penanda tidak ditemukan atau Anda tidak memiliki akses', 404);
+            }
+
+            if ($pasal->type != 'highlight') {
+                throw new CustomException('Data ini bukan highlight, tidak dapat diperbarui.');
+            }
+
+            $pasal->update([
+                'halaman' => $data['halaman'] ?? $pasal->halaman,
+                'data'    => $data['data'] ?? $pasal->data,
+            ]);
+
+            return [
+                'message' => 'Data berhasil diperbarui',
+                'data'    => $pasal
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Gagal memperbarui penanda pasal', [
+                'id'    => $id,
+                'error' => $e->getMessage(),
+            ]);
+            if ($e instanceof CustomException) {
+                throw $e;
+            }
+            throw new CustomException('Gagal memperbarui penanda pasal');
+        }
+    }
+    public function buatPenandaHalaman(array $data): array
+    {
+        try {
+            $UserID = Auth::id();
+            if (!$UserID) {
+                throw new CustomException('User tidak di temukan');
+            }
+
+            $halaman = CatatanRegulasi::create([
+                'user_id' => $UserID,
+                'regulasi_id' => $data['regulasi_id'],
+                'halaman' => $data['halaman'],
+                'catatan' => $data['catatan'],
+                'type' => 'note',
+            ]);
+
+            return [
+                'message' => 'data berhasil di tambahkan',
+                'data' => $halaman
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Gagal menambahkan penanda halaman', [
+                'error' => $e->getMessage(),
+            ]);
+            if ($e instanceof CustomException) {
+                throw $e;
+            }
+            throw new CustomException('Gagal menambahkan penanda halaman', 422);
+        }
+    }
+    public function perbaruiPenandaHalaman(int $id, array $data): array
+    {
+        try {
+            $UserID = Auth::id();
+            if (!$UserID) {
+                throw new CustomException('User tidak ditemukan');
+            }
+
+            $halaman = CatatanRegulasi::where('id', $id)
+                ->where('user_id', $UserID)
+                ->first();
+
+            if (!$halaman) {
+                throw new CustomException('Penanda halaman tidak ditemukan atau Anda tidak memiliki akses', 404);
+            }
+
+            if ($halaman->type !== 'note') {
+                throw new CustomException('Data ini bukan catatan pribadi, tidak dapat diperbarui');
+            }
+
+            // Update data
+            $halaman->update([
+                'halaman' => $data['halaman'] ?? $halaman->halaman,
+                'catatan'    => $data['catatan'] ?? $halaman->catatan,
+            ]);
+
+            return [
+                'message' => 'Catatan pribadi berhasil diperbarui',
+                'data'    => $halaman
+            ];
+        } catch (\Throwable $e) {
+
+            Log::error('Gagal memperbarui penanda halaman', [
+                'id'    => $id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -243,73 +434,43 @@ class RegulationProgressService
                 throw $e;
             }
 
-            throw new CustomException('Gagal menambahkan penanda.');
+            throw new CustomException('Gagal memperbarui penanda halaman', 422);
         }
     }
-    public function UpdatePenanda(array $data, $Id): array
+
+    public function deletePenanda($id): array
     {
         try {
-            $userId = Auth::id();
-
-            if (!$userId) {
-                throw new CustomException('User tidak ditemukan.');
+            $UserID = Auth::id();
+            if (!$UserID) {
+                throw new CustomException('User tidak ditemukan');
             }
 
-            $penanda = Penanda::where('id', $Id)
-                ->where('user_id', $userId)
+            $penanda = CatatanRegulasi::where('id', $id)
+                ->where('user_id', $UserID)
                 ->first();
 
             if (!$penanda) {
-                throw new CustomException('Data penanda tidak ditemukan atau tidak memiliki akses.');
+                throw new CustomException('Penanda tidak ditemukan atau Anda tidak memiliki akses', 404);
             }
 
-            $penanda->update([
-                'catatan' => $data['catatan'] ?? $penanda->catatan,
-                'pasal_atau_halaman' => $data['pasal_atau_halaman'] ?? $penanda->pasal_atau_halaman,
-                'updated_by' => $userId
-            ]);
-
-            $penanda->refresh();
+            $penanda->delete();
 
             return [
-                'message' => 'Data penanda berhasil diperbarui.',
-                'data' => $penanda
+                'message' => 'Data berhasil dihapus'
             ];
         } catch (\Throwable $e) {
-            Log::error('Gagal update data penanda', [
+
+            Log::error('Gagal menghapus penanda', [
+                'id' => $id,
                 'error' => $e->getMessage(),
-                'id' => $Id,
-                'user_id' => Auth::id(),
             ]);
 
             if ($e instanceof CustomException) {
                 throw $e;
             }
 
-            throw new CustomException('Terjadi kesalahan saat memperbarui data penanda.');
+            throw new CustomException('Gagal menghapus penanda', 422);
         }
-    }
-
-    public function destroyPenanda($Id): array
-    {
-        $userId = Auth::id();
-
-        if (!$userId) {
-            throw new CustomException('User tidak ditemukan.');
-        }
-
-        $penanda = Penanda::where('id', $Id)
-            ->where('user_id', $userId)
-            ->first();
-
-        if (!$penanda) {
-            throw new CustomException('Data penanda tidak ditemukan atau tidak memiliki akses.');
-        }
-
-        $penanda->delete();
-
-        return [
-            'message' => 'data berhasil dihapus'
-        ];
     }
 }

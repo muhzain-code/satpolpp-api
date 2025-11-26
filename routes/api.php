@@ -233,6 +233,18 @@ Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
     Route::post('lampiran', [LampiranLaporanController::class, 'store']);
     Route::get('lampiran/{id}', [LampiranLaporanController::class, 'show']);
     Route::put('lampiran/{id}', [LampiranLaporanController::class, 'update']);
+
+    // regulation progress
+    Route::get('progress', [RegulationProgressController::class, 'listregulasi']);
+    Route::get('progress/{id}', [RegulationProgressController::class, 'detailregulasi']);
+    Route::post('progres', [RegulationProgressController::class, 'catatprogresbacaan']);
+    Route::get('penanda', [RegulationProgressController::class, 'bookmartregulasi']);
+    Route::get('penanda/{id}', [RegulationProgressController::class, 'detailbookmark']);
+    Route::post('penanda-pasal', [RegulationProgressController::class, 'tandaiPasal']);
+    Route::put('penanda-pasal/{id}', [RegulationProgressController::class, 'updatetandaiPasal']);
+    Route::post('penanda-halaman', [RegulationProgressController::class, 'tandaiHalaman']);
+    Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
+    Route::delete('penanda/{id}', [RegulationProgressController::class, 'destroyPenanda']);
 });
 
 

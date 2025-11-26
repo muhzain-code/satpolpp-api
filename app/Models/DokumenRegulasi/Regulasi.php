@@ -31,6 +31,14 @@ class Regulasi extends Model
     {
         return $this->belongsTo(KategoriRegulasi::class);
     }
+    public function catatanRegulasi()
+    {
+        return $this->hasMany(CatatanRegulasi::class);
+    }
+    public function riwayatBaca()
+    {
+        return $this->hasMany(RiwayatBaca::class);
+    }
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -46,14 +54,6 @@ class Regulasi extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    public function KemajuanPembacaan()
-    {
-        return $this->hasMany(KemajuanPembacaan::class, 'regulasi_id', 'id');
-    }
-    public function Penanda()
-    {
-        return $this->hasMany(Penanda::class, 'regulasi_id', 'id');
-    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

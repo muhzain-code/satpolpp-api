@@ -28,17 +28,17 @@ class RegulasiController extends Controller
             'jenis'   => $request->input('jenis', null),
         ];
 
-        $result = $this->service->getAll($filters,$perPage, $currentPage);
+        $result = $this->service->getall($filters,$perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
     public function store(RegulasiRequest $request): JsonResponse
     {
-        $result = $this->service->store($request->validated());
+        $result = $this->service->create($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
     public function show(string $id): JsonResponse
     {
-        $result = $this->service->getByid($id);
+        $result = $this->service->getbyid($id);
         return $this->successResponse($result['data'], $result['message']);
     }
 

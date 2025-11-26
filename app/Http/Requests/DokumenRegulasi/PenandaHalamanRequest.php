@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class PenandaRequest extends FormRequest
+class PenandaHalamanRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,24 +23,24 @@ class PenandaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isCreate = $this->isMethod('post');
+        $ruleType = $isCreate ? 'required' : 'sometimes';
+
         return [
-            'regulasi_id' => ['required', 'integer', 'exists:regulasi,id'],
-            'pasal_atau_halaman' => ['nullable','string','max:255'],
-            'catatan' => ['nullable', 'string', 'max:500'],
+            'regulasi_id' => [$ruleType, 'integer', 'exists:regulasi,id'],
+            'halaman' => [$ruleType, 'integer', 'min:1'],
+            'catatan' => ['nullable', 'string', 'max:255'],
         ];
     }
-
     public function messages(): array
     {
         return [
-            'regulasi_id.required' => 'ID regulasi wajib diisi.',
-            'regulasi_id.integer' => 'ID regulasi harus berupa angka.',
             'regulasi_id.exists' => 'Regulasi yang dipilih tidak ditemukan.',
-            'catatan.string' => 'Catatan harus berupa teks.',
-            'catatan.max' => 'Catatan tidak boleh lebih dari 500 karakter.',
+            'halaman.required' => 'Halaman wajib diisi.',
+            'halaman.min' => 'Halaman minimal bernilai 1.',
+            'catatan.max' => 'Catatan maksimal terdiri dari 255 karakter.',
         ];
     }
-
     protected function failedValidation(Validator $validator)
     {
         $errors = $validator->errors();

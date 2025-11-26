@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class KategoriRegulasiService
 {
-    public function getAll($filters, $perPage, $currentPage): array
+    public function getall($filters, $perPage, $currentPage): array
     {
         $query = KategoriRegulasi::query();
 
@@ -42,7 +42,7 @@ class KategoriRegulasiService
         ];
     }
 
-    public function store(array $data): array
+    public function create(array $data): array
     {
         try {
             $data['created_by'] = Auth::id(); // tambahkan created_by
@@ -90,7 +90,7 @@ class KategoriRegulasiService
         }
     }
 
-    public function getById($id): array
+    public function getbyId($id): array
     {
         $kategori = KategoriRegulasi::find($id);
         if (!$kategori) {

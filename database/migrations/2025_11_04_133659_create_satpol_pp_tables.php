@@ -146,19 +146,38 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-
         // Untuk Penanda stabilo
-        Schema::create('regulation_annotations', function (Blueprint $table) {
+        Schema::create('catatan_regulasi', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
             $table->integer('halaman');
-            $table->string('type'); // highlight, note, ink
-            $table->json('data'); // Koordinat & warna
+            // Tipe: Hanya 'highlight' (visual/stabilo) dan 'note' (teks)
+            $table->enum('type', ['highlight', 'note']);
+            $table->json('data')->nullable(); // Koordinat & warna
+            $table->string('catatan')->nullable();
             $table->timestamps();
         });
 
+        Schema::create('riwayat_baca', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
+            $table->boolean('status_selesai')->default(false);
+            $table->integer('durasi_detik')->default(0);
+            $table->date('tanggal');
 
+            $table->timestamps();
+        });
+
+        Schema::create('statistik_pengguna', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->integer('streak_saat_ini')->default(0);
+            $table->integer('rekor_streak')->default(0);
+            $table->date('tanggal_aktivitas_terakhir')->nullable();
+            $table->timestamps();
+        });
         /**
          * ============================================================
          * 3. PENGADUAN PUBLIK
