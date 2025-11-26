@@ -40,7 +40,7 @@ class LaporanHarian extends Model
     {
         return $this->hasMany(LaporanLampiran::class, 'laporan_id', 'id');
     }
-    public function kategoripengaduan()
+    public function kategoriPelanggaran()
     {
         return $this->belongsTo(KategoriPengaduan::class, 'kategori_pelanggaran_id', 'id');
     }
