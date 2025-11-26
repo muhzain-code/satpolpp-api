@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Humas\GaleriController;
 use App\Http\Controllers\Api\Humas\KontenController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
+use App\Http\Controllers\Api\DokumenRegulasi\KategoriRegulasiController;
 use App\Http\Controllers\Api\Operasi\OperasiController;
 use App\Http\Controllers\Api\Operasi\DisposisiController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
@@ -173,13 +174,20 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
     Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
 
+    // Kategori regulasi
+    Route::get('kategori-regulasi', [KategoriRegulasiController::class, 'index']);
+    Route::post('kategori-regulasi', [KategoriRegulasiController::class, 'store']);
+    Route::get('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'show']);
+    Route::put('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'update']);
+    Route::delete('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'destroy']);
+
     // regulasi
     Route::get('regulasi', [RegulasiController::class, 'index']);
-    Route::post('regulasi', [RegulasiController::class, 'storeRegulasi']);
+    Route::post('regulasi', [RegulasiController::class, 'store']);
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
     Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
     Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
-    Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
+    // Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
 
     // regulation progress
     Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);

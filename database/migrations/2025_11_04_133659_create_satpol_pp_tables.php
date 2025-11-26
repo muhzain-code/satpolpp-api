@@ -120,12 +120,22 @@ return new class extends Migration
          * 2. REGULASI (Referensi utama untuk banyak modul)
          * ============================================================
          */
+        Schema::create('kategori_regulasi', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama', 100)->unique();
+            $table->text('keterangan')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
         Schema::create('regulasi', function (Blueprint $table) {
             $table->id();
             $table->string('kode', 80)->unique();
             $table->string('judul');
             $table->smallInteger('tahun')->nullable();
-            $table->enum('jenis', ['perda', 'perkada', 'sop', 'buku_saku'])->default('perda');
+            $table->foreignId('kategori_regulasi_id')->constrained('kategori_regulasi')->cascadeOnDelete();
             $table->text('ringkasan')->nullable();
             $table->string('path_pdf', 1000)->nullable();
             $table->boolean('aktif')->default(true);
@@ -135,6 +145,19 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+
+        // Untuk Penanda stabilo
+        Schema::create('regulation_annotations', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('regulasi_id')->constrained('regulasi')->cascadeOnDelete();
+            $table->integer('halaman');
+            $table->string('type'); // highlight, note, ink
+            $table->json('data'); // Koordinat & warna
+            $table->timestamps();
+        });
+
 
         /**
          * ============================================================
