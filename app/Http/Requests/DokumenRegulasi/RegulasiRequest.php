@@ -32,13 +32,13 @@ class RegulasiRequest extends FormRequest
             ],
             'judul' => ['required', 'string', 'max:255'],
             'tahun' => ['nullable', 'integer', 'digits:4'],
-            'jenis' => ['required', 'in:perda,perkada,buku_saku,sop'],
+            'kategori_regulasi_id' => ['required', 'exists:kategori_regulasi,id'],
             'ringkasan' => ['nullable', 'string'],
             'aktif' => ['required', 'boolean'],
         ];
 
         if ($this->hasFile('path_pdf')) {
-            $rules['path_pdf'] = ['file', 'mimes:pdf', 'max:5120'];
+            $rules['path_pdf'] = ['file', 'mimes:pdf', 'max:20480'];
         }
 
         return $rules;
@@ -51,12 +51,12 @@ class RegulasiRequest extends FormRequest
             'kode.unique' => 'Kode regulasi sudah terdaftar, gunakan kode lain.',
             'kode.max' => 'Kode regulasi maksimal 80 karakter.',
             'judul.required' => 'Judul regulasi wajib diisi.',
-            'jenis.required' => 'Jenis regulasi wajib dipilih.',
-            'jenis.in' => 'Jenis regulasi harus salah satu dari: sop, perda, perkada, buku_saku.',
+            'kategori_regulasi_id.required' => 'Kategori regulasi wajib dipilih.',
+            'kategori_regulasi_id.exists' => 'Kategori regulasi tidak valid.',
             'aktif.required' => 'Status aktif harus diisi (true/false).',
             'aktif.boolean' => 'Status aktif harus berupa boolean (true atau false).',
             'path_pdf.mimes' => 'File harus berupa PDF.',
-            'path_pdf.max' => 'Ukuran file maksimal 5MB.',
+            'path_pdf.max' => 'Ukuran file maksimal 20MB.',
         ];
     }
     protected function failedValidation(Validator $validator)

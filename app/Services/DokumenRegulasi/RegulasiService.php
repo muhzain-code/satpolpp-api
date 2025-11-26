@@ -13,31 +13,51 @@ use Illuminate\Support\Facades\Log;
 
 class RegulasiService
 {
-    public function getAll($perPage, $currentPage): array
+    public function getAll($filters, $perPage, $currentPage): array
     {
-        $regulasi = Regulasi::paginate($perPage, ['*'], 'page', $currentPage);
+        $query = Regulasi::with('kategoriRegulasi');
 
-        $regulasi->getCollection()->transform(function ($item) {
+        if (!empty($filters['keyword'])) {
+            $keyword = $filters['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->where('judul', 'like', "%{$keyword}%")
+                    ->orWhere('kode', 'like', "%{$keyword}%")
+                    ->orWhere('ringkasan', 'like', "%{$keyword}%");
+            });
+        }
+
+        if (!empty($filters['tahun'])) {
+            $query->where('tahun', $filters['tahun']);
+        }
+
+        if (!empty($filters['kategori_regulasi_id'])) {
+            $query->where('kategori_regulasi_id', $filters['kategori_regulasi_id']);
+        }
+
+        $regulasi = $query->orderBy('tahun', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $items = $regulasi->getCollection()->transform(function ($item) {
             return [
-                'id'        => $item->id,
-                'kode'      => $item->kode,
-                'judul'     => $item->judul,
-                'tahun'     => $item->tahun,
-                'jenis'     => $item->jenis,
+                'id' => $item->id,
+                'kode' => $item->kode,
+                'judul' => $item->judul,
+                'tahun' => $item->tahun,
+                'kategori_regulasi' => $item->kategoriRegulasi->nama ?? null,
                 'ringkasan' => $item->ringkasan,
-                'path_pdf'  => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
-                'aktif'     => $item->aktif,
+                'path_pdf' => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
+                'aktif' => $item->aktif,
             ];
         });
 
         return [
-            'message'       => 'Data berhasil diambil',
-            'data'          => [
-                'current_page'  => $regulasi->currentPage(),
-                'per_page'      => $regulasi->perPage(),
-                'total'         => $regulasi->total(),
-                'last_page'     => $regulasi->lastPage(),
-                'items'         => $regulasi->items(),
+            'message' => 'Data berhasil diambil',
+            'data' => [
+                'current_page' => $regulasi->currentPage(),
+                'per_page' => $regulasi->perPage(),
+                'total' => $regulasi->total(),
+                'last_page' => $regulasi->lastPage(),
+                'items' => $items,
             ]
         ];
     }
@@ -62,7 +82,7 @@ class RegulasiService
                 'kode'      => $data['kode'],
                 'judul'     => $data['judul'],
                 'tahun'     => $data['tahun'],
-                'jenis'     => $data['jenis'],
+                'kategori_regulasi_id'     => $data['kategori_regulasi_id'],
                 'ringkasan' => $data['ringkasan'] ?? null,
                 'path_pdf'  => $data['path_pdf'] ?? null,
                 'aktif'     => $data['aktif']
@@ -94,7 +114,7 @@ class RegulasiService
             'kode'      => $regulasi->kode,
             'judul'     => $regulasi->judul,
             'tahun'     => $regulasi->tahun,
-            'jenis'     => $regulasi->jenis,
+            'kategori_regulasi_id'     => $regulasi->kategori_regulasi_id,
             'ringkasan' => $regulasi->ringkasan,
             'path_pdf'  => $regulasi->path_pdf ? url(Storage::url($regulasi->path_pdf)) : null,
             'aktif'     => $regulasi->aktif,
@@ -137,7 +157,7 @@ class RegulasiService
                 'kode'      => $data['kode'],
                 'judul'     => $data['judul'],
                 'tahun'     => $data['tahun'],
-                'jenis'     => $data['jenis'],
+                'kategori_regulasi_id'     => $data['kategori_regulasi_id'],
                 'ringkasan' => $data['ringkasan'] ?? null,
                 'path_pdf'  => $data['path_pdf'] ?? $regulasi->path_pdf,
                 'aktif'     => $data['aktif'],
@@ -171,122 +191,122 @@ class RegulasiService
         ];
     }
 
-    public function GetallProgress($perPage, $currentPage, $request): array
-    {
-        $user = Auth::user();
+    // public function GetallProgress($perPage, $currentPage, $request): array
+    // {
+    //     $user = Auth::user();
 
-        if (!$user->hasRole('super_admin') && !$user->hasRole('admin')) {
-            throw new CustomException('Akses ditolak. Fitur khusus Admin.', 403);
-        }
+    //     if (!$user->hasRole('super_admin') && !$user->hasRole('admin')) {
+    //         throw new CustomException('Akses ditolak. Fitur khusus Admin.', 403);
+    //     }
 
-        $bulan = $request->bulan ?? now()->month;
-        $tahun = $request->tahun ?? now()->year;
-        $regulasiId = $request->regulasi_id;
-        $unitId = $request->unit_id;
-        $statusFilter = $request->status;
+    //     $bulan = $request->bulan ?? now()->month;
+    //     $tahun = $request->tahun ?? now()->year;
+    //     $regulasiId = $request->regulasi_id;
+    //     $unitId = $request->unit_id;
+    //     $statusFilter = $request->status;
 
-        if (!$regulasiId) {
-            return [
-                'message' => 'Silakan pilih regulasi terlebih dahulu untuk melihat progres.',
-                'data' => [
-                    'current_page' => 1,
-                    'per_page' => $perPage,
-                    'total' => 0,
-                    'last_page' => 1,
-                    'items' => []
-                ]
-            ];
-        }
+    //     if (!$regulasiId) {
+    //         return [
+    //             'message' => 'Silakan pilih regulasi terlebih dahulu untuk melihat progres.',
+    //             'data' => [
+    //                 'current_page' => 1,
+    //                 'per_page' => $perPage,
+    //                 'total' => 0,
+    //                 'last_page' => 1,
+    //                 'items' => []
+    //             ]
+    //         ];
+    //     }
 
-        $query = Anggota::query()->with(['unit', 'user']);
+    //     $query = Anggota::query()->with(['unit', 'user']);
 
-        if ($unitId) {
-            $query->where('unit_id', $unitId);
-        }
+    //     if ($unitId) {
+    //         $query->where('unit_id', $unitId);
+    //     }
 
-        $query->with(['user.kemajuanPembacaan' => function ($q) use ($bulan, $tahun, $regulasiId) {
-            $q->where('bulan', $bulan)
-                ->where('tahun', $tahun)
-                ->where('regulasi_id', $regulasiId)
-                ->with('regulasi');
-        }]);
+    //     $query->with(['user.kemajuanPembacaan' => function ($q) use ($bulan, $tahun, $regulasiId) {
+    //         $q->where('bulan', $bulan)
+    //             ->where('tahun', $tahun)
+    //             ->where('regulasi_id', $regulasiId)
+    //             ->with('regulasi');
+    //     }]);
 
-        if ($statusFilter) {
-            if ($statusFilter === 'selesai') {
-                $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
-                    $q->where('bulan', $bulan)
-                        ->where('tahun', $tahun)
-                        ->where('regulasi_id', $regulasiId)
-                        ->where('status', 'selesai');
-                });
-            } elseif ($statusFilter === 'sedang') {
-                $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
-                    $q->where('bulan', $bulan)
-                        ->where('tahun', $tahun)
-                        ->where('regulasi_id', $regulasiId)
-                        ->where('status', 'sedang');
-                });
-            } elseif ($statusFilter === 'belum') {
-                $query->where(function ($mainQ) use ($bulan, $tahun, $regulasiId) {
-                    $mainQ->whereDoesntHave('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
-                        $q->where('bulan', $bulan)
-                            ->where('tahun', $tahun)
-                            ->where('regulasi_id', $regulasiId);
-                    })
-                        ->orWhereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
-                            $q->where('bulan', $bulan)
-                                ->where('tahun', $tahun)
-                                ->where('regulasi_id', $regulasiId)
-                                ->where('status', 'belum');
-                        });
-                });
-            }
-        }
+    //     if ($statusFilter) {
+    //         if ($statusFilter === 'selesai') {
+    //             $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+    //                 $q->where('bulan', $bulan)
+    //                     ->where('tahun', $tahun)
+    //                     ->where('regulasi_id', $regulasiId)
+    //                     ->where('status', 'selesai');
+    //             });
+    //         } elseif ($statusFilter === 'sedang') {
+    //             $query->whereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+    //                 $q->where('bulan', $bulan)
+    //                     ->where('tahun', $tahun)
+    //                     ->where('regulasi_id', $regulasiId)
+    //                     ->where('status', 'sedang');
+    //             });
+    //         } elseif ($statusFilter === 'belum') {
+    //             $query->where(function ($mainQ) use ($bulan, $tahun, $regulasiId) {
+    //                 $mainQ->whereDoesntHave('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+    //                     $q->where('bulan', $bulan)
+    //                         ->where('tahun', $tahun)
+    //                         ->where('regulasi_id', $regulasiId);
+    //                 })
+    //                     ->orWhereHas('user.kemajuanPembacaan', function ($q) use ($bulan, $tahun, $regulasiId) {
+    //                         $q->where('bulan', $bulan)
+    //                             ->where('tahun', $tahun)
+    //                             ->where('regulasi_id', $regulasiId)
+    //                             ->where('status', 'belum');
+    //                     });
+    //             });
+    //         }
+    //     }
 
-        $anggotaList = $query->orderBy('nama', 'asc')
-            ->paginate($perPage, ['*'], 'page', $currentPage);
+    //     $anggotaList = $query->orderBy('nama', 'asc')
+    //         ->paginate($perPage, ['*'], 'page', $currentPage);
 
-        $anggotaList->getCollection()->transform(function ($anggota) use ($regulasiId) {
+    //     $anggotaList->getCollection()->transform(function ($anggota) use ($regulasiId) {
 
-            $progresData = null;
-            if ($anggota->user && $anggota->user->relationLoaded('kemajuanPembacaan')) {
-                $progresData = $anggota->user->kemajuanPembacaan->first();
-            }
+    //         $progresData = null;
+    //         if ($anggota->user && $anggota->user->relationLoaded('kemajuanPembacaan')) {
+    //             $progresData = $anggota->user->kemajuanPembacaan->first();
+    //         }
 
-            $statusBaca = $progresData ? $progresData->status : 'belum';
+    //         $statusBaca = $progresData ? $progresData->status : 'belum';
 
-            $judulBuku = '-';
-            if ($progresData && $progresData->regulasi) {
-                $judulBuku = $progresData->regulasi->judul;
-            } else {
-                $judulBuku = "Belum Membaca Harap di baca terlebih dahulu";
-            }
+    //         $judulBuku = '-';
+    //         if ($progresData && $progresData->regulasi) {
+    //             $judulBuku = $progresData->regulasi->judul;
+    //         } else {
+    //             $judulBuku = "Belum Membaca Harap di baca terlebih dahulu";
+    //         }
 
-            return [
-                'id_anggota'   => $anggota->id,
-                'nama_anggota' => $anggota->nama,
-                'unit'         => $anggota->unit->nama ?? '-',
-                'jabatan'      => $anggota->jabatan->nama ?? '-',
-                'foto_profil'  => $anggota->foto ? url(Storage::url($anggota->foto)) : null,
+    //         return [
+    //             'id_anggota'   => $anggota->id,
+    //             'nama_anggota' => $anggota->nama,
+    //             'unit'         => $anggota->unit->nama ?? '-',
+    //             'jabatan'      => $anggota->jabatan->nama ?? '-',
+    //             'foto_profil'  => $anggota->foto ? url(Storage::url($anggota->foto)) : null,
 
-                'filter_info' => [
-                    'regulasi_target_id' => $regulasiId,
-                    'info_buku'          => $judulBuku,
-                    'status_baca'        => $statusBaca,
-                    'terakhir_dibaca'    => $progresData ? Carbon::parse($progresData->terakhir_dibaca)->format('d-m-Y H:i') : '-',
-                ]
-            ];
-        });
+    //             'filter_info' => [
+    //                 'regulasi_target_id' => $regulasiId,
+    //                 'info_buku'          => $judulBuku,
+    //                 'status_baca'        => $statusBaca,
+    //                 'terakhir_dibaca'    => $progresData ? Carbon::parse($progresData->terakhir_dibaca)->format('d-m-Y H:i') : '-',
+    //             ]
+    //         ];
+    //     });
 
-        return [
-            'message' => 'Data progres seluruh anggota berhasil ditampilkan',
-            'data' => [
-                'current_page' => $anggotaList->currentPage(),
-                'per_page'     => $anggotaList->perPage(),
-                'total'        => $anggotaList->total(),
-                'last_page'    => $anggotaList->lastPage(),
-                'items'        => $anggotaList->items()
-            ]
-        ];
-    }
+    //     return [
+    //         'message' => 'Data progres seluruh anggota berhasil ditampilkan',
+    //         'data' => [
+    //             'current_page' => $anggotaList->currentPage(),
+    //             'per_page'     => $anggotaList->perPage(),
+    //             'total'        => $anggotaList->total(),
+    //             'last_page'    => $anggotaList->lastPage(),
+    //             'items'        => $anggotaList->items()
+    //         ]
+    //     ];
+    // }
 }

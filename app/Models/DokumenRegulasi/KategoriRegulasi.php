@@ -2,57 +2,26 @@
 
 namespace App\Models\DokumenRegulasi;
 
-use App\Models\ManajemenLaporan\LaporanHarian;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Regulasi extends Model
+class KategoriRegulasi extends Model
 {
     use LogsActivity;
-
-    protected $table = 'regulasi';
-
+    protected $table = 'kategori_regulasi';
     protected $fillable = [
-        'kode',
-        'judul',
-        'tahun',
-        'kategori_regulasi_id',
-        'ringkasan',
-        'path_pdf',
-        'aktif',
+        'nama',
+        'keterangan',
         'created_by',
         'updated_by',
         'deleted_by',
     ];
-    public function kategoriRegulasi()
-    {
-        return $this->belongsTo(KategoriRegulasi::class);
-    }
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
 
-    public function updater()
+    public function regulasi()
     {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function deleter()
-    {
-        return $this->belongsTo(User::class, 'deleted_by');
-    }
-
-    public function KemajuanPembacaan()
-    {
-        return $this->hasMany(KemajuanPembacaan::class, 'regulasi_id', 'id');
-    }
-    public function Penanda()
-    {
-        return $this->hasMany(Penanda::class, 'regulasi_id', 'id');
+        return $this->hasMany(Regulasi::class);
     }
     public function getActivitylogOptions(): LogOptions
     {
@@ -73,10 +42,6 @@ class Regulasi extends Model
             );
     }
 
-    public function LaporanHarian()
-    {
-        return $this->hasMany(LaporanHarian::class, 'regulasi_indikatif_id', 'id');
-    }
     protected static function booted()
     {
         static::creating(fn($model) => $model->created_by ??= Auth::id());
