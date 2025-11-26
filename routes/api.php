@@ -35,6 +35,8 @@ Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 Route::get('konten-publik', [KontenController::class, 'KontenPublik']);
 Route::get('konten-publik/{slug}', [KontenController::class, 'detailKonten']);
 
+Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
+
 Route::post('permohonan-ppid', [PPIDController::class, 'permohonanPPID']);
 Route::post('lacak-permohonan-ppid', [PPIDController::class, 'lacakPPID']);
 
@@ -153,7 +155,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::put('unit/{id}', [UnitController::class, 'update']);
     Route::delete('unit/{id}', [UnitController::class, 'destroy']);
 
-    // anggota
+    // anggotaJ
     Route::get('anggota', [AnggotaController::class, 'index']);
     Route::post('anggota', [AnggotaController::class, 'store']);
     Route::get('anggota/{id}', [AnggotaController::class, 'show']);
@@ -206,6 +208,11 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     // Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
     // Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
 
+    Route::get('ppid', [PPIDController::class, 'index']);
+    Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
+});
+
+Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function () {
     Route::get('galeri', [GaleriController::class, 'index']);
     Route::post('galeri', [GaleriController::class, 'store']);
     Route::get('galeri/{id}', [GaleriController::class, 'show']);
@@ -217,11 +224,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('konten/{id}', [KontenController::class, 'show']);
     Route::put('konten/{id}', [KontenController::class, 'update']);
     Route::delete('konten/{id}', [KontenController::class, 'destroy']);
-
-    Route::get('ppid', [PPIDController::class, 'index']);
-    Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
 });
-
 
 /**
  * ==========================

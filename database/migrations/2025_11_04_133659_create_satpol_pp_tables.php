@@ -482,6 +482,7 @@ return new class extends Migration
             $table->string('judul')->nullable();
             $table->string('path_file', 1000)->nullable();
             $table->enum('tipe', ['foto', 'video'])->default('foto');
+            $table->boolean('status')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();

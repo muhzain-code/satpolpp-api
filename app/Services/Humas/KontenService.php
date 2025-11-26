@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class KontenService
 {
-    // Role SuperAdmin
+    // Role SuperAdmin / Humas
     public function listKonten($currentPage, $perPage): array
     {
         $konten = Konten::paginate($perPage, ['*'], 'page', $currentPage);

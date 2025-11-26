@@ -13,48 +13,48 @@ use Illuminate\Http\UploadedFile;
 
 class GaleriService
 {
-    public function index($currentPage, $perPage): array
+    // role superadmin / humas
+    public function ambildaftargaleri($currentPage, $perPage): array
     {
-        $Galery = Galeri::paginate($perPage, ['*'], 'page', $currentPage);
-
-        if (!$Galery) {
-            throw new CustomException('Data tidak ditemukan');
-        }
+        $Galery = Galeri::latest()->paginate($perPage, ['*'], 'page', $currentPage);
 
         $Galery->getCollection()->transform(function ($item) {
             return [
-                'id'                => $item->id,
-                'tipe'              => $item->tipe,
-                'judul'             => $item->judul,
+                'id'        => $item->id,
+                'judul'     => $item->judul,
+                'tipe'      => $item->tipe,
+                'status'    => (bool) $item->status,
+                'path_file' => $item->path_file ? url(Storage::url($item->path_file)) : null,
+                'created_at' => $item->created_at,
             ];
         });
 
         return [
-            'message' => 'data berhasil ditampilkan',
+            'message' => 'Data berhasil ditampilkan',
             'data'    => [
-                'current_page'  => $Galery->currentPage(),
-                'per_page'      => $Galery->perPage(),
-                'total'         => $Galery->total(),
-                'last_page'     => $Galery->lastPage(),
-                'items'         => $Galery->items(),
+                'current_page' => $Galery->currentPage(),
+                'per_page'     => $Galery->perPage(),
+                'total'        => $Galery->total(),
+                'last_page'    => $Galery->lastPage(),
+                'items'        => $Galery->items(),
             ]
         ];
     }
 
-    public function store(array $data): array
+    public function simpangaleribaru(array $data): array
     {
         DB::beginTransaction();
         try {
             $UserId = Auth::id();
             $path = null;
-            $tipe = null;
+            $tipe = 'foto';
 
-            if (isset($data['path_file']) && $data['path_file']->isValid()) {
+            // Handle Upload File
+            if (isset($data['path_file']) && $data['path_file'] instanceof \Illuminate\Http\UploadedFile && $data['path_file']->isValid()) {
 
                 $extension = strtolower($data['path_file']->getClientOriginalExtension());
-
-                $fotoExt  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                $videoExt = ['mp4', 'mov', 'avi', 'mkv'];
+                $fotoExt   = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $videoExt  = ['mp4', 'mov', 'avi', 'mkv'];
 
                 if (in_array($extension, $fotoExt)) {
                     $tipe = 'foto';
@@ -68,24 +68,27 @@ class GaleriService
             }
 
             $Galery = Galeri::create([
-                'tipe'       => $tipe,
-                'judul'      => $data['judul'],
+                'judul'      => $data['judul'] ?? null,
                 'path_file'  => $path,
-                'created_by' => $UserId
+                'tipe'       => $tipe,
+                'status'     => $data['status'] ?? true, // Default true jika tidak dikirim
+                'created_by' => $UserId,
             ]);
 
             DB::commit();
 
             return [
-                'message' => 'berhasil menambahkan data galeri',
-                'data' => $Galery
+                'message' => 'Berhasil menambahkan data galeri',
+                'data'    => $Galery
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
 
             Log::error('Gagal menambahkan data galeri', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
             ]);
+
             if ($e instanceof CustomException) {
                 throw $e;
             }
@@ -93,7 +96,7 @@ class GaleriService
         }
     }
 
-    public function show($Id): array
+    public function ambildetailgaleri($Id): array
     {
         $Galery = Galeri::find($Id);
 
@@ -101,18 +104,17 @@ class GaleriService
             throw new CustomException('Data tidak ditemukan');
         }
 
-        $Galery->path_file = url(Storage::url($Galery->path_file));
+        $Galery->file_url = $Galery->path_file ? url(Storage::url($Galery->path_file)) : null;
 
         return [
-            'message' => 'data berhasil ditampilkan',
+            'message' => 'Data berhasil ditampilkan',
             'data'    => $Galery
         ];
     }
 
-    public function update(array $data, $Id): array
+    public function perbaruidatagaleri(array $data, $Id): array
     {
         DB::beginTransaction();
-
         try {
             $UserId = Auth::id();
             $Galery = Galeri::find($Id);
@@ -122,13 +124,13 @@ class GaleriService
             }
 
             $newFilePath = $Galery->path_file;
-            $newTipe = $Galery->tipe;
+            $newTipe     = $Galery->tipe;
 
-            if (isset($data['path_file']) && $data['path_file'] instanceof UploadedFile) {
+            if (isset($data['path_file']) && $data['path_file'] instanceof \Illuminate\Http\UploadedFile && $data['path_file']->isValid()) {
 
                 $extension = strtolower($data['path_file']->getClientOriginalExtension());
-                $fotoExt  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-                $videoExt = ['mp4', 'mov', 'avi', 'mkv'];
+                $fotoExt   = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $videoExt  = ['mp4', 'mov', 'avi', 'mkv'];
 
                 if (in_array($extension, $fotoExt)) {
                     $newTipe = 'foto';
@@ -146,9 +148,10 @@ class GaleriService
             }
 
             $Galery->update([
+                'judul'      => $data['judul'] ?? $Galery->judul,
                 'tipe'       => $newTipe,
-                'judul'      => $data['judul'],
                 'path_file'  => $newFilePath,
+                'status'     => isset($data['status']) ? $data['status'] : $Galery->status,
                 'updated_by' => $UserId,
             ]);
 
@@ -156,25 +159,24 @@ class GaleriService
 
             return [
                 'message' => 'Data berhasil diperbarui',
-                'data' => $Galery
+                'data'    => $Galery
             ];
         } catch (\Throwable $e) {
-
             DB::rollBack();
 
             Log::error('Gagal memperbarui data galeri', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'id' => $Id
             ]);
 
             if ($e instanceof CustomException) {
                 throw $e;
             }
-
             throw new CustomException('Gagal memperbarui data galeri');
         }
     }
 
-    public function destroy($Id): array
+    public function hapusgaleri($Id): array
     {
         $Galery = Galeri::find($Id);
         if (!$Galery) {
@@ -188,6 +190,38 @@ class GaleriService
 
         return [
             'message' =>  'data berhasil di hapus'
+        ];
+    }
+
+    public function ambilGaleriPublik($currentPage, $perPage): array
+    {
+        $galeri = Galeri::where('status', true)
+            ->latest()
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        if ($galeri->isEmpty()) {
+            throw new CustomException('Belum ada galeri yang dipublikasikan');
+        }
+
+        $galeri->getCollection()->transform(function ($item) {
+            return [
+                'id'         => $item->id,
+                'judul'      => $item->judul,
+                'tipe'       => $item->tipe,
+                'file_url'   => $item->path_file ? url(Storage::url($item->path_file)) : null,
+                'tanggal'    => $item->created_at->format('d F Y'),
+            ];
+        });
+
+        return [
+            'message' => 'Daftar galeri publik berhasil diambil',
+            'data'    => [
+                'current_page' => $galeri->currentPage(),
+                'per_page'     => $galeri->perPage(),
+                'total'        => $galeri->total(),
+                'last_page'    => $galeri->lastPage(),
+                'items'        => $galeri->items(),
+            ]
         ];
     }
 }
