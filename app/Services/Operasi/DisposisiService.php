@@ -83,16 +83,23 @@ class DisposisiService
 
     public function getById($id)
     {
-        $disposisi = Disposisi::find($id);
+        $disposisi = Disposisi::with([
+            'pengaduan.kategoriPengaduan',
+            'pengaduan.kecamatan',
+            'pengaduan.desa',
+            'komandan'
+        ])->find($id);
 
         if (!$disposisi) {
             throw new CustomException('Data disposisi tidak ditemukan', 404);
         }
 
-        $disposisi->getCollection()->transform(function ($item) {
-            $pengaduan = $item->pengaduan;
-            return [
-                'id' => $item->id,
+        $pengaduan = $disposisi->pengaduan;
+
+        return [
+            'message' => 'Disposisi berhasil ditemukan',
+            'data' => [
+                'id' => $disposisi->id,
                 'pengaduan' => $pengaduan ? [
                     'id' => $pengaduan->id,
                     'nomor_tiket' => $pengaduan->nomor_tiket,
@@ -100,19 +107,14 @@ class DisposisiService
                     'deskripsi' => $pengaduan->deskripsi,
                     'lat' => $pengaduan->lat,
                     'lng' => $pengaduan->lng,
-                    'kecamatan' => $pengaduan->kecamatan ? $pengaduan->kecamatan->nama : null,
-                    'desa' => $pengaduan->desa ? $pengaduan->desa->nama : null,
+                    'kecamatan' => $pengaduan->kecamatan->nama ?? null,
+                    'desa' => $pengaduan->desa->nama ?? null,
                 ] : null,
-                'komandan' => $item->komandan->name ?? null,
-                'catatan' => $item->catatan,
-                'batas_waktu' => $item->batas_waktu,
-                'status' => $item->status,
-            ];
-        });
-
-        return [
-            'message' => 'Disposisi berhasil ditemukan',
-            'data' => $disposisi
+                'komandan' => $disposisi->komandan->name ?? null,
+                'catatan' => $disposisi->catatan,
+                'batas_waktu' => $disposisi->batas_waktu,
+                'status' => $disposisi->status,
+            ]
         ];
     }
 
