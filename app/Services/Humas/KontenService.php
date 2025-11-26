@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 
 class KontenService
 {
-    public function index($currentPage, $perPage): array
+    // Role SuperAdmin
+    public function listKonten($currentPage, $perPage): array
     {
         $konten = Konten::paginate($perPage, ['*'], 'page', $currentPage);
 
@@ -28,7 +29,7 @@ class KontenService
         ];
     }
 
-    public function store(array $data): array
+    public function createKonten(array $data): array
     {
         DB::beginTransaction();
 
@@ -36,16 +37,13 @@ class KontenService
             $userId = Auth::id();
             $path = null;
 
-            // upload gambar
             if (isset($data['path_gambar']) && $data['path_gambar']->isValid()) {
                 $path = $data['path_gambar']->store('konten', 'public');
             }
 
-            // generate slug unik
             $slug = Str::slug($data['judul']);
             $slug = $this->generateUniqueSlug($slug);
 
-            // otomatis set published_at
             $publishedAt = ($data['tampilkan_publik'] ?? false) ? now() : null;
 
             $konten = Konten::create([
@@ -76,9 +74,9 @@ class KontenService
     }
 
 
-    public function show($slug): array
+    public function showKontenById($id): array
     {
-        $konten = Konten::where('slug', $slug)->first();
+        $konten = Konten::find($id);
 
         if (!$konten) {
             throw new CustomException('Data tidak ditemukan');
@@ -90,13 +88,13 @@ class KontenService
         ];
     }
 
-    public function update(array $data, $slug): array
+    public function updateKontenById(array $data, $id): array
     {
         DB::beginTransaction();
 
         try {
             $userId = Auth::id();
-            $konten = Konten::where('slug', $slug)->first();
+            $konten = Konten::find($id);
 
             if (!$konten) {
                 throw new CustomException('Data tidak ditemukan');
@@ -116,12 +114,10 @@ class KontenService
             $publishedAt = $konten->published_at;
 
             if ($konten->tampilkan_publik == false && $data['tampilkan_publik'] == true) {
-                if (!$publishedAt) {
-                    $publishedAt = now();
-                }
+                $publishedAt = now();
             }
 
-            if ($data['tampilkan_publik'] == true && !empty($data['published_at'])) {
+            if (!empty($data['published_at'])) {
                 $publishedAt = $data['published_at'];
             }
 
@@ -149,10 +145,9 @@ class KontenService
                 'data'    => $konten
             ];
         } catch (\Throwable $e) {
-
             DB::rollBack();
 
-            Log::error('Gagal memperbarui data Konten', [
+            Log::error('Gagal memperbarui data Konten (SuperAdmin)', [
                 'error' => $e->getMessage()
             ]);
 
@@ -160,9 +155,9 @@ class KontenService
         }
     }
 
-    public function destroy($slug): array
+    public function deleteKontenById($id): array
     {
-        $konten = Konten::where('slug', $slug)->first();
+        $konten = Konten::find($id);
 
         if (!$konten) {
             throw new CustomException('Data tidak ditemukan');
@@ -195,6 +190,7 @@ class KontenService
         return $slug;
     }
 
+    // Role Masyarakat
     public function KontenPublik($request): array
     {
         $limit = $request->input('limit', 25);
@@ -203,16 +199,18 @@ class KontenService
             'tipe',
             'judul',
             'slug',
-            'path_gambar'
+            'path_gambar',
+            'published_at',
         ])
             ->where('tampilkan_publik', true)
             ->orderBy('published_at', 'desc')
             ->limit($limit)
             ->get()
-            ->map(function ($item) {
-                if ($item->path_gambar) {
-                    $item->path_gambar = Storage::url($item->path_gambar);
-                }
+            ->transform(function ($item) {
+                $item->path_gambar = $item->path_gambar
+                    ? Storage::url($item->path_gambar)
+                    : null;
+
                 return $item;
             });
 
@@ -226,6 +224,14 @@ class KontenService
     {
         $konten = Konten::where('slug', $slug)
             ->where('tampilkan_publik', true)
+            ->select([
+                'tipe',
+                'judul',
+                'slug',
+                'isi',
+                'path_gambar',
+                'published_at'
+            ])
             ->first();
 
         if (!$konten) {

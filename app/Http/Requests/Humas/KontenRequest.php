@@ -5,6 +5,7 @@ namespace App\Http\Requests\Humas;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class KontenRequest extends FormRequest
 {
@@ -23,7 +24,7 @@ class KontenRequest extends FormRequest
      */
     public function rules(): array
     {
-        $slug = $this->route('slug');
+        $id = $this->route('id');
 
         return [
             'tipe' => 'required|in:berita,agenda,himbauan',
@@ -32,7 +33,7 @@ class KontenRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:konten,judul,' . $slug . ',slug',
+                Rule::unique('konten', 'judul')->ignore($id),
             ],
 
             'isi' => ['nullable', 'string'],
@@ -48,6 +49,7 @@ class KontenRequest extends FormRequest
             'tampilkan_publik' => ['required', 'boolean'],
         ];
     }
+
 
     public function messages(): array
     {

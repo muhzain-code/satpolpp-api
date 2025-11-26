@@ -214,9 +214,9 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
 
     Route::get('konten', [KontenController::class, 'index']);
     Route::post('konten', [KontenController::class, 'store']);
-    Route::get('konten/{slug}', [KontenController::class, 'show']);
-    Route::put('konten/{slug}', [KontenController::class, 'update']);
-    Route::delete('konten/{slug}', [KontenController::class, 'destroy']);
+    Route::get('konten/{id}', [KontenController::class, 'show']);
+    Route::put('konten/{id}', [KontenController::class, 'update']);
+    Route::delete('konten/{id}', [KontenController::class, 'destroy']);
 
     Route::get('ppid', [PPIDController::class, 'index']);
     Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);

@@ -23,31 +23,31 @@ class KontenController extends Controller
     {
         $perPage = $request->input('per_page', 25);
         $currentPage = $request->input('page', 1);
-        $result = $this->service->index($currentPage, $perPage);
+        $result = $this->service->listKonten($currentPage, $perPage);
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function store(KontenRequest $request): JsonResponse
     {
-        $result = $this->service->store($request->validated());
+        $result = $this->service->createKonten($request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function show(string $slug): JsonResponse
     {
-        $result = $this->service->show($slug);
+        $result = $this->service->showKontenById($slug);
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function update(KontenRequest $request, string $slug): JsonResponse
     {
-        $result = $this->service->update($request->validated(), $slug);
+        $result = $this->service->updateKontenById($request->validated(), $slug);
         return $this->successResponse($result['data'], $result['message']);
     }
 
     public function destroy(string $slug): JsonResponse
     {
-        $result = $this->service->destroy($slug);
+        $result = $this->service->deleteKontenById($slug);
         return $this->successResponse($result['message']);
     }
 
