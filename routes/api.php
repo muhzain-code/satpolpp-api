@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Api\Humas\GaleriController;
 use App\Http\Controllers\Api\Humas\KontenController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
+use App\Http\Controllers\Api\Anggota\AnggotaImportController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
 use App\Http\Controllers\Api\DokumenRegulasi\KategoriRegulasiController;
 use App\Http\Controllers\Api\Operasi\OperasiController;
@@ -192,13 +193,13 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     // Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
 
     // regulation progress
-    Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
-    Route::post('progres', [RegulationProgressController::class, 'Progress']);
-    Route::post('sedang-membaca', [RegulationProgressController::class, 'ProgressMembaca']);
-    Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
-    Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
-    Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
-    Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
+    // Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
+    // Route::post('progres', [RegulationProgressController::class, 'Progress']);
+    // Route::post('sedang-membaca', [RegulationProgressController::class, 'ProgressMembaca']);
+    // Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
+    // Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
+    // Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
+    // Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 
     // laporan
     // Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
@@ -210,6 +211,8 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
 
     Route::get('ppid', [PPIDController::class, 'index']);
     Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
+
+    Route::post('anggota-import',[AnggotaImportController::class, 'import']);
 });
 
 Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function () {
