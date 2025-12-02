@@ -85,4 +85,13 @@ class RegulationProgressController extends Controller
         $result = $this->service->deletePenanda($Id);
         return $this->successResponse($result['message']);
     }
+
+    public function monitoringLiterasi(Request $request): JsonResponse
+    {
+        $perPage = $request->input('per_page', 10);
+        $currentPage = $request->input('page', 1);
+        $filters = $request->only(['filter_type', 'date', 'month', 'status']);
+        $result = $this->service->monitoringLiterasi($perPage, $currentPage, $filters);
+        return $this->successResponse($result['data'], $result['message']);
+    }
 }

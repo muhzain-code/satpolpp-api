@@ -4,11 +4,11 @@ namespace App\Services\DokumenRegulasi;
 
 use App\Exceptions\CustomException;
 use App\Models\DokumenRegulasi\CatatanRegulasi;
-use App\Models\DokumenRegulasi\KemajuanPembacaan;
-use App\Models\DokumenRegulasi\Penanda;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\DokumenRegulasi\Regulasi;
 use App\Models\DokumenRegulasi\RiwayatBaca;
 use App\Models\DokumenRegulasi\StatistikPengguna;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -472,5 +472,96 @@ class RegulationProgressService
 
             throw new CustomException('Gagal menghapus penanda', 422);
         }
+    }
+
+    public function monitoringLiterasi($perPage, $currentPage, array $filters): array
+    {
+        $filterType = $filters['filter_type'] ?? 'daily';
+        $dateInput  = $filters['date'] ?? Carbon::today()->toDateString();
+        $monthInput = $filters['month'] ?? Carbon::today()->format('Y-m');
+        $status     = $filters['status'] ?? 'all';
+
+        $timeConstraint = function ($query) use ($filterType, $dateInput, $monthInput) {
+            if ($filterType === 'monthly') {
+                $year = substr($monthInput, 0, 4);
+                $month = substr($monthInput, 5, 2);
+                $query->whereYear('tanggal', $year)
+                    ->whereMonth('tanggal', $month);
+            } else {
+                $query->whereDate('tanggal', $dateInput);
+            }
+        };
+
+        $query = User::select('users.*')
+            ->whereNotNull('anggota_id')
+            ->with(['anggota.unit'])
+            ->withCount(['riwayatBaca as filtered_read_count' => $timeConstraint])
+            ->with(['riwayatBaca' => function ($q) use ($timeConstraint) {
+                $timeConstraint($q);
+                $q->with('regulasi:id,judul')
+                    ->orderBy('updated_at', 'desc');
+            }]);
+
+        $currentUser = Auth::user();
+        if (!$currentUser) {
+            throw new CustomException('User Tidak Ditemukan');
+        }
+        $query->where('users.id', '!=', $currentUser->id);
+        if ($currentUser->hasRole('komandan_regu')) {
+            if ($currentUser->anggota && $currentUser->anggota->unit_id) {
+                $unitId = $currentUser->anggota->unit_id;
+                $query->whereHas('anggota', function (Builder $q) use ($unitId) {
+                    $q->where('unit_id', $unitId);
+                });
+            } else {
+                throw new CustomException('Anda Tidak memiliki UNIT Regu');
+            }
+        }
+        if ($status === 'rajin') {
+            $query->whereHas('riwayatBaca', $timeConstraint);
+        } elseif ($status === 'tidak') {
+            $query->whereDoesntHave('riwayatBaca', $timeConstraint);
+        }
+
+        $users = $query
+            ->join('anggota', 'users.anggota_id', '=', 'anggota.id')
+            ->orderByDesc('filtered_read_count')
+            ->orderBy('anggota.nama', 'asc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        $users->getCollection()->transform(function ($user) {
+            $readCount = $user->filtered_read_count;
+            $isActive  = $readCount > 0;
+
+            return [
+                'user_id'       => $user->id,
+                'nama'          => $user->anggota->nama ?? 'Tanpa Nama',
+                'unit'          => $user->anggota->unit->nama ?? '-',
+                'foto_inisial'  => substr($user->anggota->nama ?? 'X', 0, 1),
+                'stats' => [
+                    'jumlah_buku'   => $readCount,
+                    'status_label'  => $isActive ? 'Sudah Membaca' : 'Belum Membaca',
+                ],
+                'detail_regulasi' => $user->riwayatBaca->map(function ($log) {
+                    return [
+                        'judul_regulasi' => $log->regulasi->judul ?? '-',
+                        'durasi_menit'   => $log->durasi_detik ? round($log->durasi_detik / 60) . ' Menit' : '< 1 Menit',
+                        'waktu_baca'     => Carbon::parse($log->updated_at)->format('H:i'),
+                        'tanggal'        => Carbon::parse($log->tanggal)->isoFormat('D MMM Y'),
+                    ];
+                }),
+            ];
+        });
+
+        return [
+            'message' => 'Data monitoring berhasil ditampilkan',
+            'data' => [
+                'current_page' => $users->currentPage(),
+                'per_page'     => $users->perPage(),
+                'total'        => $users->total(),
+                'last_page'    => $users->lastPage(),
+                'items'        => $users->items()
+            ]
+        ];
     }
 }

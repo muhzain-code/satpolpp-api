@@ -212,7 +212,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('ppid', [PPIDController::class, 'index']);
     Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
 
-    Route::post('anggota-import',[AnggotaImportController::class, 'import']);
+    Route::post('anggota-import', [AnggotaImportController::class, 'import']);
 });
 
 Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function () {
@@ -262,4 +262,8 @@ Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
 Route::middleware('auth:sanctum', 'role:komandan_regu')->group(function () {
     Route::get('laporan-komandan', [LampiranLaporanController::class, 'indexKomandan']);
     Route::put('laporan-komandan/{id}', [LampiranLaporanController::class, 'AccbyKomandan']);
+});
+
+Route::middleware(['auth:sanctum', 'role:komandan_regu|super_admin'])->group(function () {
+    Route::get('/monitoring-literasi', [RegulationProgressController::class, 'monitoringLiterasi']);
 });
