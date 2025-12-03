@@ -247,9 +247,9 @@ Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
     Route::get('penanda', [RegulationProgressController::class, 'bookmartregulasi']);
     Route::get('penanda/{id}', [RegulationProgressController::class, 'detailbookmark']);
     Route::post('penanda-pasal', [RegulationProgressController::class, 'tandaiPasal']);
-    Route::put('penanda-pasal/{id}', [RegulationProgressController::class, 'updatetandaiPasal']);
+    // Route::put('penanda-pasal/{id}', [RegulationProgressController::class, 'updatetandaiPasal']);
     Route::post('penanda-halaman', [RegulationProgressController::class, 'tandaiHalaman']);
-    Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
+    // Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'destroyPenanda']);
 });
 
