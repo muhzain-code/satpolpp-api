@@ -2,6 +2,7 @@
 
 namespace App\Models\Penindakan;
 
+use App\Models\Alamat\Kecamatan;
 use App\Models\User;
 use App\Models\Anggota\Anggota;
 use App\Models\Operasi\Operasi;
@@ -41,6 +42,14 @@ class Penindakan extends Model
     public function operasi()
     {
         return $this->belongsTo(Operasi::class);
+    }
+    public function kecamatan()
+    {
+        return $this->belongsTo(Kecamatan::class);
+    }
+    public function desa()
+    {
+        return $this->belongsTo(Desa::class);
     }
     public function penindakanLampiran()
     {

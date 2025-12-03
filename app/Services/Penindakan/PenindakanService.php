@@ -117,7 +117,9 @@ class PenindakanService
         $query = Penindakan::with([
             'penindakanLampiran',
             'penindakanRegulasi.regulasi',
-            'creator'
+            'creator',
+            'kecamatan',
+            'desa',
         ]);
 
         // Logika Hak Akses
@@ -145,7 +147,9 @@ class PenindakanService
 
             // Lokasi (Flat)
             'kecamatan_id'          => $penindakan->kecamatan_id,
+            'nama_kecamatan'          => $penindakan->kecamatan->nama_kecamatan,
             'desa_id'               => $penindakan->desa_id,
+            'nama_desa'          => $penindakan->desa->nama_desa,
             'lokasi_alamat'         => $penindakan->lokasi,
             'lokasi_lat'            => $penindakan->lat,
             'lokasi_lng'            => $penindakan->lng,
