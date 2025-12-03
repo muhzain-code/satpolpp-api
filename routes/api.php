@@ -36,6 +36,9 @@ Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 Route::get('berita-publik', [KontenController::class, 'beritaPublik']);
 Route::get('berita-publik/{slug}', [KontenController::class, 'detailKonten']);
 
+Route::get('regulasi-publik', [RegulasiController::class, 'regulasiPublik']);
+Route::get('filter-publik', [RegulasiController::class, 'kategoriregulasi']);
+
 Route::get('himbauan-publik', [KontenController::class, 'himbauanPublik']);
 Route::get('himbauan-publik/{slug}', [KontenController::class, 'detailKonten']);
 

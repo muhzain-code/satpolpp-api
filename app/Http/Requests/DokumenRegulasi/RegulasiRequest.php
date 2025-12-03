@@ -35,6 +35,7 @@ class RegulasiRequest extends FormRequest
             'kategori_regulasi_id' => ['required', 'exists:kategori_regulasi,id'],
             'ringkasan' => ['nullable', 'string'],
             'aktif' => ['required', 'boolean'],
+            'tampilkan_publik' => ['required', 'boolean'],
         ];
 
         if ($this->hasFile('path_pdf')) {

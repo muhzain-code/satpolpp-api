@@ -139,6 +139,7 @@ return new class extends Migration
             $table->text('ringkasan')->nullable();
             $table->string('path_pdf', 1000)->nullable();
             $table->boolean('aktif')->default(true);
+            $table->boolean('tampilkan_publik')->default(false);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();

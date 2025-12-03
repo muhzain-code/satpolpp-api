@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             PengaduanSeeder::class,
             KontenSeeder::class,
             GaleriSeeder::class,
+            RegulasiSeeder::class,
         ]);
 
         // $user->update(['anggota_id' => 1]);

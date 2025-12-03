@@ -5,6 +5,7 @@ namespace App\Services\DokumenRegulasi;
 use Exception;
 use App\Exceptions\CustomException;
 use App\Models\Anggota\Anggota;
+use App\Models\DokumenRegulasi\KategoriRegulasi;
 use App\Models\DokumenRegulasi\Regulasi;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,10 @@ class RegulasiService
             $query->where('kategori_regulasi_id', $filters['kategori_regulasi_id']);
         }
 
+        if (isset($filters['tampilkan_publik'])) {
+            $query->where('tampilkan_publik', $filters['tampilkan_publik']);
+        }
+
         $regulasi = $query->orderBy('tahun', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
@@ -47,6 +52,7 @@ class RegulasiService
                 'ringkasan' => $item->ringkasan,
                 'path_pdf' => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
                 'aktif' => $item->aktif,
+                'tampilkan_publik' => $item->tampilkan_publik,
             ];
         });
 
@@ -79,17 +85,19 @@ class RegulasiService
             }
 
             $regulasi = Regulasi::create([
-                'kode'      => $data['kode'],
-                'judul'     => $data['judul'],
-                'tahun'     => $data['tahun'],
-                'kategori_regulasi_id'     => $data['kategori_regulasi_id'],
-                'ringkasan' => $data['ringkasan'] ?? null,
-                'path_pdf'  => $data['path_pdf'] ?? null,
-                'aktif'     => $data['aktif']
+                'kode'                  => $data['kode'],
+                'judul'                 => $data['judul'],
+                'tahun'                 => $data['tahun'],
+                'kategori_regulasi_id'  => $data['kategori_regulasi_id'],
+                'ringkasan'             => $data['ringkasan'] ?? null,
+                'path_pdf'              => $data['path_pdf'] ?? null,
+                'aktif'                 => $data['aktif'],
+                'tampilkan_publik'      => $data['tampilkan_publik'] ?? false,
+                'created_by'            => $data['created_by'],
             ]);
 
             return [
-                'message'   => 'Data berhasil di tambahkan',
+                'message'   => 'Data berhasil ditambahkan',
                 'data'      => $regulasi
             ];
         } catch (Exception $e) {
@@ -109,19 +117,21 @@ class RegulasiService
             throw new CustomException('Regulasi tidak ditemukan', 404);
         }
 
-        $regulasi = [
-            'id'        => $regulasi->id,
-            'kode'      => $regulasi->kode,
-            'judul'     => $regulasi->judul,
-            'tahun'     => $regulasi->tahun,
-            'kategori_regulasi_id'     => $regulasi->kategori_regulasi_id,
-            'ringkasan' => $regulasi->ringkasan,
-            'path_pdf'  => $regulasi->path_pdf ? url(Storage::url($regulasi->path_pdf)) : null,
-            'aktif'     => $regulasi->aktif,
+        $result = [
+            'id'                    => $regulasi->id,
+            'kode'                  => $regulasi->kode,
+            'judul'                 => $regulasi->judul,
+            'tahun'                 => $regulasi->tahun,
+            'kategori_regulasi_id'  => $regulasi->kategori_regulasi_id,
+            'ringkasan'             => $regulasi->ringkasan,
+            'path_pdf'              => $regulasi->path_pdf ? url(Storage::url($regulasi->path_pdf)) : null,
+            'aktif'                 => $regulasi->aktif,
+            'tampilkan_publik'      => $regulasi->tampilkan_publik,
         ];
+
         return [
             'message' => 'Data berhasil ditampilkan',
-            'data' => $regulasi
+            'data' => $result
         ];
     }
 
@@ -151,17 +161,16 @@ class RegulasiService
                 $data['path_pdf'] = $data['path_pdf']->store('regulasi', 'public');
             }
 
-
-
             $regulasi->update([
-                'kode'      => $data['kode'],
-                'judul'     => $data['judul'],
-                'tahun'     => $data['tahun'],
-                'kategori_regulasi_id'     => $data['kategori_regulasi_id'],
-                'ringkasan' => $data['ringkasan'] ?? null,
-                'path_pdf'  => $data['path_pdf'] ?? $regulasi->path_pdf,
-                'aktif'     => $data['aktif'],
-                'updated_by' => $data['updated_by'],
+                'kode'                  => $data['kode'],
+                'judul'                 => $data['judul'],
+                'tahun'                 => $data['tahun'],
+                'kategori_regulasi_id'  => $data['kategori_regulasi_id'],
+                'ringkasan'             => $data['ringkasan'] ?? null,
+                'path_pdf'              => $data['path_pdf'] ?? $regulasi->path_pdf,
+                'aktif'                 => $data['aktif'],
+                'tampilkan_publik'      => $data['tampilkan_publik'] ?? $regulasi->tampilkan_publik,
+                'updated_by'            => $data['updated_by'],
             ]);
 
             return [
@@ -188,6 +197,68 @@ class RegulasiService
         $regulasi->delete();
         return [
             'message' => 'data berhasil dihapus'
+        ];
+    }
+
+    public function regulasiPublik($request): array
+    {
+        $limit = $request->input('limit', 10);
+        $kategoriId = $request->input('kategori_regulasi_id');
+
+        $query = Regulasi::with('kategoriRegulasi')
+            ->select([
+                'id',
+                'kategori_regulasi_id',
+                'judul',
+                'path_pdf',
+                'ringkasan',
+                'created_at',
+                'tahun',
+            ])
+            ->where('tampilkan_publik', true)
+            ->where('aktif', true);
+
+        $query->when($kategoriId, function ($q, $id) {
+            return $q->where('kategori_regulasi_id', $id);
+        });
+
+        $konten = $query->limit($limit)
+            ->get()
+            ->transform(function ($item) {
+                return [
+                    'judul'             => $item->judul,
+                    'kategori_regulasi' => $item->kategoriRegulasi->nama ?? null,
+                    'path_pdf' => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
+                    'tahun'             => $item->tahun,
+                    'ringkasan'         => $item->ringkasan,
+                    'tanggal'           => $item->created_at->format('Y-m-d'),
+                ];
+            });
+
+        return [
+            'message' => 'data berhasil ditampilkan',
+            'data'    => $konten
+        ];
+    }
+
+    public function filteringRegulasi(): array
+    {
+        $data = KategoriRegulasi::whereHas('regulasi', function ($q) {
+            $q->where('tampilkan_publik', true)
+                ->where('aktif', true);
+        })
+            ->select('id', 'nama')
+            ->get()
+            ->transform(function ($item) {
+                return [
+                    'kategori_regulasi_id' => $item->id,
+                    'kategori_regulasi'    => $item->nama,
+                ];
+            });
+
+        return [
+            'message' => 'list kategori untuk filter',
+            'data'    => $data
         ];
     }
 

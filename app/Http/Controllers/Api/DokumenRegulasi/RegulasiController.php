@@ -28,7 +28,7 @@ class RegulasiController extends Controller
             'jenis'   => $request->input('jenis', null),
         ];
 
-        $result = $this->service->getall($filters,$perPage, $currentPage);
+        $result = $this->service->getall($filters, $perPage, $currentPage);
         return $this->successResponse($result['data'], $result['message']);
     }
     public function store(RegulasiRequest $request): JsonResponse
@@ -52,5 +52,17 @@ class RegulasiController extends Controller
     {
         $result = $this->service->delete($id);
         return $this->successResponse($result['message']);
+    }
+
+    public function regulasiPublik(Request $request): JsonResponse
+    {
+        $result = $this->service->regulasiPublik($request);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function kategoriregulasi(): JsonResponse
+    {
+        $result = $this->service->filteringRegulasi();
+        return $this->successResponse($result['data'], $result['message']);
     }
 }
