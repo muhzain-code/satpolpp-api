@@ -164,6 +164,7 @@ class PenindakanService
             // List Data (Tetap array list, tapi properti di dalamnya simpel)
             'list_regulasi'         => $penindakan->penindakanRegulasi->map(function ($item) {
                 return [
+                    'id' => $item->regulasi->id ?? '-',
                     'kode'  => $item->regulasi->kode ?? '-',
                     'judul' => $item->regulasi->judul ?? '-',
                     'pasal' => $item->pasal_dilanggar,
@@ -173,7 +174,7 @@ class PenindakanService
             'list_lampiran'         => $penindakan->penindakanLampiran->map(function ($item) {
                 return [
                     'jenis' => $item->jenis,
-                    'url'   => url(Storage::url($item->path_file)), // Sesuai request
+                    'url'   => url(Storage::url($item->path_file)), 
                 ];
             })->toArray(),
         ];
