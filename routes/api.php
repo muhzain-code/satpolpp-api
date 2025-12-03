@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\PPID\PPIDController;
 use App\Http\Controllers\Api\Anggota\UnitController;
 use App\Http\Controllers\Api\Humas\GaleriController;
-use App\Http\Controllers\Api\Humas\KontenController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
 use App\Http\Controllers\Api\Anggota\AnggotaImportController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
@@ -22,6 +21,9 @@ use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
+use App\Http\Controllers\Api\Humas\AgendaController;
+use App\Http\Controllers\Api\Humas\BeritaController;
+use App\Http\Controllers\Api\Humas\HimbauanController;
 
 /**
  * ==========================
@@ -33,16 +35,16 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 
-Route::get('berita-publik', [KontenController::class, 'beritaPublik']);
-Route::get('berita-publik/{slug}', [KontenController::class, 'detailKonten']);
+Route::get('berita-publik', [BeritaController::class, 'beritaPublik']);
+Route::get('berita-publik/{slug}', [BeritaController::class, 'detailKonten']);
 
 Route::get('regulasi-publik', [RegulasiController::class, 'regulasiPublik']);
 Route::get('filter-publik', [RegulasiController::class, 'kategoriregulasi']);
 
-Route::get('himbauan-publik', [KontenController::class, 'himbauanPublik']);
-Route::get('himbauan-publik/{slug}', [KontenController::class, 'detailKonten']);
+Route::get('himbauan-publik', [HimbauanController::class, 'himbauanPublik']);
+Route::get('himbauan-publik/{slug}', [HimbauanController::class, 'detailKonten']);
 
-Route::get('agenda-publik',[KontenController::class,'agendaPublik']);
+Route::get('agenda-publik',[AgendaController::class,'agendaPublik']);
 
 Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
 
@@ -230,23 +232,23 @@ Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function ()
     Route::put('galeri/{id}', [GaleriController::class, 'update']);
     Route::delete('galeri/{id}', [GaleriController::class, 'destroy']);
 
-    Route::get('berita', [KontenController::class, 'indexBerita']);
-    Route::post('berita', [KontenController::class, 'store']);
-    Route::get('berita/{id}', [KontenController::class, 'show']);
-    Route::put('berita/{id}', [KontenController::class, 'update']);
-    Route::delete('berita/{id}', [KontenController::class, 'destroy']);
+    Route::get('berita', [BeritaController::class, 'indexBerita']);
+    Route::post('berita', [BeritaController::class, 'store']);
+    Route::get('berita/{id}', [BeritaController::class, 'show']);
+    Route::put('berita/{id}', [BeritaController::class, 'update']);
+    Route::delete('berita/{id}', [BeritaController::class, 'destroy']);
 
-    Route::get('agenda', [KontenController::class, 'indexAgenda']);
-    Route::post('agenda', [KontenController::class, 'storeAgenda']);
-    Route::get('agenda/{id}', [KontenController::class, 'showAgenda']);
-    Route::put('agenda/{id}', [KontenController::class, 'updateAgenda']);
-    Route::delete('agenda/{id}', [KontenController::class, 'destroy']);
+    Route::get('agenda', [AgendaController::class, 'indexAgenda']);
+    Route::post('agenda', [AgendaController::class, 'storeAgenda']);
+    Route::get('agenda/{id}', [AgendaController::class, 'showAgenda']);
+    Route::put('agenda/{id}', [AgendaController::class, 'updateAgenda']);
+    Route::delete('agenda/{id}', [AgendaController::class, 'destroy']);
 
-    Route::get('Himbauan', [KontenController::class, 'indexHimbauan']);
-    Route::post('Himbauan', [KontenController::class, 'storeHimbauan']);
-    Route::get('Himbauan/{id}', [KontenController::class, 'showHimbauan']);
-    Route::put('Himbauan/{id}', [KontenController::class, 'updateHimbauan']);
-    Route::delete('Himbauan/{id}', [KontenController::class, 'destroy']);
+    Route::get('Himbauan', [HimbauanController::class, 'indexHimbauan']);
+    Route::post('Himbauan', [HimbauanController::class, 'storeHimbauan']);
+    Route::get('Himbauan/{id}', [HimbauanController::class, 'showHimbauan']);
+    Route::put('Himbauan/{id}', [HimbauanController::class, 'updateHimbauan']);
+    Route::delete('Himbauan/{id}', [HimbauanController::class, 'destroy']);
 });
 
 /**

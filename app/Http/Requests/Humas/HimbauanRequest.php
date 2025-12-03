@@ -14,7 +14,7 @@ class HimbauanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -31,9 +31,7 @@ class HimbauanRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('konten', 'judul')
-                    ->where(fn($query) => $query->where('tipe', 'himbauan'))
-                    ->ignore($id),
+                Rule::unique('himbauan', 'judul')->ignore($id),
             ],
 
             'isi' => ['nullable', 'string'],
@@ -59,5 +57,17 @@ class HimbauanRequest extends FormRequest
             'path_gambar.max'   => 'Ukuran gambar maksimal 5 MB.',
             'tampilkan_publik.boolean' => 'Format status publikasi harus benar/salah.',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $errors = $validator->errors();
+
+        $response = response()->json([
+            'message' => 'Validasi gagal. Mohon periksa kembali input Anda.',
+            'errors' => $errors,
+        ], 422);
+
+        throw new HttpResponseException($response);
     }
 }

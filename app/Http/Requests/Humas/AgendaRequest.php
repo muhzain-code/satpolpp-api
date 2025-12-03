@@ -24,16 +24,15 @@ class AgendaRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id');
+
         return [
             'judul' => [
                 'required',
                 'string',
                 'max:255',
-                'unique:konten,judul,' . $id . ',id,tipe,agenda', 
             ],
 
-            'isi' => ['nullable', 'string'],
+            'deskripsi' => ['nullable', 'string'],
 
             'lokasi' => ['required', 'string', 'max:255'],
 
@@ -58,6 +57,8 @@ class AgendaRequest extends FormRequest
             'judul.unique'   => 'Judul agenda ini sudah digunakan.',
             'judul.string'   => 'Judul harus berupa teks.',
             'judul.max'      => 'Judul maksimal 255 karakter.',
+
+            'deskripsi.string' => 'Deskripsi harus berupa teks.',
 
             'lokasi.required' => 'Lokasi agenda wajib diisi.',
             'lokasi.max'      => 'Lokasi maksimal 255 karakter.',

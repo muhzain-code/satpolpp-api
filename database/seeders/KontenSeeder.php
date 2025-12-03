@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Humas\Agenda;
+use App\Models\Humas\Berita;
+use App\Models\Humas\Himbauan;
 use App\Models\Humas\Konten;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -22,49 +25,49 @@ class KontenSeeder extends Seeder
         $now = Carbon::now();
 
         // ==========================================
-        // 1. DATA BERITA (3 Data Statis)
+        // 1. DATA BERITA
+        // Schema: judul, slug, Kategori, isi, path_gambar, tampilkan_publik, published_at, created_by
         // ==========================================
         $beritaData = [
             [
-                'judul' => 'Rapat Koordinasi Evaluasi Kinerja Triwulan III Tahun 2025',
-                'isi'   => '<p>Dinas mengadakan rapat koordinasi untuk mengevaluasi capaian kinerja selama triwulan ketiga tahun anggaran 2025. Rapat ini dipimpin langsung oleh Kepala Dinas dan dihadiri oleh seluruh pejabat struktural.</p><p>Dalam arahannya, Kepala Dinas menekankan pentingnya percepatan serapan anggaran dan peningkatan kualitas pelayanan publik.</p>',
+                'judul'    => 'Rapat Koordinasi Evaluasi Kinerja Triwulan III Tahun 2025',
+                'kategori' => 'Kegiatan',
+                'isi'      => '<p>Dinas mengadakan rapat koordinasi untuk mengevaluasi capaian kinerja selama triwulan ketiga tahun anggaran 2025. Rapat ini dipimpin langsung oleh Kepala Dinas dan dihadiri oleh seluruh pejabat struktural.</p><p>Dalam arahannya, Kepala Dinas menekankan pentingnya percepatan serapan anggaran dan peningkatan kualitas pelayanan publik.</p>',
             ],
             [
-                'judul' => 'Kegiatan Penertiban PKL di Kawasan Alun-Alun Kota',
-                'isi'   => '<p>Satuan Polisi Pamong Praja (Satpol PP) kembali melakukan penertiban terhadap Pedagang Kaki Lima (PKL) yang berjualan di bahu jalan kawasan Alun-Alun Kota pagi ini.</p><p>Penertiban berjalan kondusif dengan mengedepankan pendekatan persuasif kepada para pedagang agar mematuhi Peraturan Daerah tentang Ketertiban Umum.</p>',
+                'judul'    => 'Kegiatan Penertiban PKL di Kawasan Alun-Alun Kota',
+                'kategori' => 'Operasi',
+                'isi'      => '<p>Satuan Polisi Pamong Praja (Satpol PP) kembali melakukan penertiban terhadap Pedagang Kaki Lima (PKL) yang berjualan di bahu jalan kawasan Alun-Alun Kota pagi ini.</p><p>Penertiban berjalan kondusif dengan mengedepankan pendekatan persuasif kepada para pedagang agar mematuhi Peraturan Daerah tentang Ketertiban Umum.</p>',
             ],
             [
-                'judul' => 'Sosialisasi Peraturan Daerah Terbaru tentang Retribusi',
-                'isi'   => '<p>Pemerintah Kota menggelar sosialisasi mengenai perubahan tarif retribusi pelayanan pasar. Sosialisasi ini bertujuan agar masyarakat dan pelaku usaha memahami dasar hukum dan mekanisme pembayaran terbaru.</p>',
+                'judul'    => 'Sosialisasi Peraturan Daerah Terbaru tentang Retribusi',
+                'kategori' => 'Sosialisasi',
+                'isi'      => '<p>Pemerintah Kota menggelar sosialisasi mengenai perubahan tarif retribusi pelayanan pasar. Sosialisasi ini bertujuan agar masyarakat dan pelaku usaha memahami dasar hukum dan mekanisme pembayaran terbaru.</p>',
             ]
         ];
 
         foreach ($beritaData as $item) {
-            Konten::create([
-                'tipe'             => 'berita',
+            Berita::create([
                 'judul'            => $item['judul'],
                 'slug'             => Str::slug($item['judul']),
+                'Kategori'         => $item['kategori'], // Kolom Baru
                 'isi'              => $item['isi'],
                 'path_gambar'      => null,
                 'tampilkan_publik' => true,
                 'published_at'     => $now,
                 'created_by'       => $userId,
-                // Field agenda null
-                'lokasi'           => null,
-                'tanggal_kegiatan' => null,
-                'waktu_mulai'      => null,
-                'waktu_selesai'    => null,
             ]);
         }
 
-
         // ==========================================
-        // 2. DATA AGENDA (3 Data Statis)
+        // 2. DATA AGENDA
+        // Schema: judul, deskripsi, lokasi, tanggal_kegiatan, waktu_mulai, waktu_selesai, tampilkan_publik, published_at
+        // Note: Tidak ada slug & isi diubah jadi deskripsi
         // ==========================================
         $agendaData = [
             [
                 'judul'            => 'Apel Besar Hari Ulang Tahun Satpol PP',
-                'isi'              => '<p>Seluruh anggota wajib hadir mengenakan Pakaian Dinas Upacara (PDU).</p>',
+                'deskripsi'        => 'Seluruh anggota wajib hadir mengenakan Pakaian Dinas Upacara (PDU).',
                 'lokasi'           => 'Halaman Kantor Walikota',
                 'tanggal_kegiatan' => $now->copy()->addDays(3)->format('Y-m-d'),
                 'waktu_mulai'      => '07:30:00',
@@ -72,7 +75,7 @@ class KontenSeeder extends Seeder
             ],
             [
                 'judul'            => 'Bimbingan Teknis Penggunaan Aplikasi E-Kinerja',
-                'isi'              => '<p>Peserta diharapkan membawa laptop masing-masing.</p>',
+                'deskripsi'        => 'Peserta diharapkan membawa laptop masing-masing.',
                 'lokasi'           => 'Aula Gedung B Lt. 2',
                 'tanggal_kegiatan' => $now->copy()->addDays(7)->format('Y-m-d'),
                 'waktu_mulai'      => '09:00:00',
@@ -80,7 +83,7 @@ class KontenSeeder extends Seeder
             ],
             [
                 'judul'            => 'Rapat Paripurna DPRD',
-                'isi'              => '<p>Agenda pembahasan RAPBD Tahun 2026.</p>',
+                'deskripsi'        => 'Agenda pembahasan RAPBD Tahun 2026.',
                 'lokasi'           => 'Gedung DPRD',
                 'tanggal_kegiatan' => $now->copy()->addDays(10)->format('Y-m-d'),
                 'waktu_mulai'      => '13:00:00',
@@ -89,26 +92,23 @@ class KontenSeeder extends Seeder
         ];
 
         foreach ($agendaData as $item) {
-            Konten::create([
-                'tipe'             => 'agenda',
+            Agenda::create([
                 'judul'            => $item['judul'],
-                'slug'             => Str::slug($item['judul']),
-                'isi'              => $item['isi'],
-                'path_gambar'      => null,
-                'tampilkan_publik' => true,
-                'published_at'     => $now,
-                'created_by'       => $userId,
-                // Field khusus agenda
+                // Slug dihapus
+                'deskripsi'        => strip_tags($item['deskripsi']), // Membersihkan tag HTML untuk deskripsi singkat jika perlu, atau biarkan raw
                 'lokasi'           => $item['lokasi'],
                 'tanggal_kegiatan' => $item['tanggal_kegiatan'],
                 'waktu_mulai'      => $item['waktu_mulai'],
                 'waktu_selesai'    => $item['waktu_selesai'],
+                'tampilkan_publik' => true,
+                'published_at'     => $now,
+                'created_by'       => $userId,
             ]);
         }
 
-
         // ==========================================
-        // 3. DATA HIMBAUAN (3 Data Statis)
+        // 3. DATA HIMBAUAN
+        // Schema: judul, slug, isi, path_gambar, tampilkan_publik, published_at
         // ==========================================
         $himbauanData = [
             [
@@ -126,8 +126,7 @@ class KontenSeeder extends Seeder
         ];
 
         foreach ($himbauanData as $item) {
-            Konten::create([
-                'tipe'             => 'himbauan',
+            Himbauan::create([
                 'judul'            => $item['judul'],
                 'slug'             => Str::slug($item['judul']),
                 'isi'              => $item['isi'],
@@ -135,11 +134,6 @@ class KontenSeeder extends Seeder
                 'tampilkan_publik' => true,
                 'published_at'     => $now,
                 'created_by'       => $userId,
-                // Field agenda null
-                'lokasi'           => null,
-                'tanggal_kegiatan' => null,
-                'waktu_mulai'      => null,
-                'waktu_selesai'    => null,
             ]);
         }
     }

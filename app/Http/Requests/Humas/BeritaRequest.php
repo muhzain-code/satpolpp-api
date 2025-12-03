@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
-class KontenRequest extends FormRequest
+class BeritaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,16 +24,22 @@ class KontenRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Pastikan parameter route sesuai dengan definisi di routes/api.php atau web.php
+        // Contoh: Route::put('/berita/{id}', ...) maka gunakan 'id'
         $id = $this->route('id');
 
         return [
-            // 'tipe' => 'required|in:berita,agenda,himbauan',
-
             'judul' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('konten', 'judul')->ignore($id),
+                Rule::unique('berita', 'judul')->ignore($id),
+            ],
+
+            'kategori' => [
+                'required',
+                'string',
+                'max:255'
             ],
 
             'isi' => ['nullable', 'string'],
@@ -47,19 +53,24 @@ class KontenRequest extends FormRequest
             ],
 
             'tampilkan_publik' => ['required', 'boolean'],
+
+            'published_at' => ['nullable', 'date'],
         ];
     }
-
 
     public function messages(): array
     {
         return [
-            'judul.unique' => 'Judul sudah digunakan.',
-            'path_gambar.image' => 'File harus berupa gambar.',
-            'tampilkan_publik.boolean' => 'Format tampilkan_publik harus true atau false.',
-            'published_at.date' => 'Format tanggal tidak valid.',
+            'judul.required' => 'Judul berita wajib diisi.',
+            'judul.unique' => 'Judul berita sudah digunakan, silakan pilih judul lain.',
+            'kategori.required' => 'Kategori berita wajib diisi.',
+            'path_gambar.image' => 'File harus berupa gambar (jpg, jpeg, png, webp).',
+            'path_gambar.max' => 'Ukuran gambar maksimal 2MB.',
+            'tampilkan_publik.boolean' => 'Format tampilkan publik harus berupa true atau false.',
+            'published_at.date' => 'Format tanggal publish tidak valid.',
         ];
     }
+
     protected function failedValidation(Validator $validator)
     {
         $errors = $validator->errors();

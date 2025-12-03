@@ -7,33 +7,42 @@ use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Konten extends Model
+class Agenda extends Model
 {
     use LogsActivity;
 
-    protected $table = 'konten';
+    protected $table = 'agenda';
 
     protected $fillable = [
-        'tipe',
         'judul',
-        'slug',
-        'isi',
-        'path_gambar',
+        'deskripsi',
+        'lokasi',
+        'tanggal_kegiatan', 
+        'waktu_mulai',
+        'waktu_selesai',
         'tampilkan_publik',
         'published_at',
         'created_by',
+        'updated_by',
         'deleted_by',
     ];
+
+    protected $casts = [
+        'tanggal_kegiatan' => 'date',
+        'tampilkan_publik' => 'boolean',
+        'published_at'     => 'datetime',
+    ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->useLogName('konten')
+            ->useLogName('agenda')
             ->logOnly($this->fillable)
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(
                 fn($event) =>
-                "Data unit berhasil " .
+                "Data agenda berhasil " .
                     match ($event) {
                         'created' => 'ditambahkan',
                         'updated' => 'diperbarui',
