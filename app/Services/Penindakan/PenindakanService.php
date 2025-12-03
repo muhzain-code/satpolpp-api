@@ -173,7 +173,7 @@ class PenindakanService
             'list_lampiran'         => $penindakan->penindakanLampiran->map(function ($item) {
                 return [
                     'jenis' => $item->jenis,
-                    'url'   => Storage::url($item->path_file), // Sesuai request
+                    'url'   => url(Storage::url($item->path_file)), // Sesuai request
                 ];
             })->toArray(),
         ];
