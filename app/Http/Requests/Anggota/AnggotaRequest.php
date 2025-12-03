@@ -28,7 +28,6 @@ class AnggotaRequest extends FormRequest
         $anggotaId = $this->route('id');
 
         return [
-
             'nik' => [
                 'nullable',
                 'string',

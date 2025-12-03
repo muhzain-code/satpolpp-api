@@ -37,7 +37,7 @@ class PenindakanRequest extends FormRequest
             'uraian'             => ['nullable', 'string'],
 
             // PPNS (aktif hanya saat jenis_penindakan = proses_hukum)
-            'butuh_validasi_ppns'   => ['boolean'],
+            // 'butuh_validasi_ppns'   => ['integer', 'in:0,1'],
             'status_validasi_ppns'  => ['nullable', 'in:menunggu,ditolak,revisi,disetujui'],
             'catatan_validasi_ppns' => ['nullable', 'string'],
             'ppns_validator_id'     => ['nullable', 'integer', 'exists:users,id'],
