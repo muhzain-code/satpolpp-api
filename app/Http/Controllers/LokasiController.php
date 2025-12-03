@@ -15,25 +15,9 @@ class LokasiController extends Controller
             return response()->json([]);
         }
 
-        // --- QUERY KECAMATAN (Kab. Probolinggo) ---
-        $kecamatan = DB::table('kecamatan')
-            ->join('kabupaten', 'kecamatan.kabupaten_id', '=', 'kabupaten.id')
-            ->join('provinsi', 'kabupaten.provinsi_id', '=', 'provinsi.id')
-            ->select(
-                'kecamatan.id as id',
-                DB::raw("NULL as desa_id"),
-                'kecamatan.id as kecamatan_id',
-                'kabupaten.id as kabupaten_id',
-                'provinsi.id as provinsi_id',
-                DB::raw("CONCAT('Kec. ', kecamatan.nama_kecamatan, ', ', kabupaten.nama_kabupaten, ', ', provinsi.nama_provinsi) as text"),
-                DB::raw("'kecamatan' as type"),
-                DB::raw("3 as rank_level")
-            )
-            ->where('kabupaten.nama_kabupaten', 'KAB. PROBOLINGGO')
-            ->where('kecamatan.nama_kecamatan', 'LIKE', "%{$search}%");
-
-        // --- QUERY DESA (Kab. Probolinggo) ---
-        $desa = DB::table('desa')
+        // --- QUERY HANYA DESA (Kab. Probolinggo) ---
+        // Kita hapus bagian union kecamatan, fokus langsung ke tabel desa
+        $results = DB::table('desa')
             ->join('kecamatan', 'desa.kecamatan_id', '=', 'kecamatan.id')
             ->join('kabupaten', 'kecamatan.kabupaten_id', '=', 'kabupaten.id')
             ->join('provinsi', 'kabupaten.provinsi_id', '=', 'provinsi.id')
@@ -43,22 +27,22 @@ class LokasiController extends Controller
                 'kecamatan.id as kecamatan_id',
                 'kabupaten.id as kabupaten_id',
                 'provinsi.id as provinsi_id',
+                // Format teks lengkap: Desa X, Kec Y, Kab Z...
                 DB::raw("CONCAT('Desa ', desa.nama_desa, ', Kec. ', kecamatan.nama_kecamatan, ', ', kabupaten.nama_kabupaten, ', ', provinsi.nama_provinsi) as text"),
-                DB::raw("'desa' as type"),
-                DB::raw("4 as rank_level")
+                DB::raw("'desa' as type")
             )
             ->where('kabupaten.nama_kabupaten', 'KAB. PROBOLINGGO')
             ->where(function ($q) use ($search) {
+                // Logika pencarian:
+                // 1. Cocok dengan nama desa, ATAU
+                // 2. Cocok dengan nama kecamatan (ini akan menampilkan semua desa di kecamatan tsb)
                 $q->where('desa.nama_desa', 'LIKE', "%{$search}%")
                     ->orWhere('kecamatan.nama_kecamatan', 'LIKE', "%{$search}%");
-            });
-
-        // gabungkan & urutkan
-        $results = $kecamatan
-            ->unionAll($desa)
-            ->orderByRaw("CASE WHEN text LIKE '{$search}%' THEN 0 ELSE 1 END")
-            ->orderBy('rank_level', 'asc')
-            ->orderBy('text', 'asc')
+            })
+            // Prioritaskan yang nama desanya diawali kata kunci pencarian
+            ->orderByRaw("CASE WHEN desa.nama_desa LIKE '{$search}%' THEN 0 ELSE 1 END")
+            // Lalu urutkan berdasarkan nama desa secara alfabet
+            ->orderBy('desa.nama_desa', 'asc')
             ->limit(20)
             ->get();
 

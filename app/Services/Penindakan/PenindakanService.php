@@ -89,7 +89,7 @@ class PenindakanService
                     foreach ($data['lampiran'] as $file) {
                         $storedPath = $file->store('penindakan', 'public');
 
-                        $penindakan->lampiran()->create([
+                        $penindakan->penindakanLampiran()->create([
                             'nama_file'  => $file->getClientOriginalName(),
                             'path_file'  => $storedPath,
                             'jenis'      => str_starts_with($file->getMimeType(), 'image') ? 'foto' : 'dokumen',
