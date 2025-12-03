@@ -50,7 +50,7 @@ class RegulasiService
                 'tahun' => $item->tahun,
                 'kategori_regulasi' => $item->kategoriRegulasi->nama ?? null,
                 'ringkasan' => $item->ringkasan,
-                'path_pdf' => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
+                'path_pdf' => $item->path_pdf,
                 'aktif' => $item->aktif,
                 'tampilkan_publik' => $item->tampilkan_publik,
             ];

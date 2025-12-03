@@ -204,6 +204,7 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
     Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
     Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
+    Route::get('/pdf-viewer', [RegulasiController::class, 'showPdf']);
     // Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
 
     // regulation progress

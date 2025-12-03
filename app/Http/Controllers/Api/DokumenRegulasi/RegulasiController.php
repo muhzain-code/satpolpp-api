@@ -8,6 +8,7 @@ use App\Services\DokumenRegulasi\RegulasiService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class RegulasiController extends Controller
 {
@@ -64,5 +65,62 @@ class RegulasiController extends Controller
     {
         $result = $this->service->filteringRegulasi();
         return $this->successResponse($result['data'], $result['message']);
+    }
+
+    // public function showPdf(Request $request)
+    // {
+    //     $path = $request->query('path');
+
+    //     if (!$path) abort(404);
+
+    //     $cleanPath = Str::replaceFirst('storage/', '', $path);
+    //     $cleanPath = ltrim($cleanPath, '/');
+
+    //     $fullPath = storage_path('app/public/' . $cleanPath);
+
+    //     if (!file_exists($fullPath)) {
+    //         return response()->json(['message' => 'File not found'], 404);
+    //     }
+
+    //     $file = file_get_contents($fullPath);
+    //     $type = mime_content_type($fullPath);
+    //     $size = filesize($fullPath);
+
+    //     $response = new Response($file, 200);
+    //     $response->header("Content-Type", $type);
+
+    //     // CORS Headers
+    //     $response->header("Access-Control-Allow-Origin", "*");
+    //     $response->header("Access-Control-Allow-Methods", "GET, OPTIONS");
+    //     $response->header("Access-Control-Allow-Headers", "*");
+
+    //     // Headers penting untuk PDF.js / React-PDF
+    //     $response->header("Accept-Ranges", "bytes");
+    //     $response->header("Content-Length", $size);
+    //     $response->header("Content-Disposition", 'inline; filename="' . basename($fullPath) . '"');
+    //     $response->header("Cache-Control", "public, max-age=3600");
+
+    //     return $response;
+    // }
+    public function showPdf(Request $request)
+    {
+        $path = $request->query('path');
+        if (!$path) abort(404);
+
+        $cleanPath = ltrim(Str::replaceFirst('storage/', '', $path), '/');
+        $fullPath = storage_path('app/public/' . $cleanPath);
+
+        if (!file_exists($fullPath)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+
+        $headers = [
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+            'Access-Control-Allow-Headers' => '*',
+            'Cache-Control' => 'public, max-age=3600',
+        ];
+
+        return response()->file($fullPath, $headers);
     }
 }
