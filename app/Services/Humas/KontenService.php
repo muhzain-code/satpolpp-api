@@ -202,6 +202,7 @@ class KontenService
             'path_gambar',
             'published_at',
         ])
+            ->where('tipe', 'berita')
             ->where('tampilkan_publik', true)
             ->orderBy('published_at', 'desc')
             ->limit($limit)
