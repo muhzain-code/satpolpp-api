@@ -109,28 +109,78 @@ class PenindakanService
         }
     }
 
-
     public function getById($id): array
     {
-        $user  = Auth::user();
+        $user = Auth::user();
 
-        if ($user->hasRole('super_admin') ||  $user->hasRole('ppns')) {
-            $penindakan = Penindakan::with('penindakanRegulasi', 'penindakanLampiran')->find($id);
-        }
+        // Eager Load relasi yang diperlukan
+        $query = Penindakan::with([
+            'penindakanLampiran',
+            'penindakanRegulasi.regulasi',
+            'creator'
+        ]);
 
-        if ($user->hasRole('komandan_regu')) {
-            $penindakan = Penindakan::with('penindakanRegulasi', 'penindakanLampiran')
-                ->where('created_by', $user->id)
-                ->find($id);
+        // Logika Hak Akses
+        $penindakan = null;
+        if ($user->hasRole('super_admin') || $user->hasRole('ppns')) {
+            $penindakan = $query->find($id);
+        } elseif ($user->hasRole('komandan_regu')) {
+            $penindakan = $query->where('created_by', $user->id)->find($id);
         }
 
         if (!$penindakan) {
             throw new CustomException('Penindakan tidak ditemukan', 404);
         }
 
+        // Transformasi Flat (Satu Baris)
+        $data = [
+            'id'                    => $penindakan->id,
+            'jenis_penindakan'      => $penindakan->jenis_penindakan,
+            'uraian'                => $penindakan->uraian,
+
+            // Sumber Data (Flat)
+            'operasi_id'            => $penindakan->operasi_id,
+            'laporan_harian_id'     => $penindakan->laporan_harian_id,
+            'pengaduan_id'          => $penindakan->pengaduan_id,
+
+            // Lokasi (Flat)
+            'kecamatan_id'          => $penindakan->kecamatan_id,
+            'desa_id'               => $penindakan->desa_id,
+            'lokasi_alamat'         => $penindakan->lokasi,
+            'lokasi_lat'            => $penindakan->lat,
+            'lokasi_lng'            => $penindakan->lng,
+
+            // Validasi PPNS (Flat)
+            'validasi_butuh'        => (bool) $penindakan->butuh_validasi_ppns,
+            'validasi_status'       => $penindakan->status_validasi_ppns,
+            'validasi_catatan'      => $penindakan->catatan_validasi_ppns,
+            'validasi_validator_id' => $penindakan->ppns_validator_id,
+            'validasi_tanggal'      => $penindakan->tanggal_validasi_ppns,
+
+            // Audit Info
+            'created_by_name'       => $penindakan->creator->name ?? null,
+            'created_at'            => $penindakan->created_at->format('Y-m-d H:i:s'),
+
+            // List Data (Tetap array list, tapi properti di dalamnya simpel)
+            'list_regulasi'         => $penindakan->penindakanRegulasi->map(function ($item) {
+                return [
+                    'kode'  => $item->regulasi->kode ?? '-',
+                    'judul' => $item->regulasi->judul ?? '-',
+                    'pasal' => $item->pasal_dilanggar,
+                ];
+            })->toArray(),
+
+            'list_lampiran'         => $penindakan->penindakanLampiran->map(function ($item) {
+                return [
+                    'jenis' => $item->jenis,
+                    'url'   => Storage::url($item->path_file), // Sesuai request
+                ];
+            })->toArray(),
+        ];
+
         return [
             'message' => 'Detail penindakan berhasil ditampilkan',
-            'data' => $penindakan
+            'data'    => $data
         ];
     }
 
