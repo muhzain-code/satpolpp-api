@@ -34,7 +34,7 @@ class PenandaPasalRequest extends FormRequest
             'halaman'     => [$ruleType, 'integer', 'min:1'],
 
             // Validasi Array 'data'
-            'data'        => [$ruleType, 'text'],
+            'data'        => [$ruleType, 'string'],
 
             // // Item di dalam array 'data' hanya divalidasi jika array 'data' dikirim
             // 'data.x'      => ['required_with:data', 'numeric'],
