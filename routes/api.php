@@ -48,7 +48,7 @@ Route::get('filter-publik', [RegulasiController::class, 'kategoriregulasi']);
 Route::get('himbauan-publik', [HimbauanController::class, 'himbauanPublik']);
 Route::get('himbauan-publik/{slug}', [HimbauanController::class, 'detailKonten']);
 
-Route::get('agenda-publik',[AgendaController::class,'agendaPublik']);
+Route::get('agenda-publik', [AgendaController::class, 'agendaPublik']);
 
 Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
 
@@ -56,6 +56,8 @@ Route::post('permohonan-ppid', [PPIDController::class, 'permohonanPPID']);
 Route::post('lacak-permohonan-ppid', [PPIDController::class, 'lacakPPID']);
 
 Route::get('kategori-pengaduan', [KategoriPengaduanController::class, 'index']);
+
+Route::get('/pdf-viewer', [RegulasiController::class, 'showPdf']);
 
 /**
  * ==========================
@@ -204,7 +206,6 @@ Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
     Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
     Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
     Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
-    Route::get('/pdf-viewer', [RegulasiController::class, 'showPdf']);
     // Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
 
     // regulation progress
