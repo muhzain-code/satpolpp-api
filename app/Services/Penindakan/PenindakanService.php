@@ -81,7 +81,7 @@ class PenindakanService
 
                 // --- SIMPAN REGULASI ---
                 if (!empty($data['regulasi'])) {
-                    $penindakan->regulasi()->createMany($data['regulasi']);
+                    $penindakan->penindakanRegulasi()->createMany($data['regulasi']);
                 }
 
                 // --- SIMPAN LAMPIRAN ---
@@ -100,7 +100,7 @@ class PenindakanService
 
                 return [
                     'message' => 'Penindakan berhasil ditambahkan',
-                    'data'    => $penindakan->load('regulasi', 'lampiran'),
+                    'data'    => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
                 ];
             });
         } catch (Exception $e) {
@@ -115,11 +115,11 @@ class PenindakanService
         $user  = Auth::user();
 
         if ($user->hasRole('super_admin') ||  $user->hasRole('ppns')) {
-            $penindakan = Penindakan::with('regulasi', 'lampiran')->find($id);
+            $penindakan = Penindakan::with('penindakanRegulasi', 'penindakanLampiran')->find($id);
         }
 
         if ($user->hasRole('komandan_regu')) {
-            $penindakan = Penindakan::with('regulasi', 'lampiran')
+            $penindakan = Penindakan::with('penindakanRegulasi', 'penindakanLampiran')
                 ->where('created_by', $user->id)
                 ->find($id);
         }
@@ -153,7 +153,7 @@ class PenindakanService
                 }
 
                 // Bila sudah pakai regulasi, hanya boleh update jika status PPNS = revisi
-                $isRegulasi = $penindakan->regulasi()->exists();
+                $isRegulasi = $penindakan->penindakanRegulasi()->exists();
                 if ($isRegulasi && $penindakan->status_validasi_ppns !== 'revisi') {
                     throw new CustomException(
                         'Penindakan regulasi hanya bisa diubah ketika status PPNS = revisi',
@@ -205,16 +205,16 @@ class PenindakanService
 
                 // Update regulasi (hapus → create ulang)
                 if (isset($data['regulasi'])) {
-                    $penindakan->regulasi()->delete();
-                    $penindakan->regulasi()->createMany($data['regulasi']);
+                    $penindakan->penindakanRegulasi()->delete();
+                    $penindakan->penindakanRegulasi()->createMany($data['regulasi']);
                 }
 
                 // Tambah lampiran baru
                 if (!empty($data['lampiran'])) {
 
                     // 1. Hapus lampiran lama kalau ada
-                    if ($penindakan->lampiran()->exists()) {
-                        foreach ($penindakan->lampiran as $old) {
+                    if ($penindakan->penindakanLampiran()->exists()) {
+                        foreach ($penindakan->penindakanLampiran as $old) {
                             if ($old->path_file && Storage::disk('public')->exists($old->path_file)) {
                                 Storage::disk('public')->delete($old->path_file);
                             }
@@ -237,7 +237,7 @@ class PenindakanService
 
                 return [
                     'message' => 'Penindakan berhasil diperbarui',
-                    'data' => $penindakan->load('regulasi', 'lampiran'),
+                    'data' => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
                 ];
             });
         } catch (Exception $e) {
@@ -258,7 +258,7 @@ class PenindakanService
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                $isRegulasi = $penindakan->regulasi()->exists();
+                $isRegulasi = $penindakan->penindakanRegulasi()->exists();
 
                 if ($isRegulasi && $penindakan->status_validasi_ppns !== 'revisi') {
                     throw new CustomException(
@@ -268,12 +268,12 @@ class PenindakanService
                 }
 
                 // Hapus file lampiran
-                foreach ($penindakan->lampiran as $lampiran) {
+                foreach ($penindakan->penindakanLampiran() as $lampiran) {
                     Storage::disk('public')->delete($lampiran->path_file);
                     $lampiran->delete();
                 }
 
-                $penindakan->regulasi()->delete();
+                $penindakan->penindakanRegulasi()->delete();
                 $penindakan->delete();
 
                 return ['message' => 'Penindakan berhasil dihapus'];
@@ -288,7 +288,7 @@ class PenindakanService
         try {
             return DB::transaction(function () use ($id, $data) {
 
-                $penindakan = Penindakan::with('regulasi')->find($id);
+                $penindakan = Penindakan::with('penindakanRegulasi')->find($id);
 
                 if (!$penindakan) {
                     throw new CustomException('Penindakan tidak ditemukan', 404);
@@ -319,7 +319,7 @@ class PenindakanService
 
                 return [
                     'message' => 'Validasi PPNS berhasil',
-                    'data'    => $penindakan->load('regulasi', 'lampiran'),
+                    'data'    => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
                 ];
             });
         } catch (Exception $e) {

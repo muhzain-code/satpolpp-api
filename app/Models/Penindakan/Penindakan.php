@@ -42,6 +42,14 @@ class Penindakan extends Model
     {
         return $this->belongsTo(Operasi::class);
     }
+    public function penindakanLampiran()
+    {
+        return $this->hasMany(PenindakanLampiran::class);
+    }
+    public function penindakanRegulasi()
+    {
+        return $this->hasMany(PenindakanRegulasi::class);
+    }
 
     public function pengaduan()
     {
