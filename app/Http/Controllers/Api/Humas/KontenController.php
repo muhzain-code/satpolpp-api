@@ -116,7 +116,7 @@ class KontenController extends Controller
         return $this->successResponse($result['message']);
     }
 
-    public function KontenPublik(Request $request): JsonResponse
+    public function beritaPublik(Request $request): JsonResponse
     {
         $result = $this->service->KontenPublik($request);
         return $this->successResponse($result['data'], $result['message']);
@@ -125,6 +125,18 @@ class KontenController extends Controller
     public function detailKonten($slug): JsonResponse
     {
         $result = $this->service->detailKonten($slug);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function agendaPublik(Request $request): JsonResponse
+    {
+        $result = $this->service->agendaPublik($request);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function himbauanPublik(Request $request): JsonResponse
+    {
+        $result = $this->service->himbauanPublik($request);
         return $this->successResponse($result['data'], $result['message']);
     }
 }
