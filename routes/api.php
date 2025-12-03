@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 use App\Http\Controllers\Api\Humas\AgendaController;
 use App\Http\Controllers\Api\Humas\BeritaController;
 use App\Http\Controllers\Api\Humas\HimbauanController;
+use App\Http\Controllers\Api\Humas\StatistikPublikController;
 
 /**
  * ==========================
@@ -34,6 +35,9 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
+
+Route::get('statistik-operasi-kategori', [StatistikPublikController::class, 'index']);
+Route::get('statistik-bulanan', [StatistikPublikController::class, 'indexMonth']);
 
 Route::get('berita-publik', [BeritaController::class, 'beritaPublik']);
 Route::get('berita-publik/{slug}', [BeritaController::class, 'detailKonten']);
