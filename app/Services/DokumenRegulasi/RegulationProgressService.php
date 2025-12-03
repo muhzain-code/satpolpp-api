@@ -482,6 +482,8 @@ class RegulationProgressService
         $status     = $filters['status'] ?? 'all';
 
         $timeConstraint = function ($query) use ($filterType, $dateInput, $monthInput) {
+            $query->where('status_selesai', true);
+
             if ($filterType === 'monthly') {
                 $year = substr($monthInput, 0, 4);
                 $month = substr($monthInput, 5, 2);
@@ -491,7 +493,6 @@ class RegulationProgressService
                 $query->whereDate('tanggal', $dateInput);
             }
         };
-
         $query = User::select('users.*')
             ->whereNotNull('anggota_id')
             ->with(['anggota.unit'])
@@ -537,10 +538,12 @@ class RegulationProgressService
                 'user_id'       => $user->id,
                 'nama'          => $user->anggota->nama ?? 'Tanpa Nama',
                 'unit'          => $user->anggota->unit->nama ?? '-',
-                'foto_inisial'  => substr($user->anggota->nama ?? 'X', 0, 1),
+                'foto'          => $user->anggota->foto
+                    ? url(Storage::url($user->anggota->foto))
+                    : null,
                 'stats' => [
                     'jumlah_buku'   => $readCount,
-                    'status_label'  => $isActive ? 'Sudah Membaca' : 'Belum Membaca',
+                    'status_label'  => $isActive ? "Sudah Menuntaskan {$readCount} Buku Regulasi" : 'Belum Menuntaskan Bacaan',
                 ],
                 'detail_regulasi' => $user->riwayatBaca->map(function ($log) {
                     return [
