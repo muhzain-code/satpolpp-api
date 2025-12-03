@@ -27,7 +27,6 @@ class PengaduanController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status');
         $kategoriId = $request->input('kategori_id');
-
         $result = $this->service->getAll([
             'per_page' => $perPage,
             'page' => $page,

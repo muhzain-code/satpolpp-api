@@ -77,16 +77,6 @@ class PenindakanRequest extends FormRequest
                     'Hanya satu dari operasi, pengaduan, atau laporan harian yang boleh diisi.'
                 );
             }
-
-            // Validasi PPNS khusus jenis proses hukum
-            if ($this->input('jenis_penindakan') !== 'proses_hukum') {
-                if ($this->input('butuh_validasi_ppns')) {
-                    $validator->errors()->add(
-                        'butuh_validasi_ppns',
-                        'Validasi PPNS hanya boleh aktif jika jenis penindakan adalah proses_hukum.'
-                    );
-                }
-            }
         });
     }
 
