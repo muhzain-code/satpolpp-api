@@ -7,14 +7,14 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
-class KontenRequest extends FormRequest
+class HimbauanRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -27,13 +27,13 @@ class KontenRequest extends FormRequest
         $id = $this->route('id');
 
         return [
-            // 'tipe' => 'required|in:berita,agenda,himbauan',
-
             'judul' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('konten', 'judul')->ignore($id),
+                Rule::unique('konten', 'judul')
+                    ->where(fn($query) => $query->where('tipe', 'himbauan'))
+                    ->ignore($id),
             ],
 
             'isi' => ['nullable', 'string'],
@@ -42,33 +42,22 @@ class KontenRequest extends FormRequest
                 'nullable',
                 'file',
                 'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048'
+                'mimes:jpeg,png,jpg,gif,webp',
+                'max:5120',
             ],
 
             'tampilkan_publik' => ['required', 'boolean'],
         ];
     }
 
-
     public function messages(): array
     {
         return [
-            'judul.unique' => 'Judul sudah digunakan.',
+            'judul.required' => 'Judul himbauan wajib diisi.',
+            'judul.unique'   => 'Judul himbauan ini sudah digunakan.',
             'path_gambar.image' => 'File harus berupa gambar.',
-            'tampilkan_publik.boolean' => 'Format tampilkan_publik harus true atau false.',
-            'published_at.date' => 'Format tanggal tidak valid.',
+            'path_gambar.max'   => 'Ukuran gambar maksimal 5 MB.',
+            'tampilkan_publik.boolean' => 'Format status publikasi harus benar/salah.',
         ];
-    }
-    protected function failedValidation(Validator $validator)
-    {
-        $errors = $validator->errors();
-
-        $response = response()->json([
-            'message' => 'Validasi gagal. Mohon periksa kembali input Anda.',
-            'errors' => $errors,
-        ], 422);
-
-        throw new HttpResponseException($response);
     }
 }
