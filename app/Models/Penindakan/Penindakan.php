@@ -2,10 +2,11 @@
 
 namespace App\Models\Penindakan;
 
-use App\Models\Alamat\Kecamatan;
 use App\Models\User;
+use App\Models\Alamat\Desa;
 use App\Models\Anggota\Anggota;
 use App\Models\Operasi\Operasi;
+use App\Models\Alamat\Kecamatan;
 use App\Models\Pengaduan\Pengaduan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
