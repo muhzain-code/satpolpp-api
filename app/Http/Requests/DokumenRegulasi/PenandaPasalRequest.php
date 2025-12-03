@@ -34,14 +34,14 @@ class PenandaPasalRequest extends FormRequest
             'halaman'     => [$ruleType, 'integer', 'min:1'],
 
             // Validasi Array 'data'
-            'data'        => [$ruleType, 'array'],
+            'data'        => [$ruleType, 'text'],
 
-            // Item di dalam array 'data' hanya divalidasi jika array 'data' dikirim
-            'data.x'      => ['required_with:data', 'numeric'],
-            'data.y'      => ['required_with:data', 'numeric'],
-            'data.w'      => ['nullable', 'numeric'],
-            'data.h'      => ['nullable', 'numeric'],
-            'data.color'  => ['nullable', 'string'],
+            // // Item di dalam array 'data' hanya divalidasi jika array 'data' dikirim
+            // 'data.x'      => ['required_with:data', 'numeric'],
+            // 'data.y'      => ['required_with:data', 'numeric'],
+            // 'data.w'      => ['nullable', 'numeric'],
+            // 'data.h'      => ['nullable', 'numeric'],
+            // 'data.color'  => ['nullable', 'string'],
         ];
     }
 
