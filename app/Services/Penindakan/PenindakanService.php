@@ -302,7 +302,7 @@ class PenindakanService
         try {
             return DB::transaction(function () use ($id) {
 
-                $penindakan = Penindakan::with('lampiran')->find($id);
+                $penindakan = Penindakan::with('penindakanLampiran')->find($id);
 
                 if (!$penindakan) {
                     throw new CustomException('Penindakan tidak ditemukan', 404);
