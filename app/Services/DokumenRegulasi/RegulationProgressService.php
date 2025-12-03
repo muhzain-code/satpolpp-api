@@ -260,23 +260,25 @@ class RegulationProgressService
         ];
     }
 
-    public function detailPdf(): array
+    public function detailPdf($id): array
     {
         $UserID = Auth::id();
+
         if (!$UserID) {
-            throw new CustomException('User tidak di temukan');
+            throw new CustomException('User tidak ditemukan');
         }
 
         $tanda = CatatanRegulasi::with('regulasi')
-            ->where('user_id', $UserID);
+            ->where('user_id', $UserID)
+            ->where('regulasi_id', $id);
 
-        $tanda->getCollection()->transform(function ($item) {
+        $tanda->through(function ($item) {
             return [
                 'id'        => $item->regulasi_id,
                 'halaman'   => $item->halaman,
                 'type'      => $item->type,
                 'data'      => $item->data,
-                'catatan'      => $item->catatan,
+                'catatan'   => $item->catatan,
                 'regulasi'  => $item->regulasi->judul ?? null,
             ];
         });
@@ -284,11 +286,11 @@ class RegulationProgressService
         return [
             'message' => 'data berhasil ditampilkan',
             'data'    => [
-                'current_page'  => $tanda->currentPage(),
-                'per_page'      => $tanda->perPage(),
-                'total'         => $tanda->total(),
-                'last_page'     => $tanda->lastPage(),
-                'items'         => $tanda->items(),
+                'current_page' => $tanda->currentPage(),
+                'per_page'     => $tanda->perPage(),
+                'total'        => $tanda->total(),
+                'last_page'    => $tanda->lastPage(),
+                'items'        => $tanda->items(), 
             ]
         ];
     }
