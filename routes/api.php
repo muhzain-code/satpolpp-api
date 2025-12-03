@@ -222,11 +222,23 @@ Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function ()
     Route::put('galeri/{id}', [GaleriController::class, 'update']);
     Route::delete('galeri/{id}', [GaleriController::class, 'destroy']);
 
-    Route::get('konten', [KontenController::class, 'index']);
-    Route::post('konten', [KontenController::class, 'store']);
-    Route::get('konten/{id}', [KontenController::class, 'show']);
-    Route::put('konten/{id}', [KontenController::class, 'update']);
-    Route::delete('konten/{id}', [KontenController::class, 'destroy']);
+    Route::get('berita', [KontenController::class, 'indexBerita']);
+    Route::post('berita', [KontenController::class, 'store']);
+    Route::get('berita/{id}', [KontenController::class, 'show']);
+    Route::put('berita/{id}', [KontenController::class, 'update']);
+    Route::delete('berita/{id}', [KontenController::class, 'destroy']);
+
+    Route::get('agenda', [KontenController::class, 'indexAgenda']);
+    Route::post('agenda', [KontenController::class, 'storeAgenda']);
+    Route::get('agenda/{id}', [KontenController::class, 'showAgenda']);
+    Route::put('agenda/{id}', [KontenController::class, 'updateAgenda']);
+    Route::delete('agenda/{id}', [KontenController::class, 'destroy']);
+
+    Route::get('Himbauan', [KontenController::class, 'indexHimbauan']);
+    Route::post('Himbauan', [KontenController::class, 'storeHimbauan']);
+    Route::get('Himbauan/{id}', [KontenController::class, 'showHimbauan']);
+    Route::put('Himbauan/{id}', [KontenController::class, 'updateHimbauan']);
+    Route::delete('Himbauan/{id}', [KontenController::class, 'destroy']);
 });
 
 /**

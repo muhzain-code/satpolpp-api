@@ -461,6 +461,22 @@ return new class extends Migration
          * 8. KONTEN HUMAS & GALERI
          * ============================================================
          */
+        // Schema::create('konten', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->enum('tipe', ['berita', 'agenda', 'himbauan'])->default('berita');
+        //     $table->string('judul');
+        //     $table->string('slug')->unique();
+        //     $table->text('isi')->nullable();
+        //     $table->string('path_gambar', 1000)->nullable();
+        //     $table->boolean('tampilkan_publik')->default(true);
+        //     $table->timestamp('published_at')->nullable();
+        //     $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
+
         Schema::create('konten', function (Blueprint $table) {
             $table->id();
             $table->enum('tipe', ['berita', 'agenda', 'himbauan'])->default('berita');
@@ -468,11 +484,20 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('isi')->nullable();
             $table->string('path_gambar', 1000)->nullable();
+
+            // Agenda
+            $table->string('lokasi')->nullable();
+            $table->time('waktu_mulai')->nullable();
+            $table->time('waktu_selesai')->nullable();
+            $table->date('tanggal_kegiatan')->nullable();
+
+
             $table->boolean('tampilkan_publik')->default(true);
             $table->timestamp('published_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
             $table->softDeletes();
         });
