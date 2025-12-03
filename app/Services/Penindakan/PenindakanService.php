@@ -69,7 +69,7 @@ class PenindakanService
                     'lng'                => $data['lng'] ?? null,
 
                     // PPNS
-                    'butuh_validasi_ppns'   => $data['jenis_penindakan'] === 'proses_hukum',
+                    'butuh_validasi_ppns'   => $data['butuh_validasi_ppns'] ?? false,
                     'status_validasi_ppns'  => $statusPpns,
 
                     'created_by' => Auth::id(),
@@ -174,7 +174,7 @@ class PenindakanService
             'list_lampiran'         => $penindakan->penindakanLampiran->map(function ($item) {
                 return [
                     'jenis' => $item->jenis,
-                    'url'   => url(Storage::url($item->path_file)), 
+                    'url'   => url(Storage::url($item->path_file)),
                 ];
             })->toArray(),
         ];
@@ -203,9 +203,7 @@ class PenindakanService
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                // Bila sudah pakai regulasi, hanya boleh update jika status PPNS = revisi
-                $isRegulasi = $penindakan->penindakanRegulasi()->exists();
-                if ($isRegulasi && $penindakan->status_validasi_ppns !== 'revisi') {
+                if ($penindakan->butuh_validasi_ppns === true && $penindakan->status_validasi_ppns !== 'revisi') {
                     throw new CustomException(
                         'Penindakan regulasi hanya bisa diubah ketika status PPNS = revisi',
                         403
@@ -309,11 +307,9 @@ class PenindakanService
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                $isRegulasi = $penindakan->penindakanRegulasi()->exists();
-
-                if ($isRegulasi && $penindakan->status_validasi_ppns !== 'revisi') {
+                if ($penindakan->butuh_validasi_ppns === true && $penindakan->status_validasi_ppns !== 'revisi') {
                     throw new CustomException(
-                        'Penindakan regulasi hanya bisa dihapus jika status = revisi',
+                        'Penindakan regulasi hanya bisa diubah ketika status PPNS = revisi',
                         403
                     );
                 }
@@ -345,7 +341,7 @@ class PenindakanService
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                if ($penindakan->jenis_penindakan !== 'proses_hukum') {
+                if ($penindakan->butuh_validasi_ppns !== true) {
                     throw new CustomException('Penindakan ini tidak memerlukan validasi PPNS', 422);
                 }
 
