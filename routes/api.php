@@ -33,7 +33,7 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 
-Route::get('konten-publik', [KontenController::class, 'KontenPublik']);
+Route::get('berita-publik', [KontenController::class, 'KontenPublik']);
 Route::get('konten-publik/{slug}', [KontenController::class, 'detailKonten']);
 
 Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
@@ -250,7 +250,7 @@ Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
     // Route::put('penanda-pasal/{id}', [RegulationProgressController::class, 'updatetandaiPasal']);
     Route::post('penanda-halaman', [RegulationProgressController::class, 'tandaiHalaman']);
     // Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
-    Route::delete('penanda/{id}', [RegulationProgressController::class, 'destroyPenanda']);
+    Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
 });
 
 
