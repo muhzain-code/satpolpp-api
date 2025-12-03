@@ -33,8 +33,13 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('pengaduan', [PengaduanController::class, 'store']);
 Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
 
-Route::get('berita-publik', [KontenController::class, 'KontenPublik']);
-Route::get('konten-publik/{slug}', [KontenController::class, 'detailKonten']);
+Route::get('berita-publik', [KontenController::class, 'beritaPublik']);
+Route::get('berita-publik/{slug}', [KontenController::class, 'detailKonten']);
+
+Route::get('himbauan-publik', [KontenController::class, 'himbauanPublik']);
+Route::get('himbauan-publik/{slug}', [KontenController::class, 'detailKonten']);
+
+Route::get('agenda-publik',[KontenController::class,'agendaPublik']);
 
 Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
 

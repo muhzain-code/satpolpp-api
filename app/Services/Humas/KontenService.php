@@ -346,7 +346,6 @@ class KontenService
                     'slug'          => $item->slug,
                     'isi'           => Str::limit(strip_tags($item->isi), 100),
                     'tampilkan_publik' => (bool) $item->tampilkan_publik,
-                    'status_label'  => $item->tampilkan_publik ? 'Tayang' : 'Draft',
                     'path_gambar'   => $item->path_gambar ? url(Storage::url($item->path_gambar)) : null,
                     'published_at'  => $item->published_at,
                 ];
@@ -477,6 +476,25 @@ class KontenService
         }
     }
 
+    public function deleteKontenById($id): array
+    {
+        $konten = Konten::find($id);
+
+        if (!$konten) {
+            throw new CustomException('Data tidak ditemukan');
+        }
+
+        if ($konten->path_gambar && Storage::disk('public')->exists($konten->path_gambar)) {
+            Storage::disk('public')->delete($konten->path_gambar);
+        }
+
+        $konten->delete();
+
+        return [
+            'message' => 'data berhasil dihapus'
+        ];
+    }
+
     private function generateUniqueSlug($baseSlug, $ignoreId = null)
     {
         $slug = $baseSlug;
@@ -493,10 +511,9 @@ class KontenService
         return $slug;
     }
 
-    // Role Masyarakat
     public function KontenPublik($request): array
     {
-        $limit = $request->input('limit', 25);
+        $limit = $request->input('limit', 10);
 
         $konten = Konten::select([
             'tipe',
@@ -504,6 +521,7 @@ class KontenService
             'slug',
             'path_gambar',
             'published_at',
+            'isi',
         ])
             ->where('tipe', 'berita')
             ->where('tampilkan_publik', true)
@@ -511,16 +529,18 @@ class KontenService
             ->limit($limit)
             ->get()
             ->transform(function ($item) {
-                $item->path_gambar = $item->path_gambar
-                    ? Storage::url($item->path_gambar)
-                    : null;
-
-                return $item;
+                return [
+                    'judul'        => $item->judul,
+                    'slug'         => $item->slug,
+                    'gambar'       => $item->path_gambar ? Storage::url($item->path_gambar) : null,
+                    'tanggal'      => $item->published_at,
+                    'deskripsi_singkat' => Str::limit(strip_tags($item->isi), 120, '...')
+                ];
             });
 
         return [
             'message' => 'data berhasil ditampilkan',
-            'data'  => $konten
+            'data'    => $konten
         ];
     }
 
@@ -552,22 +572,75 @@ class KontenService
         ];
     }
 
-    public function deleteKontenById($id): array
+    public function agendaPublik($request): array
     {
-        $konten = Konten::find($id);
+        $limit = $request->input('limit', 10);
 
-        if (!$konten) {
-            throw new CustomException('Data tidak ditemukan');
-        }
+        $konten = Konten::select([
+            'tipe',
+            'judul',
+            'lokasi',
+            'tanggal_kegiatan',
+            'waktu_mulai',
+            'waktu_selesai',
+            'tampilkan_publik',
+        ])
+            ->where('tipe', 'agenda')
+            ->where('tampilkan_publik', true)
+            ->whereDate('tanggal_kegiatan', '>=', now())
+            ->orderBy('tanggal_kegiatan', 'asc')
 
-        if ($konten->path_gambar && Storage::disk('public')->exists($konten->path_gambar)) {
-            Storage::disk('public')->delete($konten->path_gambar);
-        }
-
-        $konten->delete();
+            ->limit($limit)
+            ->get()
+            ->transform(function ($item) {
+                return [
+                    'judul'            => $item->judul,
+                    'tipe'             => $item->tipe,
+                    'tanggal_kegiatan'          => $item->tanggal_kegiatan,
+                    'lokasi'           => $item->lokasi,
+                    'waktu_mulai'        => $item->waktu_mulai ? Carbon::parse($item->waktu_mulai)->format('H:i') . ' WIB' : '-',
+                    'waktu_selesai'      => $item->waktu_selesai ? Carbon::parse($item->waktu_selesai)->format('H:i') . ' WIB' : 'Selesai',
+                    'tampilkan_publik' => $item->tampilkan_publik,
+                ];
+            });
 
         return [
-            'message' => 'data berhasil dihapus'
+            'message' => 'data berhasil ditampilkan',
+            'data'    => $konten
+        ];
+    }
+
+    public function himbauanPublik($request): array
+    {
+        $limit = $request->input('limit', 10);
+
+        $konten = Konten::select([
+            'tipe',
+            'judul',
+            'slug',
+            'path_gambar',
+            'published_at',
+            'isi',
+        ])
+            ->where('tipe', 'himbauan')
+            ->where('tampilkan_publik', true)
+            ->orderBy('published_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->transform(function ($item) {
+                return [
+                    'tipe'        => $item->tipe,
+                    'judul'        => $item->judul,
+                    'slug'         => $item->slug,
+                    'gambar'       => $item->path_gambar ? Storage::url($item->path_gambar) : null,
+                    'tanggal'      => $item->published_at,
+                    'deskripsi_singkat' => Str::limit(strip_tags($item->isi), 120, '...')
+                ];
+            });
+
+        return [
+            'message' => 'data berhasil ditampilkan',
+            'data'    => $konten
         ];
     }
 }
