@@ -29,7 +29,8 @@ class DisposisiService
         $disposisi->getCollection()->transform(function ($item) {
             return [
                 'id' => $item->id,
-                'pengaduan_id' => $item->pengaduan->nomor_tiket,
+                'pengaduan_id' => $item->pengaduan_id,
+                'nomor_tiket' => $item->pengaduan->nomor_tiket,
                 'komandan_id' => $item->komandan->name ?? null,
                 'catatan' => $item->catatan,
                 'batas_waktu' => $item->batas_waktu,
@@ -110,7 +111,8 @@ class DisposisiService
                     'kecamatan' => $pengaduan->kecamatan->nama ?? null,
                     'desa' => $pengaduan->desa->nama ?? null,
                 ] : null,
-                'komandan' => $disposisi->komandan->name ?? null,
+                'komandan_id' => $disposisi->komandan_id ?? null,
+                'nama_komandan' => $disposisi->komandan->name ?? null,
                 'catatan' => $disposisi->catatan,
                 'batas_waktu' => $disposisi->batas_waktu,
                 'status' => $disposisi->status,
