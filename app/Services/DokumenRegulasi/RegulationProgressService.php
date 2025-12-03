@@ -57,7 +57,7 @@ class RegulationProgressService
                 'tahun'     => $item->tahun,
                 'kategori'  => $item->kategoriRegulasi ? $item->kategoriRegulasi->nama : null,
                 'ringkasan' => $item->ringkasan,
-                'path_pdf'  => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
+                'path_pdf'  => $item->path_pdf ? Storage::url($item->path_pdf) : null,
                 'aktif'     => $item->aktif,
                 'daily_progress' => [
                     'status_label'   => $statusLabel,
@@ -244,6 +244,39 @@ class RegulationProgressService
                 'id'        => $item->id,
                 'halaman'   => $item->halaman,
                 'type'      => $item->type,
+                'regulasi'  => $item->regulasi->judul ?? null,
+            ];
+        });
+
+        return [
+            'message' => 'data berhasil ditampilkan',
+            'data'    => [
+                'current_page'  => $tanda->currentPage(),
+                'per_page'      => $tanda->perPage(),
+                'total'         => $tanda->total(),
+                'last_page'     => $tanda->lastPage(),
+                'items'         => $tanda->items(),
+            ]
+        ];
+    }
+
+    public function detailPdf(): array
+    {
+        $UserID = Auth::id();
+        if (!$UserID) {
+            throw new CustomException('User tidak di temukan');
+        }
+
+        $tanda = CatatanRegulasi::with('regulasi')
+            ->where('user_id', $UserID);
+
+        $tanda->getCollection()->transform(function ($item) {
+            return [
+                'id'        => $item->regulasi_id,
+                'halaman'   => $item->halaman,
+                'type'      => $item->type,
+                'data'      => $item->data,
+                'catatan'      => $item->catatan,
                 'regulasi'  => $item->regulasi->judul ?? null,
             ];
         });

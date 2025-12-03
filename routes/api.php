@@ -279,6 +279,8 @@ Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
     Route::post('penanda-halaman', [RegulationProgressController::class, 'tandaiHalaman']);
     // Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
     Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
+    
+    Route::get('detail-pdf/{id}', [RegulationProgressController::class, 'detailPdf']);
 });
 
 

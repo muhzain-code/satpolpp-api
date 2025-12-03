@@ -50,6 +50,12 @@ class RegulationProgressController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
+    public function detailPdf($id): JsonResponse
+    {
+        $result = $this->service->detailPdf($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
     public function detailbookmark($id): JsonResponse
     {
         $result = $this->service->detailtanda($id);
