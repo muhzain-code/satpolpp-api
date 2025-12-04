@@ -108,7 +108,7 @@ class RegulationProgressService
             ->first();
 
         if (!$regulasi) {
-            throw new CustomException('Regulasi tidak ditemukan');
+            throw new CustomException('Regulasi tidak ditemukan',404);
         }
 
         $riwayatHarian = $regulasi->riwayatBaca->first();
@@ -273,13 +273,16 @@ class RegulationProgressService
         $UserID = Auth::id();
 
         if (!$UserID) {
-            throw new CustomException('User tidak ditemukan');
+            throw new CustomException('User tidak ditemukan', 404);
         }
 
         $tanda = CatatanRegulasi::with('regulasi')
             ->where('user_id', $UserID)
             ->where('regulasi_id', $id);
 
+        if (!$tanda) {
+            throw new CustomException('Data Tidak Ditemukan', 404);
+        }
         $tanda->through(function ($item) {
             return [
                 'id'        => $item->regulasi_id,
@@ -348,7 +351,7 @@ class RegulationProgressService
             ->get();
 
         if ($listTanda->isEmpty()) {
-            throw new CustomException('data tidak ditemukan');
+            throw new CustomException('data tidak ditemukan', 404);
         }
 
         return [
