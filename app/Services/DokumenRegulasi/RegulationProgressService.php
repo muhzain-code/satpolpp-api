@@ -36,7 +36,10 @@ class RegulationProgressService
                     $query->where('user_id', $UserID)
                         ->where('tanggal', $today);
                 },
-                'kategoriRegulasi'
+                'kategoriRegulasi',
+                'catatanRegulasi' => function ($query) use ($UserID) {
+                    $query->where('user_id', $UserID);
+                }
             ])
             ->orderBy('daily_completed_status', 'asc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
@@ -44,11 +47,7 @@ class RegulationProgressService
         $Regulasi->getCollection()->transform(function ($item) {
             $riwayatHarian = $item->riwayatBaca->first();
             $isCompleted = $riwayatHarian ? (bool) $riwayatHarian->status_selesai : false;
-            if ($isCompleted) {
-                $statusLabel = 'completed';
-            } else {
-                $statusLabel = 'not_started';
-            }
+            $statusLabel = $isCompleted ? 'completed' : 'not_started';
 
             return [
                 'id'        => $item->id,
@@ -62,9 +61,18 @@ class RegulationProgressService
                 'daily_progress' => [
                     'status_label'   => $statusLabel,
                     'is_completed'   => $isCompleted,
-                    'durasi_detik'   => $riwayatHarian ? $riwayatHarian->durasi_detik : 0, // Untuk timer resume
+                    'durasi_detik'   => $riwayatHarian ? $riwayatHarian->durasi_detik : 0,
                     'terakhir_akses' => $riwayatHarian ? Carbon::parse($riwayatHarian->updated_at)->diffForHumans() : null,
-                ]
+                ],
+                'catatan_regulasi' => $item->catatanRegulasi->map(function ($catatan) {
+                    return [
+                        'id'      => $catatan->id,
+                        'halaman' => $catatan->halaman,
+                        'type'    => $catatan->type,
+                        'data'    => $catatan->data,
+                        'catatan' => $catatan->catatan,
+                    ];
+                }),
             ];
         });
 
@@ -290,11 +298,42 @@ class RegulationProgressService
                 'per_page'     => $tanda->perPage(),
                 'total'        => $tanda->total(),
                 'last_page'    => $tanda->lastPage(),
-                'items'        => $tanda->items(), 
+                'items'        => $tanda->items(),
             ]
         ];
     }
 
+
+    // public function detailtanda($id): array
+    // {
+    //     $UserID = Auth::id();
+    //     if (!$UserID) {
+    //         throw new CustomException('User tidak di temukan');
+    //     }
+
+    //     $tanda = CatatanRegulasi::with('regulasi')
+    //         ->where('id', $id)
+    //         ->where('user_id', $UserID)
+    //         ->first();
+
+    //     if (!$tanda) {
+    //         throw new CustomException('data tidak ditemukan');
+    //     }
+
+    //     return [
+    //         'message' => 'data berhasil di tampilkan',
+    //         'data'    => [
+    //             'id'            => $tanda->id,
+    //             'halaman'       => $tanda->halaman,
+    //             'type'          => $tanda->type,
+    //             'regulasi_judul' => $tanda->regulasi->judul ?? null,
+    //             'path_pdf' => $tanda->regulasi->path_pdf
+    //                 ? url(Storage::url($tanda->regulasi->path_pdf))
+    //                 : null,
+    //             'data'          => $tanda->data,
+    //         ]
+    //     ];
+    // }
 
     public function detailtanda($id): array
     {
@@ -303,27 +342,26 @@ class RegulationProgressService
             throw new CustomException('User tidak di temukan');
         }
 
-        $tanda = CatatanRegulasi::with('regulasi')
-            ->where('id', $id)
+        $listTanda = CatatanRegulasi::with('regulasi')
+            ->where('regulasi_id', $id)
             ->where('user_id', $UserID)
-            ->first();
+            ->get();
 
-        if (!$tanda) {
+        if ($listTanda->isEmpty()) {
             throw new CustomException('data tidak ditemukan');
         }
 
         return [
             'message' => 'data berhasil di tampilkan',
-            'data'    => [
-                'id'            => $tanda->id,
-                'halaman'       => $tanda->halaman,
-                'type'          => $tanda->type,
-                'regulasi_judul' => $tanda->regulasi->judul ?? null,
-                'path_pdf' => $tanda->regulasi->path_pdf
-                    ? url(Storage::url($tanda->regulasi->path_pdf))
-                    : null,
-                'data'          => $tanda->data,
-            ]
+            'data'    => $listTanda->map(function ($tanda) {
+                return [
+                    'id'      => $tanda->id,
+                    'halaman' => $tanda->halaman,
+                    'type'    => $tanda->type,
+                    'catatan' => $tanda->catatan ?? null,
+                    'data'    => $tanda->data ?? null,
+                ];
+            })
         ];
     }
 

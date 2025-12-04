@@ -33,21 +33,21 @@ class BeritaController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(string $id): JsonResponse
     {
-        $result = $this->service->showBeritaById($slug);
+        $result = $this->service->showBeritaById($id);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(BeritaRequest $request, string $slug): JsonResponse
+    public function update(BeritaRequest $request, string $id): JsonResponse
     {
-        $result = $this->service->updateBeritaById($request->validated(), $slug);
+        $result = $this->service->updateBeritaById($request->validated(), $id);
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function destroy(string $slug): JsonResponse
+    public function destroy(string $id): JsonResponse
     {
-        $result = $this->service->deleteBeritaById($slug);
+        $result = $this->service->deleteBeritaById($id);
         return $this->successResponse($result['message']);
     }
 

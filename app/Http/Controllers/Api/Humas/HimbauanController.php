@@ -47,9 +47,9 @@ class HimbauanController extends Controller
         $result = $this->service->updateHimbauanById($request->validated(), $id);
         return $this->successResponse($result['data'], $result['message']);
     }
-    public function destroy(string $slug): JsonResponse
+    public function destroy(string $id): JsonResponse
     {
-        $result = $this->service->deleteHimbauanById($slug);
+        $result = $this->service->deleteHimbauanById($id);
         return $this->successResponse($result['message']);
     }
     public function himbauanPublik(Request $request): JsonResponse

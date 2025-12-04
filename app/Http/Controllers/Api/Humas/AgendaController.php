@@ -55,9 +55,9 @@ class AgendaController extends Controller
     }
 
 
-    public function destroy(string $slug): JsonResponse
+    public function destroy(string $id): JsonResponse
     {
-        $result = $this->service->deleteAgendaById($slug);
+        $result = $this->service->deleteAgendaById($id);
         return $this->successResponse($result['message']);
     }
 
