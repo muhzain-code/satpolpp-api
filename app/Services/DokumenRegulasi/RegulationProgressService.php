@@ -57,6 +57,7 @@ class RegulationProgressService
                 'kategori'  => $item->kategoriRegulasi ? $item->kategoriRegulasi->nama : null,
                 'ringkasan' => $item->ringkasan,
                 'path_pdf'  => $item->path_pdf ? Storage::url($item->path_pdf) : null,
+                'full_url'  => $item->path_pdf ? url(Storage::url($item->path_pdf)) : null,
                 'aktif'     => $item->aktif,
                 'daily_progress' => [
                     'status_label'   => $statusLabel,
