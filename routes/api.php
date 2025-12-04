@@ -7,24 +7,25 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\PPID\PPIDController;
 use App\Http\Controllers\Api\Anggota\UnitController;
+use App\Http\Controllers\Api\Humas\AgendaController;
+use App\Http\Controllers\Api\Humas\BeritaController;
 use App\Http\Controllers\Api\Humas\GaleriController;
+use App\Http\Controllers\Api\Humas\HimbauanController;
 use App\Http\Controllers\Api\Anggota\AnggotaController;
-use App\Http\Controllers\Api\Anggota\AnggotaImportController;
 use App\Http\Controllers\Api\Anggota\JabatanController;
-use App\Http\Controllers\Api\DokumenRegulasi\KategoriRegulasiController;
 use App\Http\Controllers\Api\Operasi\OperasiController;
 use App\Http\Controllers\Api\Operasi\DisposisiController;
+use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\Pengaduan\PengaduanController;
+use App\Http\Controllers\Api\Anggota\AnggotaImportController;
+use App\Http\Controllers\Api\Humas\StatistikPublikController;
 use App\Http\Controllers\Api\Penindakan\PenindakanController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulasiController;
 use App\Http\Controllers\Api\Pengaduan\KategoriPengaduanController;
 use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
+use App\Http\Controllers\Api\DokumenRegulasi\KategoriRegulasiController;
 use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
-use App\Http\Controllers\Api\Humas\AgendaController;
-use App\Http\Controllers\Api\Humas\BeritaController;
-use App\Http\Controllers\Api\Humas\HimbauanController;
-use App\Http\Controllers\Api\Humas\StatistikPublikController;
 
 /**
  * ==========================
@@ -189,6 +190,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      */
     Route::middleware('role:super_admin')->group(function () {
 
+        //Dashboard
+         Route::get('/stats', [DashboardController::class, 'index']);
+
         // User Registration
         Route::post('register', [AuthController::class, 'register'])->name('register');
 
@@ -312,7 +316,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * Role: anggota_regu
      * ==========================
      */
-    Route::middleware('role:anggota_regu')->group(function () {
+    Route::middleware('role:super_admin|anggota_regu')->group(function () {
         // Lampiran Laporan
         Route::prefix('lampiran')->name('lampiran.')->group(function () {
             Route::get('/', [LampiranLaporanController::class, 'index'])->name('index');
@@ -347,7 +351,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * Role: komandan_regu
      * ==========================
      */
-    Route::middleware('role:komandan_regu')->prefix('laporan-komandan')->name('laporan-komandan.')->group(function () {
+    Route::middleware('role:super_admin|komandan_regu')->prefix('laporan-komandan')->name('laporan-komandan.')->group(function () {
         Route::get('/', [LampiranLaporanController::class, 'indexKomandan'])->name('index');
         Route::put('{id}', [LampiranLaporanController::class, 'AccbyKomandan'])->name('approve');
     });

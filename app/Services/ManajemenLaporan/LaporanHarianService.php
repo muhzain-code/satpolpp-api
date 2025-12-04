@@ -2,16 +2,24 @@
 
 namespace App\Services\ManajemenLaporan;
 
+use Illuminate\Support\Facades\DB;
 use App\Exceptions\CustomException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Services\OptimizePhotoService;
+use Illuminate\Support\Facades\Storage;
 use App\Models\ManajemenLaporan\LaporanHarian;
 use App\Models\ManajemenLaporan\LaporanLampiran;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class LaporanHarianService
 {
+
+    protected OptimizePhotoService $optimizeService;
+
+    public function __construct(OptimizePhotoService $optimizeService)
+    {
+        $this->optimizeService = $optimizeService;
+    }
 
     public function getAll($perPage, $currentPage, $request): array
     {
@@ -140,7 +148,7 @@ class LaporanHarianService
             if (!empty($data['lampiran']) && is_array($data['lampiran'])) {
                 foreach ($data['lampiran'] as $file) {
                     if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-                        $path = $file->store('laporan_harian', 'public');
+                        $path = $this->optimizeService->optimizeImage($file, 'laporan_harian');
 
                         LaporanLampiran::create([
                             'laporan_id' => $laporan->id,
@@ -264,7 +272,7 @@ class LaporanHarianService
             if (!empty($data['lampiran'])) {
                 foreach ($data['lampiran'] as $file) {
                     if ($file->isValid()) {
-                        $path = $file->store('laporan_harian', 'public');
+                        $path = $this->optimizeService->optimizeImage($file, 'laporan_harian');
                         LaporanLampiran::create([
                             'laporan_id' => $laporan->id,
                             'path_file'  => $path,

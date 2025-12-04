@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Exceptions\CustomException;
 use App\Models\Pengaduan\Pengaduan;
 use Illuminate\Support\Facades\Log;
+use App\Services\OptimizePhotoService;
 use App\Services\NomorGeneratorService;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Pengaduan\PengaduanLampiran;
@@ -15,10 +16,12 @@ use App\Models\Pengaduan\PengaduanLampiran;
 class PengaduanService
 {
     protected NomorGeneratorService $service;
+    protected OptimizePhotoService $optimizeService;
 
-    public function __construct(NomorGeneratorService $service)
+    public function __construct(NomorGeneratorService $service, OptimizePhotoService $optimizeService)
     {
         $this->service = $service;
+        $this->optimizeService = $optimizeService;
     }
 
     public function getAll($filter): array
@@ -87,7 +90,7 @@ class PengaduanService
                     foreach ($data['lampiran'] as $file) {
                         if ($file instanceof UploadedFile) {
                             $originalName = $file->getClientOriginalName();
-                            $path = $file->store('pengaduan', 'public');
+                            $path = $this->optimizeService->optimizeImage($file, 'pengaduan');
 
                             $pengaduanLampiran = PengaduanLampiran::create([
                                 'pengaduan_id' => $pengaduan->id,
@@ -188,7 +191,8 @@ class PengaduanService
                     foreach ($data['lampiran'] as $file) {
                         if ($file instanceof UploadedFile) {
                             $originalName = $file->getClientOriginalName();
-                            $path = $file->store('pengaduan', 'public');
+
+                            $path = $this->optimizeService->optimizeImage($file, 'pengaduan');
 
                             $lampiran = PengaduanLampiran::create([
                                 'pengaduan_id' => $pengaduan->id,

@@ -29,7 +29,7 @@ class LaporanHarianAnggotaRequest extends FormRequest
             'lat'        => 'required|numeric',
             'lng'        => 'required|numeric',
             'lampiran'   => 'nullable|array',
-            'lampiran.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+            'lampiran.*' => 'file|mimes:jpg,jpeg,png,mp4,mov|max:5120',
 
             'kategori_pelanggaran_id' => 'required_if:jenis,insiden|nullable|exists:kategori_pengaduan,id',
             'severity'                => 'required_if:jenis,insiden|nullable|in:rendah,sedang,tinggi',

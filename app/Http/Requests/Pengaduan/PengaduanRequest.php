@@ -41,7 +41,7 @@ class PengaduanRequest extends FormRequest
             'status'         => 'nullable|in:diterima,diproses,selesai,ditolak',
 
             'lampiran'       => 'nullable|array|max:3',
-            'lampiran.*'     => 'file|mimes:jpg,jpeg,png,pdf|max:2048', 
+            'lampiran.*'     => 'file|mimes:jpg,jpeg,png,pdf|max:5120', 
         ];
     }
 

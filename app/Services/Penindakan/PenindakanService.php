@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PenindakanService
 {
+    
     public function getAll($filter): array
     {
         $user = Auth::user();
