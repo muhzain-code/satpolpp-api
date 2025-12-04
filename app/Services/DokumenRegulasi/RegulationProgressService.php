@@ -71,6 +71,7 @@ class RegulationProgressService
                         'type'    => $catatan->type,
                         'data'    => $catatan->data,
                         'catatan' => $catatan->catatan,
+                        'warna' => $catatan->warna,
                     ];
                 }),
             ];
@@ -108,7 +109,7 @@ class RegulationProgressService
             ->first();
 
         if (!$regulasi) {
-            throw new CustomException('Regulasi tidak ditemukan');
+            throw new CustomException('Regulasi tidak ditemukan',404);
         }
 
         $riwayatHarian = $regulasi->riwayatBaca->first();
@@ -273,13 +274,16 @@ class RegulationProgressService
         $UserID = Auth::id();
 
         if (!$UserID) {
-            throw new CustomException('User tidak ditemukan');
+            throw new CustomException('User tidak ditemukan', 404);
         }
 
         $tanda = CatatanRegulasi::with('regulasi')
             ->where('user_id', $UserID)
             ->where('regulasi_id', $id);
 
+        if (!$tanda) {
+            throw new CustomException('Data Tidak Ditemukan', 200);
+        }
         $tanda->through(function ($item) {
             return [
                 'id'        => $item->regulasi_id,
@@ -287,6 +291,7 @@ class RegulationProgressService
                 'type'      => $item->type,
                 'data'      => $item->data,
                 'catatan'   => $item->catatan,
+                'warna'   => $item->warna ?? null,
                 'regulasi'  => $item->regulasi->judul ?? null,
             ];
         });
@@ -348,7 +353,7 @@ class RegulationProgressService
             ->get();
 
         if ($listTanda->isEmpty()) {
-            throw new CustomException('data tidak ditemukan');
+            throw new CustomException('data tidak ditemukan', 200);
         }
 
         return [
@@ -360,6 +365,7 @@ class RegulationProgressService
                     'type'    => $tanda->type,
                     'catatan' => $tanda->catatan ?? null,
                     'data'    => $tanda->data ?? null,
+                    'warna'    => $tanda->warna ?? null,
                 ];
             })
         ];
@@ -379,6 +385,7 @@ class RegulationProgressService
                 'halaman' => $data['halaman'],
                 'type' => 'highlight',
                 'data' => $data['data'],
+                'warna' => $data['warna'],
             ]);
 
             return [

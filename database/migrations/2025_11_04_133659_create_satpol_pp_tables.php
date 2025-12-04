@@ -156,6 +156,7 @@ return new class extends Migration
             // Tipe: Hanya 'highlight' (visual/stabilo) dan 'note' (teks)
             $table->enum('type', ['highlight', 'note']);
             $table->json('data')->nullable(); // Koordinat & warna
+            $table->string('warna')->nullable();
             $table->string('catatan')->nullable();
             $table->timestamps();
         });
