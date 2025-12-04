@@ -38,7 +38,7 @@ class StatistikPublikService
             'ringkasan' => [
                 'total_operasi' => $totalOperasi,
                 'pengaduan_selesai' => $pengaduanSelesai,
-                'persentase_penyelesaian' => $persentaseSelesai,
+                'persentase_penyelesaian' => $persentaseSelesai . '%',
                 'personel_aktif' => $personelAktif,
             ],
             'grafik' => $statistikOperasi
