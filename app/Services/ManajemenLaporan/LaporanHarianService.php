@@ -99,8 +99,8 @@ class LaporanHarianService
 
                 // Info Laporan
                 'jenis'             => $item->jenis, // aman/insiden
-                'severity'          => $item->severity, // rendah/sedang/tinggi
-                'catatan'           => $item->catatan, // Ini pengganti 'lokasi' teks manual
+                'severity'          => $item->severity ?? null, // rendah/sedang/tinggi
+                'catatan'           => $item->catatan ?? null, // Ini pengganti 'lokasi' teks manual
 
                 // Koordinat (Penting untuk Peta)
                 'lat'               => $item->lat,
@@ -134,22 +134,75 @@ class LaporanHarianService
         DB::beginTransaction();
 
         try {
-            $data['created_by'] = Auth::id();
+            $user = Auth::user();
+
+            if (!$user) {
+                throw new CustomException('Anda belum login.');
+            }
+
+            $anggotaId = null;
+            $isSuperAdmin = $user->hasRole('superadmin');
+
+            if ($isSuperAdmin) {
+                if (empty($data['anggota_id'])) {
+                    throw new CustomException('Superadmin wajib memilih anggota.');
+                }
+                $anggotaId = $data['anggota_id'];
+            } else {
+                $anggota = $user->anggota;
+                if (!$anggota || $anggota->status !== 'aktif') {
+                    throw new CustomException('Akun anggota tidak valid/aktif.');
+                }
+                $anggotaId = $anggota->id;
+            }
+
+            $statusValidasi = 'menunggu';
+            $divalidasiOleh = null;
+
+            if ($isSuperAdmin) {
+                $statusInput = $data['status_validasi'] ?? 'disetujui';
+
+                $statusValidasi = $statusInput;
+
+                if (in_array($statusValidasi, ['disetujui', 'ditolak'])) {
+                    $divalidasiOleh = $user->id;
+                }
+            } else {
+                $statusValidasi = 'menunggu';
+            }
+            $kategoriId = null;
+            $regulasiId = null;
+            $severity   = null;
+
+            if (isset($data['jenis']) && $data['jenis'] === 'insiden') {
+                $kategoriId = $data['kategori_pelanggaran_id'] ?? null;
+                $regulasiId = $data['regulasi_indikatif_id'] ?? null;
+                $severity   = $data['severity'] ?? null;
+
+                if (!$severity) throw new CustomException('Severity wajib diisi.');
+            }
 
             $laporan = LaporanHarian::create([
-                'anggota_id'        => $data['anggota_id'],
-                'jenis'             => $data['jenis'] ?? 'aman',
-                'catatan'           => $data['catatan'] ?? null,
-                'lat'               => $data['lat'] ?? null,
-                'lng'               => $data['lng'] ?? null,
-                'status_validasi'   => 'menunggu',
+                'anggota_id'              => $anggotaId,
+                'jenis'                   => $data['jenis'] ?? 'aman',
+                'catatan'                 => $data['catatan'] ?? null,
+                'lat'                     => $data['lat'] ?? null,
+                'lng'                     => $data['lng'] ?? null,
+
+                'kategori_pelanggaran_id' => $kategoriId,
+                'regulasi_indikatif_id'   => $regulasiId,
+                'severity'                => $severity,
+
+                'status_validasi'         => $statusValidasi,
+                'divalidasi_oleh'         => $divalidasiOleh,
+
+                'created_by'              => $user->id,
             ]);
 
             if (!empty($data['lampiran']) && is_array($data['lampiran'])) {
                 foreach ($data['lampiran'] as $file) {
                     if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
                         $path = $this->optimizeService->optimizeImage($file, 'laporan_harian');
-
                         LaporanLampiran::create([
                             'laporan_id' => $laporan->id,
                             'path_file'  => $path,
@@ -167,14 +220,9 @@ class LaporanHarianService
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-
-            Log::error('Gagal menambah laporan harian', [
-                'message' => $e->getMessage(),
-            ]);
-            if ($e instanceof CustomException) {
-                throw $e;
-            }
-            throw new CustomException('Gagal menambah laporan harian', 422);
+            Log::error('Gagal store laporan', ['msg' => $e->getMessage()]);
+            if ($e instanceof CustomException) throw $e;
+            throw new CustomException('Gagal menambah laporan: ' . $e->getMessage(), 422);
         }
     }
 
@@ -225,28 +273,18 @@ class LaporanHarianService
     {
         $user = Auth::user();
 
-        // 1. BLOKIR AKSES ANGGOTA
-        if ($user->hasRole('anggota_regu')) {
-            throw new CustomException('Akses ditolak. Anggota tidak diizinkan mengubah laporan.', 403);
+        if (!$user->hasRole('superadmin')) {
+            throw new CustomException('Akses ditolak. Hanya Superadmin yang diizinkan mengubah laporan.', 403);
         }
 
         DB::beginTransaction();
         try {
-            // Load anggota untuk pengecekan unit
             $laporan = LaporanHarian::with(['lampiran', 'anggota'])->find($id);
 
             if (!$laporan) {
                 throw new CustomException('Data laporan harian tidak ditemukan', 404);
             }
 
-            // 2. CEK AKSES KOMANDAN
-            if ($user->hasRole('komandan_regu')) {
-                if (!$user->anggota || $user->anggota->unit_id !== $laporan->anggota->unit_id) {
-                    throw new CustomException('Akses ditolak. Anda hanya dapat mengubah laporan unit Anda.', 403);
-                }
-            }
-
-            // Hapus Lampiran Lama (Jika ada request lampiran baru)
             if (!empty($data['lampiran'])) {
                 foreach ($laporan->lampiran as $lampiran) {
                     if (Storage::disk('public')->exists($lampiran->path_file)) {
@@ -256,19 +294,31 @@ class LaporanHarianService
                 }
             }
 
-            // Update Data Utama
-            $laporan->update([
-                'jenis'           => $data['jenis'] ?? $laporan->jenis,
-                'catatan'         => $data['catatan'] ?? $laporan->catatan,
-                'lat'             => $data['lat'] ?? $laporan->lat,
-                'lng'             => $data['lng'] ?? $laporan->lng,
-                'status_validasi' => $data['status_validasi'] ?? $laporan->status_validasi,
-                'divalidasi_oleh' => $data['divalidasi_oleh'] ?? $laporan->divalidasi_oleh,
-                // Best practice: updated_at otomatis dihandle Eloquent, tapi manual oke
-                'updated_at'      => now(),
-            ]);
+            $updateData = [
+                'jenis'                   => $data['jenis'] ?? $laporan->jenis,
+                'catatan'                 => $data['catatan'] ?? $laporan->catatan,
+                'lat'                     => $data['lat'] ?? $laporan->lat,
+                'lng'                     => $data['lng'] ?? $laporan->lng,
+                'kategori_pelanggaran_id' => $data['kategori_pelanggaran_id'] ?? $laporan->kategori_pelanggaran_id,
+                'regulasi_indikatif_id'   => $data['regulasi_indikatif_id'] ?? $laporan->regulasi_indikatif_id,
+                'severity'                => $data['severity'] ?? $laporan->severity,
+                'updated_at'              => now(),
+            ];
 
-            // Upload Lampiran Baru
+            if (isset($data['status_validasi'])) {
+                $newStatus = $data['status_validasi'];
+
+                $updateData['status_validasi'] = $newStatus;
+
+                if (in_array($newStatus, ['disetujui', 'ditolak'])) {
+                    $updateData['divalidasi_oleh'] = $user->id;
+                } elseif ($newStatus === 'menunggu') {
+                    $updateData['divalidasi_oleh'] = null;
+                }
+            }
+
+            $laporan->update($updateData);
+
             if (!empty($data['lampiran'])) {
                 foreach ($data['lampiran'] as $file) {
                     if ($file->isValid()) {
@@ -286,7 +336,7 @@ class LaporanHarianService
 
             return [
                 'message' => 'Data laporan harian berhasil diperbarui',
-                'data'    => $laporan->load('lampiran')
+                'data'    => $laporan->fresh()->load('lampiran')
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -337,5 +387,125 @@ class LaporanHarianService
         return [
             'message' => 'Data laporan harian berhasil dihapus'
         ];
+    }
+
+    public function ListValidasi($perPage, $currentPage, $request): array
+    {
+        $user = Auth::user();
+
+        $query = LaporanHarian::with([
+            'anggota:id,nama,unit_id',
+            'anggota.unit:id,nama',
+            'kategoriPelanggaran:id,nama',
+            'regulasi:id,judul'
+        ])
+            ->where('jenis', 'insiden')
+            ->where('telah_dieskalasi', false)
+            ->whereNull('divalidasi_oleh');
+
+        if ($user->hasRole('super_admin')) {
+        } else if ($user->hasRole('komandan_regu')) {
+
+            if (!$user->anggota) {
+                throw new CustomException('Akun Komandan tidak terhubung dengan data anggota/unit. Harap hubungi Admin.', 403);
+            }
+
+            $unitIdKomandan = $user->anggota->unit_id;
+
+            $query->whereHas('anggota', function ($q) use ($unitIdKomandan) {
+                $q->where('unit_id', $unitIdKomandan);
+            });
+        } else {
+            throw new CustomException('Role Anda tidak memiliki akses ke validasi laporan.', 403);
+        }
+
+        if ($request->filled('severity')) {
+            $query->where('severity', $request->severity);
+        }
+
+        $laporan = $query
+            ->orderByRaw("FIELD(severity, 'tinggi', 'sedang', 'rendah') ASC")
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $currentPage);
+
+        // 5. Transformasi Data
+        $laporan->through(function ($item) {
+            return [
+                'id'             => $item->id,
+                'tanggal'        => $item->created_at->format('d-m-Y H:i'),
+
+                // Null Safe Operator (?->) mencegah error jika anggota terhapus
+                'anggota_nama'   => $item->anggota?->nama ?? 'Personil Tidak Dikenal',
+                'unit_nama'      => $item->anggota?->unit?->nama ?? '-',
+
+                'jenis'          => $item->jenis,
+                'severity'       => $item->severity,
+                'catatan'        => $item->catatan,
+
+                'lat'            => $item->lat,
+                'lng'            => $item->lng,
+
+                'kategori'       => $item->kategoriPelanggaran?->nama ?? '-',
+                'regulasi'       => $item->regulasi?->judul ?? '-',
+            ];
+        });
+
+        return [
+            'message' => 'Data validasi insiden berhasil ditampilkan',
+            'data' => [
+                'current_page' => $laporan->currentPage(),
+                'per_page'     => $laporan->perPage(),
+                'total'        => $laporan->total(),
+                'last_page'    => $laporan->lastPage(),
+                'items'        => $laporan->items()
+            ]
+        ];
+    }
+
+    public function processDecision(array $data, int $id): array
+    {
+        $user = Auth::user();
+
+        $laporan = LaporanHarian::with('anggota')->find($id);
+
+        if (!$laporan) {
+            throw new CustomException('Data laporan tidak ditemukan.', 404);
+        }
+
+        if ($user->hasRole('komandan_regu')) {
+            if (!$user->anggota) {
+                throw new CustomException('Akun Anda tidak terhubung dengan data keanggotaan.', 403);
+            }
+
+            if ($laporan->anggota->unit_id !== $user->anggota->unit_id) {
+                throw new CustomException('Anda tidak memiliki akses untuk memvalidasi laporan dari unit lain.', 403);
+            }
+        }
+
+        if ($laporan->status_validasi != 'menunggu') {
+            throw new CustomException('Data tidak dapat diupdate karena status sudah bukan menunggu (Sudah diproses sebelumnya).', 400);
+        }
+
+        if ($data['status_validasi'] == 'ditolak') {
+            if (empty($data['catatan_validasi'])) {
+                throw new CustomException('Catatan/Alasan wajib diisi jika laporan ditolak.', 422);
+            }
+        }
+
+        return DB::transaction(function () use ($laporan, $data, $user) {
+
+            $laporan->status_validasi = $data['status_validasi'];
+            $laporan->divalidasi_oleh = $user->id;
+            if (isset($data['catatan_validasi']) && !empty($data['catatan_validasi'])) {
+                $laporan->catatan_validasi = $data['catatan_validasi'];
+            }
+
+            $laporan->save();
+
+            return [
+                'message' => 'Laporan berhasil diperbarui menjadi ' . $laporan->status_validasi,
+                'data'    => $laporan
+            ];
+        });
     }
 }

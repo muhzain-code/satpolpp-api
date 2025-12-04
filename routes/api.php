@@ -184,6 +184,16 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         Route::delete('{id}', [PenindakanController::class, 'destroy'])->name('destroy');
     });
 
+    Route::middleware('role:super_admin|anggota_regu|komandan_regu')->group(function () {
+        // Laporan Harian Resource
+        Route::prefix('laporan')->name('laporan.')->group(function () {
+            Route::get('/', [LaporanHarianController::class, 'getAll'])->name('index');
+            Route::post('/', [LaporanHarianController::class, 'store'])->name('store');
+            Route::get('{id}', [LaporanHarianController::class, 'show'])->name('show');
+            Route::put('{id}', [LaporanHarianController::class, 'update'])->name('update');
+            Route::delete('{id}', [LaporanHarianController::class, 'destroy'])->name('destroy');
+        });
+    });
     /**
      * ==========================
      * SUPER ADMIN MANAGEMENT
@@ -193,7 +203,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     Route::middleware('role:super_admin')->group(function () {
 
         //Dashboard
-         Route::get('/stats', [DashboardController::class, 'index']);
+        Route::get('/stats', [DashboardController::class, 'index']);
 
         // User Registration
         Route::post('register', [AuthController::class, 'register'])->name('register');
@@ -234,14 +244,6 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
             Route::delete('{id}', [KategoriPengaduanController::class, 'destroy'])->name('destroy');
         });
 
-        // Laporan Harian Resource
-        Route::prefix('laporan')->name('laporan.')->group(function () {
-            Route::get('/', [LaporanHarianController::class, 'getAll'])->name('index');
-            Route::post('/', [LaporanHarianController::class, 'store'])->name('store');
-            Route::get('{id}', [LaporanHarianController::class, 'show'])->name('show');
-            Route::put('{id}', [LaporanHarianController::class, 'update'])->name('update');
-            Route::delete('{id}', [LaporanHarianController::class, 'destroy'])->name('destroy');
-        });
 
         // Kategori Regulasi Resource
         Route::prefix('kategori-regulasi')->name('kategori-regulasi.')->group(function () {
@@ -319,15 +321,6 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * ==========================
      */
     Route::middleware('role:super_admin|anggota_regu')->group(function () {
-        // Lampiran Laporan
-        Route::prefix('lampiran')->name('lampiran.')->group(function () {
-            Route::get('/', [LampiranLaporanController::class, 'index'])->name('index');
-            Route::post('/', [LampiranLaporanController::class, 'store'])->name('store');
-            Route::get('{id}', [LampiranLaporanController::class, 'show'])->name('show');
-            Route::put('{id}', [LampiranLaporanController::class, 'update'])->name('update');
-        });
-
-        // Regulation Progress
         Route::prefix('progress')->name('progress.')->group(function () {
             Route::get('/', [RegulationProgressController::class, 'listregulasi'])->name('list');
             Route::get('{id}', [RegulationProgressController::class, 'detailregulasi'])->name('detail');
@@ -353,10 +346,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * Role: komandan_regu
      * ==========================
      */
-    Route::middleware('role:super_admin|komandan_regu')->prefix('laporan-komandan')->name('laporan-komandan.')->group(function () {
-        Route::get('/', [LampiranLaporanController::class, 'indexKomandan'])->name('index');
-        Route::put('{id}', [LampiranLaporanController::class, 'AccbyKomandan'])->name('approve');
-    });
+    Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
+            Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+        });
 
     /**
      * ==========================

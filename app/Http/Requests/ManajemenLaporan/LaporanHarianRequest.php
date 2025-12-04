@@ -23,67 +23,73 @@ class LaporanHarianRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'anggota_id' => ['required', 'exists:anggota,id'],
+        $user = $this->user();
+        $isSuperAdmin = $user && $user->hasRole('superadmin');
+        $isPost = $this->isMethod('post');
 
-            'jenis' => ['required', 'in:aman,insiden'],
+        return [
+            'anggota_id' => [
+                ($isPost && $isSuperAdmin) ? 'required' : 'nullable',
+                'exists:anggota,id'
+            ],
+
+            'jenis' => [
+                $isPost ? 'required' : 'sometimes',
+                'in:aman,insiden'
+            ],
+
             'catatan' => ['nullable', 'string'],
+            'lat'     => ['nullable', 'numeric', 'between:-90,90'],
+            'lng'     => ['nullable', 'numeric', 'between:-180,180'],
 
             'kecamatan_id' => ['nullable', 'exists:kecamatan,id'],
-            'desa_id' => ['nullable', 'exists:desa,id'],
-
-            'lokasi' => ['nullable', 'string'],
-
-            'lat' => ['nullable', 'numeric'],
-            'lng' => ['nullable', 'numeric'],
+            'desa_id'      => ['nullable', 'exists:desa,id'],
 
             'kategori_pelanggaran_id' => ['nullable', 'exists:kategori_pengaduan,id'],
             'regulasi_indikatif_id'   => ['nullable', 'exists:regulasi,id'],
 
-            'severity' => ['required', 'in:rendah,sedang,tinggi'],
+            'severity' => [
+                'nullable',
+                'required_if:jenis,insiden',
+                'in:rendah,sedang,tinggi'
+            ],
 
-            'status_validasi' => ['required', 'in:menunggu,disetujui,ditolak'],
-            'divalidasi_oleh' => ['nullable', 'exists:users,id'],
+            'status_validasi' => ['nullable', 'in:menunggu,disetujui,ditolak'],
 
             'telah_dieskalasi' => ['nullable', 'boolean'],
 
-            // Lampiran kini masuk ke tabel terpisah → tetap validasi array
-            'lampiran.*' => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png,mp4'],
+            'lampiran'   => ['nullable', 'array'],
+            'lampiran.*' => [
+                'file',
+                'max:10240',
+                'mimes:jpg,jpeg,png,mp4,mov,pdf,doc,docx'
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'anggota_id.required' => 'ID anggota wajib diisi.',
-            'anggota_id.exists' => 'ID anggota tidak ditemukan.',
+            'anggota_id.required' => 'Superadmin wajib memilih anggota untuk input laporan.',
+            'anggota_id.exists'   => 'Data anggota yang dipilih tidak ditemukan.',
 
-            'jenis.required' => 'Jenis laporan wajib diisi.',
-            'jenis.in' => 'Jenis laporan hanya boleh bernilai aman atau insiden.',
-
-            'catatan.string' => 'Catatan harus berupa teks.',
-
-            'kecamatan_id.exists' => 'Kecamatan tidak ditemukan.',
-            'desa_id.exists' => 'Desa tidak ditemukan.',
-
-            'lokasi.string' => 'Lokasi harus berupa teks.',
+            'jenis.required' => 'Jenis laporan wajib dipilih (Aman/Insiden).',
+            'jenis.in'       => 'Jenis laporan hanya boleh Aman atau Insiden.',
 
             'lat.numeric' => 'Latitude harus berupa angka.',
             'lng.numeric' => 'Longitude harus berupa angka.',
+            'lat.between' => 'Latitude tidak valid.',
+            'lng.between' => 'Longitude tidak valid.',
 
-            'kategori_pelanggaran_id.exists' => 'Kategori pelanggaran tidak ditemukan.',
-            'regulasi_indikatif_id.exists' => 'Regulasi indikatif tidak ditemukan.',
+            'severity.required_if' => 'Tingkat keparahan (severity) wajib diisi jika jenis laporan adalah Insiden.',
+            'severity.in'          => 'Pilihan severity tidak valid.',
 
-            'severity.in' => 'Severity hanya boleh rendah, sedang, atau tinggi.',
+            'status_validasi.in' => 'Status validasi harus berupa: menunggu, disetujui, atau ditolak.',
 
-            'status_validasi.in' => 'Status validasi hanya boleh menunggu, disetujui, atau ditolak.',
-            'divalidasi_oleh.exists' => 'Validator tidak ditemukan di daftar pengguna.',
-
-            'telah_dieskalasi.boolean' => 'Field telah_dieskalasi harus berupa true atau false.',
-
-            'lampiran.*.file' => 'Lampiran harus berupa file.',
-            'lampiran.*.mimes' => 'Lampiran hanya boleh berupa: jpg, jpeg, png, mp4, mov, pdf, doc, docx.',
-            'lampiran.*.max' => 'Ukuran file lampiran tidak boleh melebihi 10MB.',
+            'lampiran.array'   => 'Format lampiran salah.',
+            'lampiran.*.file'  => 'Lampiran harus berupa file.',
+            'lampiran.*.mimes' => 'Format file tidak didukung. Gunakan: jpg, png, mp4, mov, pdf, docx.',
+            'lampiran.*.max'   => 'Ukuran file lampiran maksimal 10MB per file.',
         ];
     }
 
