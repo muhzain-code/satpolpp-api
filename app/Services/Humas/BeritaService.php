@@ -193,8 +193,6 @@ class BeritaService
                 throw new CustomException('Data berita tidak ditemukan');
             }
 
-            $userId = Auth::id();
-
             if ($berita->path_gambar && Storage::disk('public')->exists($berita->path_gambar)) {
                 Storage::disk('public')->delete($berita->path_gambar);
             }
@@ -253,7 +251,7 @@ class BeritaService
             ->select([
                 'judul',
                 'slug',
-                'Kategori',
+                'Kategori as kategori',
                 'isi',
                 'path_gambar',
                 'published_at'
