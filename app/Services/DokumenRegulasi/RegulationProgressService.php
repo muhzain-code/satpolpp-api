@@ -71,6 +71,7 @@ class RegulationProgressService
                         'type'    => $catatan->type,
                         'data'    => $catatan->data,
                         'catatan' => $catatan->catatan,
+                        'warna' => $catatan->warna,
                     ];
                 }),
             ];
@@ -290,6 +291,7 @@ class RegulationProgressService
                 'type'      => $item->type,
                 'data'      => $item->data,
                 'catatan'   => $item->catatan,
+                'warna'   => $item->warna ?? null,
                 'regulasi'  => $item->regulasi->judul ?? null,
             ];
         });
@@ -363,6 +365,7 @@ class RegulationProgressService
                     'type'    => $tanda->type,
                     'catatan' => $tanda->catatan ?? null,
                     'data'    => $tanda->data ?? null,
+                    'warna'    => $tanda->warna ?? null,
                 ];
             })
         ];
@@ -382,6 +385,7 @@ class RegulationProgressService
                 'halaman' => $data['halaman'],
                 'type' => 'highlight',
                 'data' => $data['data'],
+                'warna' => $data['warna'],
             ]);
 
             return [

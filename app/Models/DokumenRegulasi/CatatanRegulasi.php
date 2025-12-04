@@ -14,6 +14,7 @@ class CatatanRegulasi extends Model
         'halaman',
         'type',
         'data',
+        'warna',
         'catatan',
     ];
 
