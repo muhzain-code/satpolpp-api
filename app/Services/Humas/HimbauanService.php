@@ -111,6 +111,10 @@ class HimbauanService
             throw new CustomException('Data himbauan tidak ditemukan');
         }
 
+        $himbauan->path_gambar = $himbauan->path_gambar
+            ? url(Storage::url($himbauan->path_gambar))
+            : null;
+
         return [
             'message' => 'Detail himbauan berhasil ditampilkan',
             'data'    => $himbauan
