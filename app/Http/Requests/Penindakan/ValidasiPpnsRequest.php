@@ -24,7 +24,7 @@ class ValidasiPpnsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status_validasi_ppns' => ['required', 'string', 'in:menunggu,ditolak,disetujui'],
+            'status_validasi_ppns' => ['required', 'string', 'in:ditolak,disetujui,revisi'],
             'catatan_validasi_ppns' => ['nullable', 'string'],
         ];
     }
@@ -33,7 +33,7 @@ class ValidasiPpnsRequest extends FormRequest
     {
         return [
             'status_validasi_ppns.required' => 'Status validasi wajib diisi.',
-            'status_validasi_ppns.in' => 'Status validasi hanya boleh berupa disetujui, ditolak dan disetujui.',
+            'status_validasi_ppns.in' => 'Status validasi hanya boleh berupa disetujui, ditolak dan revisi.',
             'catatan_validasi_ppns.string' => 'Catatan validasi harus berupa teks.',
         ];
     }

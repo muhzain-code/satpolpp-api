@@ -368,7 +368,7 @@ return new class extends Migration
             $table->text('catatan_validasi_ppns')->nullable();
             $table->foreignId('ppns_validator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('tanggal_validasi_ppns')->nullable();
-
+            
             // Audit
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

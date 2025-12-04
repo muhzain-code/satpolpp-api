@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PenindakanService
 {
-    
+
     public function getAll($filter): array
     {
         $user = Auth::user();
@@ -50,7 +50,7 @@ class PenindakanService
             return DB::transaction(function () use ($data) {
 
                 // Tentukan status PPNS awal
-                $statusPpns = $data['jenis_penindakan'] === 'proses_hukum'
+                $statusPpns = $data['butuh_validasi_ppns']
                     ? 'menunggu'
                     : null;
 
@@ -328,7 +328,7 @@ class PenindakanService
                 $penindakan->penindakanRegulasi()->delete();
                 $penindakan->delete();
 
-                return ['message' => 'Penindakan berhasil dihapus'];
+                return ['message' => 'Penindakan berhasil dihapus', 'data' => null];
             });
         } catch (Exception $e) {
             throw new CustomException('Gagal menghapus penindakan', 422);
@@ -346,12 +346,12 @@ class PenindakanService
                     throw new CustomException('Penindakan tidak ditemukan', 404);
                 }
 
-                if ($penindakan->butuh_validasi_ppns !== true) {
+                if (!$penindakan->butuh_validasi_ppns) {
                     throw new CustomException('Penindakan ini tidak memerlukan validasi PPNS', 422);
                 }
 
-                if ($penindakan->status_validasi_ppns !== 'menunggu') {
-                    throw new CustomException('Validasi hanya dapat dilakukan ketika status masih menunggu', 422);
+                if ($penindakan->status_validasi_ppns === 'ditolak' || $penindakan->status_validasi_ppns === 'disetujui') {
+                    throw new CustomException('Validasi hanya dapat dilakukan ketika status masih menunggu atau revisi', 422);
                 }
 
                 if (!in_array($data['status_validasi_ppns'], ['disetujui', 'ditolak', 'revisi'])) {
@@ -365,9 +365,10 @@ class PenindakanService
                     'tanggal_validasi_ppns' => now(),
                 ]);
 
-                if ($data['status_validasi_ppns'] === 'disetujui') {
-                    app(BAPGeneratorService::class)->generate($penindakan);
-                }
+
+                // if ($data['status_validasi_ppns'] === 'disetujui') {
+                //     app(BAPGeneratorService::class)->generate($penindakan);
+                // }
 
                 return [
                     'message' => 'Validasi PPNS berhasil',
@@ -375,6 +376,7 @@ class PenindakanService
                 ];
             });
         } catch (Exception $e) {
+            Log::error('Gagal melakukan validasi PPNS', ['error' => $e->getMessage()]);
             throw new CustomException('Gagal melakukan validasi PPNS', 422);
         }
     }
