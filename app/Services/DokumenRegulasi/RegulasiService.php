@@ -49,6 +49,7 @@ class RegulasiService
                 'judul' => $item->judul,
                 'tahun' => $item->tahun,
                 'kategori_regulasi' => $item->kategoriRegulasi->nama ?? null,
+                'kategori_regulasi_id' => $item->kategori_regulasi_id,
                 'ringkasan' => $item->ringkasan,
                 'path_pdf' => $item->path_pdf ? Storage::url($item->path_pdf) : null,
                 'aktif' => $item->aktif,
