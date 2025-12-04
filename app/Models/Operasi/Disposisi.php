@@ -5,6 +5,7 @@ namespace App\Models\Operasi;
 use App\Models\User;
 use App\Models\Anggota\Unit;
 use App\Models\Anggota\Anggota;
+use Spatie\Activitylog\LogOptions;
 use App\Models\Pengaduan\Pengaduan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -60,5 +61,31 @@ class Disposisi extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('disposisi')
+            ->logOnly($this->fillable)
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(
+                fn($event) =>
+                "Data disposisi berhasil " .
+                    match ($event) {
+                        'created' => 'ditambahkan',
+                        'updated' => 'diperbarui',
+                        'deleted' => 'dihapus',
+                        default => $event,
+                    } . ' oleh ' . (Auth::user()->name ?? 'Sistem') . '.'
+            );
+    }
+
+    protected static function booted()
+    {
+        static::creating(fn($model) => $model->created_by ??= Auth::id());
+        static::updating(fn($model) => $model->updated_by = Auth::id());
+        static::deleting(fn($model) => $model->forceFill([
+            'deleted_by' => Auth::id(),
+        ])->saveQuietly());
+    }
 }
