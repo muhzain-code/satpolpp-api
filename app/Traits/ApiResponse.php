@@ -13,6 +13,16 @@ trait ApiResponse
         ], $status);
     }
 
+    protected function successResponseWithMeta($data = null, $message = 'Success', $meta = null, $status = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data'    => $data,
+            'meta'    => $meta,
+        ], $status);
+    }
+
     protected function errorResponse($message = 'Error', $status = 400, $errors = null)
     {
         return response()->json([

@@ -2,15 +2,95 @@
 
 namespace App\Services\Auth;
 
+use Exception;
 use App\Models\User;
-use App\Exceptions\CustomException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\CustomException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
+
+    public function getAll($perPage, $currentPage, $request)
+    {
+        try {
+            $users = User::with('roles'); // penting: eager load roles
+
+            // Pencarian
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $users->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            // Pagination
+            $results = $users->paginate($perPage, ['*'], 'page', $currentPage);
+
+            // Transform Data
+            $data = $results->getCollection()->map(function ($item) {
+                return [
+                    'id'    => $item->id,
+                    'name'  => $item->name,
+                    'email' => $item->email,
+                    'roles' => $item->roles->pluck('name')->first(),
+                ];
+            });
+
+            return [
+                'message' => 'Data user berhasil ditampilkan',
+                'data'    => $data,
+                'meta'    => [
+                    'current_page' => $results->currentPage(),
+                    'per_page'     => $results->perPage(),
+                    'total'        => $results->total(),
+                    'last_page'    => $results->lastPage(),
+                    'from'         => $results->firstItem(),
+                    'to'           => $results->lastItem(),
+                ]
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengambil data user', [
+                'error' => $e->getMessage()
+            ]);
+
+            throw new CustomException('User gagal ditampilkan');
+        }
+    }
+
+    public function findById($id)
+    {
+        try {
+            $user = User::with('roles')->findOrFail($id);
+
+            $userData = [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'anggota_id'    => $user->anggota_id,
+                'role'       => $user->roles->pluck('name')->first(),
+            ];
+
+            return [
+                'message' => 'Detail user berhasil ditampilkan',
+                'data'    => $userData
+            ];
+        } catch (\Throwable $e) {
+
+            Log::error('Error findById AuthService', [
+                'id'      => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            throw new CustomException('Data user tidak ditemukan');
+        }
+    }
+
     public function register(array $data): array
     {
         $authUser = Auth::user();
@@ -90,6 +170,47 @@ class AuthService
                 'token' => $token,
             ],
         ];
+    }
+
+    public function update($id, $data)
+    {
+        DB::beginTransaction();
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                throw new CustomException('User tidak ditemukan');
+            }
+
+            $updateData = [
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'anggota_id' => $data['anggota_id'] ?? null,
+            ];
+
+            if (!empty($data['password'])) {
+                $updateData['password'] = Hash::make($data['password']);
+            }
+
+            $user->update($updateData);
+
+            if (isset($data['role'])) {
+                $user->syncRoles($data['role']);
+            }
+
+            DB::commit();
+
+            return [
+                'message' => 'Data user berhasil diperbarui',
+                'data'  => $user->fresh(['roles'])
+            ];
+        } catch (Exception $e) {
+            Log::error('Error update user', [
+                'error' => $e->getMessage()
+            ]);
+
+            throw new CustomException('Gagal mengupdate user');
+        }
     }
 
     public function logout(User $user): array

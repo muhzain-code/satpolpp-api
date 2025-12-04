@@ -100,7 +100,7 @@ Route::middleware('throttle:120,1')->group(function () {
 Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
 
     // Auth User Info
-    Route::get('user', fn(Request $request) => $request->user())->name('user.info');
+    // Route::get('user', fn(Request $request) => $request->user())->name('user.info');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     /**
@@ -206,7 +206,10 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         Route::get('/stats', [DashboardController::class, 'index']);
 
         // User Registration
-        Route::post('register', [AuthController::class, 'register'])->name('register');
+        Route::get('users', [AuthController::class, 'index'])->name('index.users');
+        Route::get('users/{id}', [AuthController::class, 'show'])->name('show.users');
+        Route::post('register', [AuthController::class, 'register'])->name('register.user');
+        Route::put('users/{id}', [AuthController::class, 'update'])->name('update.user');
 
         // Jabatan Resource
         Route::prefix('jabatan')->name('jabatan.')->group(function () {
@@ -347,8 +350,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
-            Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
-        });
+        Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+    });
 
     /**
      * ==========================

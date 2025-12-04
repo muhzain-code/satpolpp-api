@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\UpdateUserRequest;
 use App\Services\Auth\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,20 @@ class AuthController extends Controller
         $this->service = $service;
     }
 
+    public function index(Request $request)
+    {
+        $perPage = $request->input('limit', 25);
+        $currentPage = $request->input('page', 1);
+        $result = $this->service->getAll($perPage, $currentPage, $request);
+        return $this->successResponseWithMeta($result['data'], $result['message'], $result['meta']);
+    }
+
+    public function show($id): JsonResponse
+    {
+        $result = $this->service->findById($id);
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
     public function register(RegisterRequest $request): JsonResponse
     {
         $result = $this->service->register($request->validated());
@@ -33,6 +48,12 @@ class AuthController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         $result = $this->service->login($request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
+
+    public function update($id, UpdateUserRequest $request): JsonResponse
+    {
+        $result = $this->service->update($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
 
