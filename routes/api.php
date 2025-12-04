@@ -348,6 +348,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      */
     Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
             Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+            Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
         });
 
     /**
