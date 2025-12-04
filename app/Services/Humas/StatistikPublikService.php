@@ -16,9 +16,9 @@ class StatistikPublikService
         $totalOperasi = Operasi::whereYear('created_at', $now->year)->count();
         $pengaduanDiterima = Pengaduan::where('status', 'diterima')->count();
         $pengaduanSelesai = Pengaduan::where('status', 'selesai')->count();
-        $totalPengaduan = Pengaduan::count();
-        $persentaseSelesai = $totalPengaduan > 0
-            ? round(($pengaduanSelesai / $totalPengaduan) * 100)
+        $totalPengaduanUntukPersentase = Pengaduan::where('status', '!=', 'ditolak')->count();
+        $persentaseSelesai = $totalPengaduanUntukPersentase > 0
+            ? number_format(($pengaduanSelesai / $totalPengaduanUntukPersentase) * 100, 1)
             : 0;
         $personelAktif = Anggota::where('status', 'aktif')->count();
 
