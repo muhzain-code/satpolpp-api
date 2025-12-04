@@ -28,272 +28,337 @@ use App\Http\Controllers\Api\Humas\StatistikPublikController;
 
 /**
  * ==========================
- *  PUBLIC ROUTES
+ * PUBLIC ROUTES
+ * Throttle: 60 requests per minute
  * ==========================
  */
-Route::post('login', [AuthController::class, 'login']);
+Route::middleware('throttle:120,1')->group(function () {
+    // Authentication
+    Route::post('login', [AuthController::class, 'login'])->name('login');
 
-Route::post('pengaduan', [PengaduanController::class, 'store']);
-Route::post('lacak-pengaduan', [PengaduanController::class, 'lacakNomorTiket']);
+    // Pengaduan Public
+    Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
+        Route::post('/', [PengaduanController::class, 'store'])->name('store');
+        Route::post('lacak', [PengaduanController::class, 'lacakNomorTiket'])->name('lacak');
+    });
 
-Route::get('statistik-operasi-kategori', [StatistikPublikController::class, 'index']);
-Route::get('statistik-bulanan', [StatistikPublikController::class, 'indexMonth']);
+    // Statistik Public
+    Route::prefix('statistik')->name('statistik.')->group(function () {
+        Route::get('operasi-kategori', [StatistikPublikController::class, 'index'])->name('operasi-kategori');
+        Route::get('bulanan', [StatistikPublikController::class, 'indexMonth'])->name('bulanan');
+    });
 
-Route::get('berita-publik', [BeritaController::class, 'beritaPublik']);
-Route::get('berita-publik/{slug}', [BeritaController::class, 'detailKonten']);
+    // Berita Public
+    Route::prefix('berita-publik')->name('berita-publik.')->group(function () {
+        Route::get('/', [BeritaController::class, 'beritaPublik'])->name('index');
+        Route::get('{slug}', [BeritaController::class, 'detailKonten'])->name('show');
+    });
 
-Route::get('regulasi-publik', [RegulasiController::class, 'regulasiPublik']);
-Route::get('filter-publik', [RegulasiController::class, 'kategoriregulasi']);
+    // Regulasi Public
+    Route::prefix('regulasi-publik')->name('regulasi-publik.')->group(function () {
+        Route::get('/', [RegulasiController::class, 'regulasiPublik'])->name('index');
+        Route::get('filter', [RegulasiController::class, 'kategoriregulasi'])->name('filter');
+    });
 
-Route::get('himbauan-publik', [HimbauanController::class, 'himbauanPublik']);
-Route::get('himbauan-publik/{slug}', [HimbauanController::class, 'detailKonten']);
+    // Himbauan Public
+    Route::prefix('himbauan-publik')->name('himbauan-publik.')->group(function () {
+        Route::get('/', [HimbauanController::class, 'himbauanPublik'])->name('index');
+        Route::get('{slug}', [HimbauanController::class, 'detailKonten'])->name('show');
+    });
 
-Route::get('agenda-publik', [AgendaController::class, 'agendaPublik']);
+    // Agenda Public
+    Route::get('agenda-publik', [AgendaController::class, 'agendaPublik'])->name('agenda-publik.index');
 
-Route::get('konten-galeri', [GaleriController::class, 'galeripublic']);
+    // Galeri Public
+    Route::get('konten-galeri', [GaleriController::class, 'galeripublic'])->name('galeri-publik.index');
 
-Route::post('permohonan-ppid', [PPIDController::class, 'permohonanPPID']);
-Route::post('lacak-permohonan-ppid', [PPIDController::class, 'lacakPPID']);
+    // PPID Public
+    Route::prefix('ppid')->name('ppid.')->group(function () {
+        Route::post('permohonan', [PPIDController::class, 'permohonanPPID'])->name('permohonan');
+        Route::post('lacak', [PPIDController::class, 'lacakPPID'])->name('lacak');
+    });
 
-Route::get('kategori-pengaduan', [KategoriPengaduanController::class, 'index']);
+    // Kategori Pengaduan Public
+    Route::get('kategori-pengaduan', [KategoriPengaduanController::class, 'index'])->name('kategori-pengaduan.index');
 
-Route::get('/pdf-viewer', [RegulasiController::class, 'showPdf']);
+    // PDF Viewer
+    Route::get('pdf-viewer', [RegulasiController::class, 'showPdf'])->name('pdf-viewer');
+
+    // Lokasi Search
+    Route::get('search-lokasi', [LokasiController::class, 'search'])->name('lokasi.search');
+});
 
 /**
  * ==========================
- * AUTH SANCTUM
+ * AUTHENTICATED ROUTES
+ * Throttle: 120 requests per minute
  * ==========================
  */
-Route::get('search-lokasi', [LokasiController::class, 'search']);
+Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
 
-Route::middleware('auth:sanctum')->group(function () {
-
-    Route::get('/user', fn(Request $request) => $request->user());
-    Route::post('logout', [AuthController::class, 'logout']);
-
-
+    // Auth User Info
+    Route::get('user', fn(Request $request) => $request->user())->name('user.info');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     /**
      * ==========================
      * PENGADUAN & DISPOSISI
-     * role: super_admin | operator
+     * Role: super_admin | operator
      * ==========================
      */
     Route::middleware('role:super_admin|operator')->group(function () {
-        Route::get('pengaduan', [PengaduanController::class, 'index']);
-        Route::get('pengaduan/{id}', [PengaduanController::class, 'show']);
-        Route::put('pengaduan/{id}', [PengaduanController::class, 'update']);
-        Route::delete('pengaduan/{id}', [PengaduanController::class, 'destroy']);
-        Route::post('pengaduan-tolak/{id}', [PengaduanController::class, 'setDitolak']);
+        // Pengaduan Management
+        Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
+            Route::get('/', [PengaduanController::class, 'index'])->name('index');
+            Route::get('{id}', [PengaduanController::class, 'show'])->name('show');
+            Route::put('{id}', [PengaduanController::class, 'update'])->name('update');
+            Route::delete('{id}', [PengaduanController::class, 'destroy'])->name('destroy');
+            Route::post('tolak/{id}', [PengaduanController::class, 'setDitolak'])->name('tolak');
+        });
 
-        Route::get('list-komandan', [UserController::class, 'getAllKomandan']);
+        // User - List Komandan
+        Route::get('list-komandan', [UserController::class, 'getAllKomandan'])->name('user.komandan');
 
-        Route::get('disposisi', [DisposisiController::class, 'index']);
-        Route::post('disposisi', [DisposisiController::class, 'store']);
-        Route::get('disposisi/{id}', [DisposisiController::class, 'show']);
-        Route::put('disposisi/{id}', [DisposisiController::class, 'update']);
-        Route::delete('disposisi/{id}', [DisposisiController::class, 'destroy']);
+        // Disposisi Management
+        Route::prefix('disposisi')->name('disposisi.')->group(function () {
+            Route::get('/', [DisposisiController::class, 'index'])->name('index');
+            Route::post('/', [DisposisiController::class, 'store'])->name('store');
+            Route::get('{id}', [DisposisiController::class, 'show'])->name('show');
+            Route::put('{id}', [DisposisiController::class, 'update'])->name('update');
+            Route::delete('{id}', [DisposisiController::class, 'destroy'])->name('destroy');
+        });
     });
 
     /**
      * ==========================
      * OPERASI
-     * role: super_admin | komandan_regu
+     * Role: super_admin | komandan_regu
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu')->group(function () {
-        Route::get('operasi', [OperasiController::class, 'index']);
-        Route::post('operasi', [OperasiController::class, 'store']);
-        Route::get('operasi/{id}', [OperasiController::class, 'show']);
-        Route::put('operasi/{id}', [OperasiController::class, 'update']);
-        Route::delete('operasi/{id}', [OperasiController::class, 'destroy']);
+        Route::prefix('operasi')->name('operasi.')->group(function () {
+            Route::get('/', [OperasiController::class, 'index'])->name('index');
+            Route::post('/', [OperasiController::class, 'store'])->name('store');
+            Route::get('{id}', [OperasiController::class, 'show'])->name('show');
+            Route::put('{id}', [OperasiController::class, 'update'])->name('update');
+            Route::delete('{id}', [OperasiController::class, 'destroy'])->name('destroy');
+        });
     });
-
 
     /**
      * ==========================
      * PENINDAKAN
+     * Role: super_admin | komandan_regu | ppns
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu|ppns')->group(function () {
-        Route::get('penindakan', [PenindakanController::class, 'index']);
-        Route::get('penindakan/{id}', [PenindakanController::class, 'show']);
+        // Penindakan Read
+        Route::prefix('penindakan')->name('penindakan.')->group(function () {
+            Route::get('/', [PenindakanController::class, 'index'])->name('index');
+            Route::get('{id}', [PenindakanController::class, 'show'])->name('show');
 
-        Route::get('disposisi-komandan', [DisposisiController::class, 'getDisposisiKomandan'])
-            ->middleware('role:super_admin|komandan_regu');
-
-        Route::get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])
-            ->middleware('role:super_admin|anggota_regu');
-    });
-
-    // CRUD penindakan
-    Route::middleware('role:super_admin|komandan_regu')
-        ->prefix('penindakan')
-        ->group(function () {
-            Route::post('/', [PenindakanController::class, 'store']);
-            Route::put('/{id}', [PenindakanController::class, 'update']);
-            Route::delete('/{id}', [PenindakanController::class, 'destroy']);
+            // Validasi PPNS
+            Route::middleware('role:super_admin|ppns')
+                ->post('validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS'])
+                ->name('validasi-ppns');
         });
 
-    // Validasi PPNS
-});
+        // Disposisi Komandan
+        Route::middleware('role:super_admin|komandan_regu')
+            ->get('disposisi-komandan', [DisposisiController::class, 'getDisposisiKomandan'])
+            ->name('disposisi.komandan');
 
+        // Operasi Anggota
+        Route::middleware('role:super_admin|anggota_regu')
+            ->get('operasi-anggota', [OperasiController::class, 'getOperasiAnggota'])
+            ->name('operasi.anggota');
+    });
 
-/**
- * ==========================
- * VALIDASI PENINDAKAN GLOBAL
- * role: super_admin | ppns
- * ==========================
- */
-Route::middleware('auth:sanctum', 'role:super_admin|ppns')
-    ->post('penindakan-validasi-ppns/{id}', [PenindakanController::class, 'validasiPPNS']);
+    // Penindakan CRUD (super_admin | komandan_regu only)
+    Route::middleware('role:super_admin|komandan_regu')->prefix('penindakan')->name('penindakan.')->group(function () {
+        Route::post('/', [PenindakanController::class, 'store'])->name('store');
+        Route::put('{id}', [PenindakanController::class, 'update'])->name('update');
+        Route::delete('{id}', [PenindakanController::class, 'destroy'])->name('destroy');
+    });
 
+    /**
+     * ==========================
+     * SUPER ADMIN MANAGEMENT
+     * Role: super_admin
+     * ==========================
+     */
+    Route::middleware('role:super_admin')->group(function () {
 
-/**
- * ==========================
- * SUPER ADMIN MANAGEMENT
- * ==========================
- */
-Route::middleware('auth:sanctum', 'role:super_admin')->group(function () {
+        // User Registration
+        Route::post('register', [AuthController::class, 'register'])->name('register');
 
-    Route::post('register', [AuthController::class, 'register']);
+        // Jabatan Resource
+        Route::prefix('jabatan')->name('jabatan.')->group(function () {
+            Route::get('/', [JabatanController::class, 'index'])->name('index');
+            Route::post('/', [JabatanController::class, 'store'])->name('store');
+            Route::get('{id}', [JabatanController::class, 'show'])->name('show');
+            Route::put('{id}', [JabatanController::class, 'update'])->name('update');
+            Route::delete('{id}', [JabatanController::class, 'destroy'])->name('destroy');
+        });
 
-    // jabatan
-    Route::get('jabatan', [JabatanController::class, 'index']);
-    Route::post('jabatan', [JabatanController::class, 'store']);
-    Route::get('jabatan/{id}', [JabatanController::class, 'show']);
-    Route::put('jabatan/{id}', [JabatanController::class, 'update']);
-    Route::delete('jabatan/{id}', [JabatanController::class, 'destroy']);
+        // Unit Resource
+        Route::prefix('unit')->name('unit.')->group(function () {
+            Route::get('/', [UnitController::class, 'index'])->name('index');
+            Route::post('/', [UnitController::class, 'store'])->name('store');
+            Route::get('{id}', [UnitController::class, 'show'])->name('show');
+            Route::put('{id}', [UnitController::class, 'update'])->name('update');
+            Route::delete('{id}', [UnitController::class, 'destroy'])->name('destroy');
+        });
 
-    // unit
-    Route::get('unit', [UnitController::class, 'index']);
-    Route::post('unit', [UnitController::class, 'store']);
-    Route::get('unit/{id}', [UnitController::class, 'show']);
-    Route::put('unit/{id}', [UnitController::class, 'update']);
-    Route::delete('unit/{id}', [UnitController::class, 'destroy']);
+        // Anggota Resource
+        Route::prefix('anggota')->name('anggota.')->group(function () {
+            Route::get('/', [AnggotaController::class, 'index'])->name('index');
+            Route::post('/', [AnggotaController::class, 'store'])->name('store');
+            Route::get('{id}', [AnggotaController::class, 'show'])->name('show');
+            Route::put('{id}', [AnggotaController::class, 'update'])->name('update');
+            Route::delete('{id}', [AnggotaController::class, 'destroy'])->name('destroy');
+            Route::post('import', [AnggotaImportController::class, 'import'])->name('import');
+        });
 
-    // anggotaJ
-    Route::get('anggota', [AnggotaController::class, 'index']);
-    Route::post('anggota', [AnggotaController::class, 'store']);
-    Route::get('anggota/{id}', [AnggotaController::class, 'show']);
-    Route::put('anggota/{id}', [AnggotaController::class, 'update']);
-    Route::delete('anggota/{id}', [AnggotaController::class, 'destroy']);
+        // Kategori Pengaduan Resource
+        Route::prefix('kategori-pengaduan')->name('kategori-pengaduan.')->group(function () {
+            Route::post('/', [KategoriPengaduanController::class, 'store'])->name('store');
+            Route::get('{id}', [KategoriPengaduanController::class, 'show'])->name('show');
+            Route::put('{id}', [KategoriPengaduanController::class, 'update'])->name('update');
+            Route::delete('{id}', [KategoriPengaduanController::class, 'destroy'])->name('destroy');
+        });
 
-    // kategori pengaduan
+        // Laporan Harian Resource
+        Route::prefix('laporan')->name('laporan.')->group(function () {
+            Route::get('/', [LaporanHarianController::class, 'getAll'])->name('index');
+            Route::post('/', [LaporanHarianController::class, 'store'])->name('store');
+            Route::get('{id}', [LaporanHarianController::class, 'show'])->name('show');
+            Route::put('{id}', [LaporanHarianController::class, 'update'])->name('update');
+            Route::delete('{id}', [LaporanHarianController::class, 'destroy'])->name('destroy');
+        });
 
-    Route::post('kategori-pengaduan', [KategoriPengaduanController::class, 'store']);
-    Route::get('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'show']);
-    Route::put('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'update']);
-    Route::delete('kategori-pengaduan/{id}', [KategoriPengaduanController::class, 'destroy']);
+        // Kategori Regulasi Resource
+        Route::prefix('kategori-regulasi')->name('kategori-regulasi.')->group(function () {
+            Route::get('/', [KategoriRegulasiController::class, 'index'])->name('index');
+            Route::post('/', [KategoriRegulasiController::class, 'store'])->name('store');
+            Route::get('{id}', [KategoriRegulasiController::class, 'show'])->name('show');
+            Route::put('{id}', [KategoriRegulasiController::class, 'update'])->name('update');
+            Route::delete('{id}', [KategoriRegulasiController::class, 'destroy'])->name('destroy');
+        });
 
-    // laporan
-    Route::get('laporan', [LaporanHarianController::class, 'getAll']);
-    Route::post('laporan', [LaporanHarianController::class, 'store']);
-    Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
-    Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
-    Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+        // Regulasi Resource
+        Route::prefix('regulasi')->name('regulasi.')->group(function () {
+            Route::get('/', [RegulasiController::class, 'index'])->name('index');
+            Route::post('/', [RegulasiController::class, 'store'])->name('store');
+            Route::get('{id}', [RegulasiController::class, 'show'])->name('show');
+            Route::put('{id}', [RegulasiController::class, 'update'])->name('update');
+            Route::delete('{id}', [RegulasiController::class, 'destroy'])->name('destroy');
+        });
 
-    // Kategori regulasi
-    Route::get('kategori-regulasi', [KategoriRegulasiController::class, 'index']);
-    Route::post('kategori-regulasi', [KategoriRegulasiController::class, 'store']);
-    Route::get('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'show']);
-    Route::put('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'update']);
-    Route::delete('kategori-regulasi/{id}', [KategoriRegulasiController::class, 'destroy']);
+        // PPID Management
+        Route::prefix('ppid')->name('ppid.')->group(function () {
+            Route::get('/', [PPIDController::class, 'index'])->name('index');
+            Route::post('validasi/{id}', [PPIDController::class, 'validasiPPID'])->name('validasi');
+        });
+    });
 
-    // regulasi
-    Route::get('regulasi', [RegulasiController::class, 'index']);
-    Route::post('regulasi', [RegulasiController::class, 'store']);
-    Route::get('regulasi/{id}', [RegulasiController::class, 'show']);
-    Route::put('regulasi/{id}', [RegulasiController::class, 'update']);
-    Route::delete('regulasi/{id}', [RegulasiController::class, 'destroy']);
-    // Route::get('progress-anggota', [RegulasiController::class, 'GetallProgress']);
+    /**
+     * ==========================
+     * HUMAS MANAGEMENT
+     * Role: humas | super_admin
+     * ==========================
+     */
+    Route::middleware('role:humas|super_admin')->group(function () {
+        // Galeri Resource
+        Route::prefix('galeri')->name('galeri.')->group(function () {
+            Route::get('/', [GaleriController::class, 'index'])->name('index');
+            Route::post('/', [GaleriController::class, 'store'])->name('store');
+            Route::get('{id}', [GaleriController::class, 'show'])->name('show');
+            Route::put('{id}', [GaleriController::class, 'update'])->name('update');
+            Route::delete('{id}', [GaleriController::class, 'destroy'])->name('destroy');
+        });
 
-    // regulation progress
-    // Route::get('getprogres', [RegulationProgressController::class, 'getProgress']);
-    // Route::post('progres', [RegulationProgressController::class, 'Progress']);
-    // Route::post('sedang-membaca', [RegulationProgressController::class, 'ProgressMembaca']);
-    // Route::post('penanda', [RegulationProgressController::class, 'Penanda']);
-    // Route::get('penanda/{id}', [RegulationProgressController::class, 'GetPenanda']);
-    // Route::put('penanda/{id}', [RegulationProgressController::class, 'UpdatePenanda']);
-    // Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
+        // Berita Resource
+        Route::prefix('berita')->name('berita.')->group(function () {
+            Route::get('/', [BeritaController::class, 'indexBerita'])->name('index');
+            Route::post('/', [BeritaController::class, 'store'])->name('store');
+            Route::get('{id}', [BeritaController::class, 'show'])->name('show');
+            Route::put('{id}', [BeritaController::class, 'update'])->name('update');
+            Route::delete('{id}', [BeritaController::class, 'destroy'])->name('destroy');
+        });
 
-    // laporan
-    // Route::get('laporan-admin', [LaporanHarianController::class, 'getallLaporan']);
-    // Route::get('laporan', [LaporanHarianController::class, 'index']);
-    // Route::post('laporan', [LaporanHarianController::class, 'store']);
-    // Route::get('laporan/{id}', [LaporanHarianController::class, 'show']);
-    // Route::put('laporan/{id}', [LaporanHarianController::class, 'update']);
-    // Route::delete('laporan/{id}', [LaporanHarianController::class, 'destroy']);
+        // Agenda Resource
+        Route::prefix('agenda')->name('agenda.')->group(function () {
+            Route::get('/', [AgendaController::class, 'indexAgenda'])->name('index');
+            Route::post('/', [AgendaController::class, 'storeAgenda'])->name('store');
+            Route::get('{id}', [AgendaController::class, 'showAgenda'])->name('show');
+            Route::put('{id}', [AgendaController::class, 'updateAgenda'])->name('update');
+            Route::delete('{id}', [AgendaController::class, 'destroy'])->name('destroy');
+        });
 
-    Route::get('ppid', [PPIDController::class, 'index']);
-    Route::post('validasi-ppid/{id}', [PPIDController::class, 'validasiPPID']);
+        // Himbauan Resource
+        Route::prefix('himbauan')->name('himbauan.')->group(function () {
+            Route::get('/', [HimbauanController::class, 'indexHimbauan'])->name('index');
+            Route::post('/', [HimbauanController::class, 'storeHimbauan'])->name('store');
+            Route::get('{id}', [HimbauanController::class, 'showHimbauan'])->name('show');
+            Route::put('{id}', [HimbauanController::class, 'updateHimbauan'])->name('update');
+            Route::delete('{id}', [HimbauanController::class, 'destroy'])->name('destroy');
+        });
+    });
 
-    Route::post('anggota-import', [AnggotaImportController::class, 'import']);
-});
+    /**
+     * ==========================
+     * ANGGOTA REGU
+     * Role: anggota_regu
+     * ==========================
+     */
+    Route::middleware('role:anggota_regu')->group(function () {
+        // Lampiran Laporan
+        Route::prefix('lampiran')->name('lampiran.')->group(function () {
+            Route::get('/', [LampiranLaporanController::class, 'index'])->name('index');
+            Route::post('/', [LampiranLaporanController::class, 'store'])->name('store');
+            Route::get('{id}', [LampiranLaporanController::class, 'show'])->name('show');
+            Route::put('{id}', [LampiranLaporanController::class, 'update'])->name('update');
+        });
 
-Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function () {
-    Route::get('galeri', [GaleriController::class, 'index']);
-    Route::post('galeri', [GaleriController::class, 'store']);
-    Route::get('galeri/{id}', [GaleriController::class, 'show']);
-    Route::put('galeri/{id}', [GaleriController::class, 'update']);
-    Route::delete('galeri/{id}', [GaleriController::class, 'destroy']);
+        // Regulation Progress
+        Route::prefix('progress')->name('progress.')->group(function () {
+            Route::get('/', [RegulationProgressController::class, 'listregulasi'])->name('list');
+            Route::get('{id}', [RegulationProgressController::class, 'detailregulasi'])->name('detail');
+            Route::post('/', [RegulationProgressController::class, 'catatprogresbacaan'])->name('catat');
+        });
 
-    Route::get('berita', [BeritaController::class, 'indexBerita']);
-    Route::post('berita', [BeritaController::class, 'store']);
-    Route::get('berita/{id}', [BeritaController::class, 'show']);
-    Route::put('berita/{id}', [BeritaController::class, 'update']);
-    Route::delete('berita/{id}', [BeritaController::class, 'destroy']);
+        // Penanda (Bookmark)
+        Route::prefix('penanda')->name('penanda.')->group(function () {
+            Route::get('/', [RegulationProgressController::class, 'bookmartregulasi'])->name('list');
+            Route::get('{id}', [RegulationProgressController::class, 'detailbookmark'])->name('detail');
+            Route::post('pasal', [RegulationProgressController::class, 'tandaiPasal'])->name('pasal');
+            Route::post('halaman', [RegulationProgressController::class, 'tandaiHalaman'])->name('halaman');
+            Route::delete('{id}', [RegulationProgressController::class, 'DestroyPenanda'])->name('destroy');
+        });
 
-    Route::get('agenda', [AgendaController::class, 'indexAgenda']);
-    Route::post('agenda', [AgendaController::class, 'storeAgenda']);
-    Route::get('agenda/{id}', [AgendaController::class, 'showAgenda']);
-    Route::put('agenda/{id}', [AgendaController::class, 'updateAgenda']);
-    Route::delete('agenda/{id}', [AgendaController::class, 'destroy']);
+        // Detail PDF
+        Route::get('detail-pdf/{id}', [RegulationProgressController::class, 'detailPdf'])->name('detail-pdf');
+    });
 
-    Route::get('Himbauan', [HimbauanController::class, 'indexHimbauan']);
-    Route::post('Himbauan', [HimbauanController::class, 'storeHimbauan']);
-    Route::get('Himbauan/{id}', [HimbauanController::class, 'showHimbauan']);
-    Route::put('Himbauan/{id}', [HimbauanController::class, 'updateHimbauan']);
-    Route::delete('Himbauan/{id}', [HimbauanController::class, 'destroy']);
-});
+    /**
+     * ==========================
+     * KOMANDAN REGU
+     * Role: komandan_regu
+     * ==========================
+     */
+    Route::middleware('role:komandan_regu')->prefix('laporan-komandan')->name('laporan-komandan.')->group(function () {
+        Route::get('/', [LampiranLaporanController::class, 'indexKomandan'])->name('index');
+        Route::put('{id}', [LampiranLaporanController::class, 'AccbyKomandan'])->name('approve');
+    });
 
-/**
- * ==========================
- * ANGGOTA REGU
- * ==========================
- */
-Route::middleware('auth:sanctum', 'role:anggota_regu')->group(function () {
-    Route::get('lampiran', [LampiranLaporanController::class, 'index']);
-    Route::post('lampiran', [LampiranLaporanController::class, 'store']);
-    Route::get('lampiran/{id}', [LampiranLaporanController::class, 'show']);
-    Route::put('lampiran/{id}', [LampiranLaporanController::class, 'update']);
-
-    // regulation progress
-    Route::get('progress', [RegulationProgressController::class, 'listregulasi']);
-    Route::get('progress/{id}', [RegulationProgressController::class, 'detailregulasi']);
-    Route::post('progres', [RegulationProgressController::class, 'catatprogresbacaan']);
-    Route::get('penanda', [RegulationProgressController::class, 'bookmartregulasi']);
-    Route::get('penanda/{id}', [RegulationProgressController::class, 'detailbookmark']);
-    Route::post('penanda-pasal', [RegulationProgressController::class, 'tandaiPasal']);
-    // Route::put('penanda-pasal/{id}', [RegulationProgressController::class, 'updatetandaiPasal']);
-    Route::post('penanda-halaman', [RegulationProgressController::class, 'tandaiHalaman']);
-    // Route::put('penanda-halaman/{id}', [RegulationProgressController::class, 'updatetandaihalaman']);
-    Route::delete('penanda/{id}', [RegulationProgressController::class, 'DestroyPenanda']);
-    
-    Route::get('detail-pdf/{id}', [RegulationProgressController::class, 'detailPdf']);
-});
-
-
-/**
- * ==========================
- * KOMANDAN REGU
- * ==========================
- */
-Route::middleware('auth:sanctum', 'role:komandan_regu')->group(function () {
-    Route::get('laporan-komandan', [LampiranLaporanController::class, 'indexKomandan']);
-    Route::put('laporan-komandan/{id}', [LampiranLaporanController::class, 'AccbyKomandan']);
-});
-
-Route::middleware(['auth:sanctum', 'role:komandan_regu|super_admin'])->group(function () {
-    Route::get('/monitoring-literasi', [RegulationProgressController::class, 'monitoringLiterasi']);
+    /**
+     * ==========================
+     * MONITORING LITERASI
+     * Role: komandan_regu | super_admin
+     * ==========================
+     */
+    Route::middleware('role:komandan_regu|super_admin')
+        ->get('monitoring-literasi', [RegulationProgressController::class, 'monitoringLiterasi'])
+        ->name('monitoring-literasi');
 });
