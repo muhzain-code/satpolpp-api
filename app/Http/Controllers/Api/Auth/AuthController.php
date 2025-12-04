@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Services\Auth\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -38,4 +42,32 @@ class AuthController extends Controller
         return $this->successResponse(null, $result['message']);
     }
 
+    public function forgotPassword(ForgotPasswordRequest $req): JsonResponse
+    {
+        $status = $this->service->sendResetLink($req->email);
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => 'Reset link terkirim.'])
+            : response()->json(['message' => __($status)], 500);
+    }
+
+    public function resetPassword(ResetPasswordRequest $req): JsonResponse
+    {
+        $status = $this->service->resetPassword($req->validated());
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => 'Password berhasil direset.'])
+            : response()->json(['message' => __($status)], 500);
+    }
+
+    public function changePassword(ChangePasswordRequest $req): JsonResponse
+    {
+        $this->service->changePassword(
+            $req->user(),
+            $req->current_password,
+            $req->new_password
+        );
+
+        return response()->json(['message' => 'Password telah diubah. Silakan login ulang.']);
+    }
 }

@@ -5,7 +5,9 @@ namespace App\Services\Auth;
 use App\Models\User;
 use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
@@ -112,5 +114,44 @@ class AuthService
             'message' => 'Logout berhasil',
             'data' => null,
         ];
+    }
+
+    public function sendResetLink(string $email): string
+    {
+        return Password::sendResetLink(['email' => $email]);
+    }
+
+    public function resetPassword(array $data): string
+    {
+        return Password::reset($data, function (User $user, string $pass) {
+            $user->password = Hash::make($pass);
+            $user->setRememberToken(Str::random(60));
+            $user->tokens()->delete();
+            $user->save();
+        });
+    }
+
+    public function changePassword(User $user, string $current, string $new): void
+    {
+        if (! Hash::check($current, $user->password)) {
+            abort(422, 'Current password is incorrect.');
+        }
+
+        $user->password = Hash::make($new);
+        $user->setRememberToken(Str::random(60));
+        $user->tokens()->delete();
+        $user->save();
+
+        activity('auth')
+            ->event('password_changed')
+            ->performedOn($user)
+            ->causedBy($user)
+            ->withProperties([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ])
+            ->log("Password pengguna '{$user->email}' berhasil diubah");
     }
 }

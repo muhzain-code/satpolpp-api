@@ -281,7 +281,7 @@ class RegulationProgressService
             ->where('regulasi_id', $id);
 
         if (!$tanda) {
-            throw new CustomException('Data Tidak Ditemukan', 404);
+            throw new CustomException('Data Tidak Ditemukan', 200);
         }
         $tanda->through(function ($item) {
             return [
@@ -351,7 +351,7 @@ class RegulationProgressService
             ->get();
 
         if ($listTanda->isEmpty()) {
-            throw new CustomException('data tidak ditemukan', 404);
+            throw new CustomException('data tidak ditemukan', 200);
         }
 
         return [

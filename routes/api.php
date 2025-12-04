@@ -35,6 +35,8 @@ use App\Http\Controllers\Api\Humas\StatistikPublikController;
 Route::middleware('throttle:120,1')->group(function () {
     // Authentication
     Route::post('login', [AuthController::class, 'login'])->name('login');
+    // Route::post('forgot', [AuthController::class, 'forgotPassword']);
+    // Route::post('reset', [AuthController::class, 'resetPassword'])->name('password.reset');
 
     // Pengaduan Public
     Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
