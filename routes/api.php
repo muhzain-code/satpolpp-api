@@ -250,11 +250,11 @@ Route::middleware(['auth:sanctum', 'role:humas|super_admin'])->group(function ()
     Route::put('agenda/{id}', [AgendaController::class, 'updateAgenda']);
     Route::delete('agenda/{id}', [AgendaController::class, 'destroy']);
 
-    Route::get('Himbauan', [HimbauanController::class, 'indexHimbauan']);
-    Route::post('Himbauan', [HimbauanController::class, 'storeHimbauan']);
-    Route::get('Himbauan/{id}', [HimbauanController::class, 'showHimbauan']);
-    Route::put('Himbauan/{id}', [HimbauanController::class, 'updateHimbauan']);
-    Route::delete('Himbauan/{id}', [HimbauanController::class, 'destroy']);
+    Route::get('himbauan', [HimbauanController::class, 'indexHimbauan']);
+    Route::post('himbauan', [HimbauanController::class, 'storeHimbauan']);
+    Route::get('himbauan/{id}', [HimbauanController::class, 'showHimbauan']);
+    Route::put('himbauan/{id}', [HimbauanController::class, 'updateHimbauan']);
+    Route::delete('himbauan/{id}', [HimbauanController::class, 'destroy']);
 });
 
 /**
