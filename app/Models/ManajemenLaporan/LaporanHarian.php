@@ -29,6 +29,7 @@ class LaporanHarian extends Model
         'severity',
         'telah_dieskalasi',
         'status_validasi',
+        'catatan_validasi',
         'divalidasi_oleh',
     ];
 

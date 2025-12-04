@@ -318,6 +318,7 @@ return new class extends Migration
 
             $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->nullable();
             $table->enum('status_validasi', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
+            $table->string('catatan_validasi')->nullable();
             $table->foreignId('divalidasi_oleh')->nullable()->constrained('users')->nullOnDelete();
 
             $table->boolean('telah_dieskalasi')->default(false);
@@ -368,7 +369,7 @@ return new class extends Migration
             $table->text('catatan_validasi_ppns')->nullable();
             $table->foreignId('ppns_validator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('tanggal_validasi_ppns')->nullable();
-            
+
             // Audit
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
