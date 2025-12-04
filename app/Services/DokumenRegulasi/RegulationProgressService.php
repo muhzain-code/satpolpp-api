@@ -69,7 +69,7 @@ class RegulationProgressService
                         'id'      => $catatan->id,
                         'halaman' => $catatan->halaman,
                         'type'    => $catatan->type,
-                        'data'    => $catatan->data, 
+                        'data'    => $catatan->data,
                         'catatan' => $catatan->catatan,
                     ];
                 }),
@@ -304,6 +304,37 @@ class RegulationProgressService
     }
 
 
+    // public function detailtanda($id): array
+    // {
+    //     $UserID = Auth::id();
+    //     if (!$UserID) {
+    //         throw new CustomException('User tidak di temukan');
+    //     }
+
+    //     $tanda = CatatanRegulasi::with('regulasi')
+    //         ->where('id', $id)
+    //         ->where('user_id', $UserID)
+    //         ->first();
+
+    //     if (!$tanda) {
+    //         throw new CustomException('data tidak ditemukan');
+    //     }
+
+    //     return [
+    //         'message' => 'data berhasil di tampilkan',
+    //         'data'    => [
+    //             'id'            => $tanda->id,
+    //             'halaman'       => $tanda->halaman,
+    //             'type'          => $tanda->type,
+    //             'regulasi_judul' => $tanda->regulasi->judul ?? null,
+    //             'path_pdf' => $tanda->regulasi->path_pdf
+    //                 ? url(Storage::url($tanda->regulasi->path_pdf))
+    //                 : null,
+    //             'data'          => $tanda->data,
+    //         ]
+    //     ];
+    // }
+
     public function detailtanda($id): array
     {
         $UserID = Auth::id();
@@ -311,27 +342,26 @@ class RegulationProgressService
             throw new CustomException('User tidak di temukan');
         }
 
-        $tanda = CatatanRegulasi::with('regulasi')
-            ->where('id', $id)
+        $listTanda = CatatanRegulasi::with('regulasi')
+            ->where('regulasi_id', $id)
             ->where('user_id', $UserID)
-            ->first();
+            ->get();
 
-        if (!$tanda) {
+        if ($listTanda->isEmpty()) {
             throw new CustomException('data tidak ditemukan');
         }
 
         return [
             'message' => 'data berhasil di tampilkan',
-            'data'    => [
-                'id'            => $tanda->id,
-                'halaman'       => $tanda->halaman,
-                'type'          => $tanda->type,
-                'regulasi_judul' => $tanda->regulasi->judul ?? null,
-                'path_pdf' => $tanda->regulasi->path_pdf
-                    ? url(Storage::url($tanda->regulasi->path_pdf))
-                    : null,
-                'data'          => $tanda->data,
-            ]
+            'data'    => $listTanda->map(function ($tanda) {
+                return [
+                    'id'      => $tanda->id,
+                    'halaman' => $tanda->halaman,
+                    'type'    => $tanda->type,
+                    'catatan' => $tanda->catatan ?? null,
+                    'data'    => $tanda->data ?? null,
+                ];
+            })
         ];
     }
 
