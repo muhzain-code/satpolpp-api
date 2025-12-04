@@ -36,8 +36,8 @@ use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
 Route::middleware('throttle:120,1')->group(function () {
     // Authentication
     Route::post('login', [AuthController::class, 'login'])->name('login');
-    // Route::post('forgot', [AuthController::class, 'forgotPassword']);
-    // Route::post('reset', [AuthController::class, 'resetPassword'])->name('password.reset');
+    Route::post('forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('reset', [AuthController::class, 'resetPassword'])->name('password.reset');
 
     // Pengaduan Public
     Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     // Auth User Info
     // Route::get('user', fn(Request $request) => $request->user())->name('user.info');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('password', [AuthController::class, 'changePassword']);
 
     /**
      * ==========================
@@ -350,8 +351,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
-        Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
-    });
+            Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+            Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
+        });
 
     /**
      * ==========================

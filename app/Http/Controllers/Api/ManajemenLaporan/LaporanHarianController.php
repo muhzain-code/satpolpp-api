@@ -57,14 +57,14 @@ class LaporanHarianController extends Controller
     {
         $perPage = $request->input('per_page', 25);
         $currentPage = $request->input('page', 1);
-        $result = $this->service->ListValidasi($perPage, $currentPage, $request);
+        $result = $this->service->listValidasi($perPage, $currentPage, $request);
 
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function pressesValidasi(AccByKomandanRequest $request, string $id): JsonResponse
+    public function pressesValidasi(AccByKomandanRequest $request, $id): JsonResponse
     {
-        $result = $this->service->processDecision($id, $request->validated());
+        $result = $this->service->processDecision($request->validated(),$id);
         return $this->successResponse($result['data'], $result['message']);
     }
 }

@@ -389,7 +389,7 @@ class LaporanHarianService
         ];
     }
 
-    public function ListValidasi($perPage, $currentPage, $request): array
+    public function listValidasi($perPage, $currentPage, $request): array
     {
         $user = Auth::user();
 
@@ -401,7 +401,8 @@ class LaporanHarianService
         ])
             ->where('jenis', 'insiden')
             ->where('telah_dieskalasi', false)
-            ->whereNull('divalidasi_oleh');
+            ->whereNull('divalidasi_oleh')
+            ->where('severity', '<>', 'rendah');
 
         if ($user->hasRole('super_admin')) {
         } else if ($user->hasRole('komandan_regu')) {
@@ -424,7 +425,7 @@ class LaporanHarianService
         }
 
         $laporan = $query
-            ->orderByRaw("FIELD(severity, 'tinggi', 'sedang', 'rendah') ASC")
+            ->orderByRaw("FIELD(severity, 'tinggi', 'sedang') ASC")
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
@@ -434,8 +435,7 @@ class LaporanHarianService
                 'id'             => $item->id,
                 'tanggal'        => $item->created_at->format('d-m-Y H:i'),
 
-                // Null Safe Operator (?->) mencegah error jika anggota terhapus
-                'anggota_nama'   => $item->anggota?->nama ?? 'Personil Tidak Dikenal',
+                'anggota_nama'   => $item->anggota?->nama ?? '-',
                 'unit_nama'      => $item->anggota?->unit?->nama ?? '-',
 
                 'jenis'          => $item->jenis,

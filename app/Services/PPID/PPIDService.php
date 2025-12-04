@@ -41,7 +41,7 @@ class PPIDService
                 'jawaban_ppid'      => $item->jawaban_ppid,
                 'file_jawaban'      => $item->file_jawaban ? asset('storage/' . $item->file_jawaban) : null,
                 'ditangani_oleh'    => optional(optional($item->user)->anggota)->nama
-                    ?? optional($item->user)->name?? 'Belum ditangani',
+                    ?? optional($item->user)->name ?? 'Belum ditangani',
             ];
         });
 
@@ -77,7 +77,7 @@ class PPIDService
 
             DB::commit();
             return [
-                'message' => 'Permohonan PPID berhasil diajukan',
+                'message' => "Permohonan PPID berhasil diajukan nomor registrasi anda untuk tracking {$PPID->nomor_registrasi}",
                 'data'    => $PPID
             ];
         } catch (\Throwable $e) {
@@ -171,7 +171,7 @@ class PPIDService
                 $data['file_jawaban'] = $filePath;
             } elseif (isset($data['file_jawaban']) && is_string($data['file_jawaban'])) {
             } else {
-                $data['file_jawaban'] = $PPID->file_jawaban; 
+                $data['file_jawaban'] = $PPID->file_jawaban;
             }
 
             $PPID->update([
