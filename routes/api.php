@@ -127,13 +127,17 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         // Disposisi Management
         Route::prefix('disposisi')->name('disposisi.')->group(function () {
             Route::get('/', [DisposisiController::class, 'index'])->name('index');
-            Route::post('/', [DisposisiController::class, 'store'])->name('store');
             Route::get('{id}', [DisposisiController::class, 'show'])->name('show');
+            Route::post('/', [DisposisiController::class, 'store'])->name('store');
             Route::put('{id}', [DisposisiController::class, 'update'])->name('update');
             Route::delete('{id}', [DisposisiController::class, 'destroy'])->name('destroy');
         });
     });
 
+    Route::prefix('disposisi')->middleware('role:super_admin|komandan_regu|operator')->name('disposisi.')->group(function () {
+        Route::get('/', [DisposisiController::class, 'index'])->name('index');
+        Route::get('{id}', [DisposisiController::class, 'show'])->name('show');
+    });
     /**
      * ==========================
      * OPERASI
@@ -153,7 +157,10 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         });
     });
 
-
+    Route::prefix('operasi')->middleware('role:super_admin|komandan_regu|anggota_regu')->name('operasi.')->group(function () {
+        Route::get('/', [OperasiController::class, 'index'])->name('index');
+        Route::get('{id}', [OperasiController::class, 'show'])->name('show');
+    });
 
     /**
      * ==========================
@@ -174,9 +181,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         });
 
         // Disposisi Komandan
-        Route::middleware('role:super_admin|komandan_regu')
-            ->get('disposisi-komandan', [DisposisiController::class, 'getDisposisiKomandan'])
-            ->name('disposisi.komandan');
+        // Route::middleware('role:super_admin|komandan_regu')
+        //     ->get('disposisi-komandan', [DisposisiController::class, 'getDisposisiKomandan'])
+        //     ->name('disposisi.komandan');
 
         // Operasi Anggota
         Route::middleware('role:super_admin|anggota_regu')
@@ -186,7 +193,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
 
     // Penindakan CRUD (super_admin | komandan_regu only)
     Route::middleware('role:super_admin|anggota_regu')->prefix('penindakan')->name('penindakan.')->group(function () {
-        
+
         Route::post('/validasi-komandan/{id}', [PenindakanController::class, 'validasiKomandan'])->name('validasiKomandan');
         Route::post('/', [PenindakanController::class, 'store'])->name('store');
         Route::put('{id}', [PenindakanController::class, 'update'])->name('update');
@@ -241,8 +248,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
         // Anggota Resource
         Route::prefix('anggota')->name('anggota.')->group(function () {
             Route::get('/', [AnggotaController::class, 'index'])->name('index');
-            Route::post('/', [AnggotaController::class, 'store'])->name('store');
             Route::get('{id}', [AnggotaController::class, 'show'])->name('show');
+            Route::post('/', [AnggotaController::class, 'store'])->name('store');
             Route::put('{id}', [AnggotaController::class, 'update'])->name('update');
             Route::delete('{id}', [AnggotaController::class, 'destroy'])->name('destroy');
             Route::post('import', [AnggotaImportController::class, 'import'])->name('import');
@@ -280,6 +287,11 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
             Route::get('/', [PPIDController::class, 'index'])->name('index');
             Route::post('validasi/{id}', [PPIDController::class, 'validasiPPID'])->name('validasi');
         });
+    });
+
+    Route::prefix('anggota')->middleware('role:super_admin|komandan_regu')->name('anggota.')->group(function () {
+        Route::get('/', [AnggotaController::class, 'index'])->name('index');
+        Route::get('{id}', [AnggotaController::class, 'show'])->name('show');
     });
 
     /**
@@ -336,6 +348,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     Route::middleware('role:super_admin|anggota_regu|komandan_regu')->group(function () {
         Route::get('penugasan', [PenugasanController::class, 'index']);
         Route::get('penugasan/{id}', [PenugasanController::class, 'show']);
+        Route::get('list-anggota-penugasan/{id}', [PenugasanController::class, 'listAnggotaPenugasan']);
+        
     });
     Route::middleware('role:super_admin|anggota_regu')->group(function () {
         Route::prefix('progress')->name('progress.')->group(function () {

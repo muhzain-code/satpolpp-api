@@ -415,7 +415,7 @@ class PenindakanService
                 }
 
                 $penindakan->update($updatePayload);
-
+                
                 return [
                     'message' => 'Validasi Komandan berhasil disimpan. Status: ' . $status,
                     'data'    => $penindakan

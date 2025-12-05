@@ -55,7 +55,7 @@ class PenugasanService
                 'anggota_id'    => $item->anggota_id,
                 'nama_anggota'  => $item->anggota->nama,
                 'peran'         => $item->peran,
-                'created_by'    => $item->creator?->name, 
+                'created_by'    => $item->creator?->name,
             ];
         });
 
@@ -102,7 +102,7 @@ class PenugasanService
         if (!$penugasan) {
             // Jika data tidak ada ATAU tidak punya hak akses, lempar 404
             // Ini lebih aman daripada memberi tahu "Data ada tapi Anda tidak boleh akses"
-            throw new CustomException('Data penugasan tidak ditemukan atau Anda tidak memiliki akses.', 404);
+            throw new CustomException('Data penugasan tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
         // Transformasi single object
@@ -129,6 +129,39 @@ class PenugasanService
             'data'    => $data
         ];
     }
+
+    public function listAnggotaPenugasan($id): array
+    {
+        $user = Auth::user();
+
+        // Ambil data penugasan berdasarkan pengaduan_id
+        $penugasan = Penugasan::with(['anggota.unit', 'anggota.jabatan'])
+            ->where('pengaduan_id', $id)
+            ->get();
+
+        // Jika tidak ada data
+        if ($penugasan->isEmpty()) {
+            throw new CustomException('Data penugasan tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        // Transform hasil
+        $data = $penugasan->transform(function ($item) {
+            return [
+                'id'            => $item->id,
+                'anggota_id'    => $item->anggota->id ?? null,
+                'nama'          => $item->anggota->nama ?? null,
+                'kode_anggota'  => $item->anggota->kode_anggota ?? null,
+                'unit'          => $item->anggota->unit->nama ?? null,
+                'jabatan'       => $item->anggota->jabatan->nama ?? null,
+            ];
+        });
+
+        return [
+            'message' => 'Detail penugasan berhasil ditampilkan',
+            'data'    => $data,
+        ];
+    }
+
 
     /**
      * Create Penugasan (Batch Insert)
