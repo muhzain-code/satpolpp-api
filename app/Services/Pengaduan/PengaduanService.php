@@ -125,12 +125,23 @@ class PengaduanService
     {
         $pengaduan = Pengaduan::with([
             'pengaduanLampiran:id,pengaduan_id,path_file,nama_file,jenis,created_by',
-            'kategoriPengaduan:id,nama'
+            'kategoriPengaduan:id,nama',
+            'penugasan.anggota' 
         ])->find($id);
 
         if (!$pengaduan) {
             throw new CustomException('Pengaduan tidak ditemukan', 404);
         }
+
+        // Mapping penugasan
+        $penugasan = $pengaduan->penugasan->map(function ($p) {
+            return [
+                'id'         => $p->id,
+                'anggota_id' => $p->anggota_id,
+                'nama'       => $p->anggota->nama ?? null,
+                'peran'      => $p->peran,
+            ];
+        });
 
         $data = [
             'id' => $pengaduan->id,
@@ -149,12 +160,17 @@ class PengaduanService
             'diproses_at' => $pengaduan->diproses_at,
             'selesai_at' => $pengaduan->selesai_at,
             'ditolak_at' => $pengaduan->ditolak_at,
+
             'lampiran' => $pengaduan->pengaduanLampiran->map(fn($lampiran) => [
-                'id' => $lampiran->id,
+                'id'        => $lampiran->id,
                 'nama_file' => $lampiran->nama_file,
                 'path_file' => $lampiran->path_file,
-                'jenis' => $lampiran->jenis,
+                'jenis'     => $lampiran->jenis,
             ]),
+
+            // Tambahkan penugasan di sini
+            'penugasan' => $penugasan,
+
             'created_at' => $pengaduan->created_at,
             'updated_at' => $pengaduan->updated_at,
         ];
@@ -164,6 +180,7 @@ class PengaduanService
             'data' => $data
         ];
     }
+
 
     public function update($id, array $data): array
     {

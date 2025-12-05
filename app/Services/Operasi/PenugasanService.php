@@ -17,7 +17,7 @@ class PenugasanService
 
             foreach ($data['anggota_id'] as $i => $anggota) {
                 $record = Penugasan::create([
-                    'disposisi_id' => $data['disposisi_id'] ?? null,
+                    'pengaduan_id' => $data['pengaduan_id'] ?? null,
                     'operasi_id'   => $data['operasi_id'] ?? null,
                     'anggota_id'   => $anggota,
                     'peran'        => $data['peran'][$i] ?? null,
@@ -48,7 +48,7 @@ class PenugasanService
         $penugasan = Penugasan::findOrFail($id);
 
         $penugasan->update([
-            'disposisi_id' => $data['disposisi_id'] ?? null,
+            'pengaduan_id' => $data['pengaduan_id'] ?? null,
             'operasi_id'   => $data['operasi_id'] ?? null,
             'anggota_id'   => $data['anggota_id'][0],
             'peran'        => $data['peran'][0] ?? null,

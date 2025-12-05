@@ -28,12 +28,12 @@ class PenugasanRequest extends FormRequest
 
         return [
             // wajib salah satu
-            'disposisi_id' => [
+            'pengaduan_id' => [
                 'nullable',
-                'exists:disposisi,id',
+                'exists:pengaduan,id',
                 function ($attr, $value, $fail) {
                     if (!$value && !$this->operasi_id) {
-                        $fail("disposisi_id atau operasi_id wajib diisi salah satu.");
+                        $fail("pengaduan_id atau operasi_id wajib diisi salah satu.");
                     }
                 }
             ],
@@ -47,9 +47,9 @@ class PenugasanRequest extends FormRequest
                 'integer',
                 'exists:anggota,id',
 
-                // unique per disposisi
+                // unique per pengaduan
                 Rule::unique('penugasan', 'anggota_id')
-                    ->where(fn($q) => $q->where('disposisi_id', $this->disposisi_id))
+                    ->where(fn($q) => $q->where('pengaduan_id', $this->pengaduan_id))
                     ->ignore($id),
 
                 // unique per operasi

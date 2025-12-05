@@ -5,6 +5,7 @@ namespace App\Models\Operasi;
 use App\Models\User;
 use App\Models\Anggota\Anggota;
 use App\Models\Operasi\Operasi;
+use App\Models\Pengaduan\Pengaduan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,7 +16,7 @@ class Penugasan extends Model
     protected $table = 'penugasan';
 
     protected $fillable = [
-        'disposisi_id',
+        'pengaduan_id',
         'operasi_id',
         'anggota_id',
         'peran',
@@ -28,9 +29,9 @@ class Penugasan extends Model
     {
         return $this->belongsTo(Operasi::class);
     }
-    public function disposisi()
+    public function pengaduan()
     {
-        return $this->belongsTo(Disposisi::class);
+        return $this->belongsTo(Pengaduan::class);
     }
 
     public function operasiActive()

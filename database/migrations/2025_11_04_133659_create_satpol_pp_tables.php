@@ -287,7 +287,7 @@ return new class extends Migration
         Schema::create('penugasan', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('disposisi_id')->nullable()->constrained('disposisi')->cascadeOnDelete();
+            $table->foreignId('pengaduan_id')->nullable()->constrained('disposisi')->cascadeOnDelete();
             $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
 
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
@@ -299,7 +299,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // 1️⃣ Unique kombinasi disposisi + anggota
-            $table->unique(['disposisi_id', 'anggota_id'], 'uniq_disposisi_anggota');
+            $table->unique(['pengaduan_id', 'anggota_id'], 'uniq_pengaduan_anggota');
 
             // 2️⃣ Unique kombinasi operasi + anggota
             $table->unique(['operasi_id', 'anggota_id'], 'uniq_operasi_anggota');

@@ -161,7 +161,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * Role: super_admin | komandan_regu | ppns
      * ==========================
      */
-    Route::middleware('role:super_admin|komandan_regu|ppns')->group(function () {
+    Route::middleware('role:super_admin|komandan_regu|ppns|anggota_regu')->group(function () {
         // Penindakan Read
         Route::prefix('penindakan')->name('penindakan.')->group(function () {
             Route::get('/', [PenindakanController::class, 'index'])->name('index');
@@ -185,7 +185,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     });
 
     // Penindakan CRUD (super_admin | komandan_regu only)
-    Route::middleware('role:super_admin|komandan_regu')->prefix('penindakan')->name('penindakan.')->group(function () {
+    Route::middleware('role:super_admin|anggota_regu')->prefix('penindakan')->name('penindakan.')->group(function () {
         Route::post('/', [PenindakanController::class, 'store'])->name('store');
         Route::put('{id}', [PenindakanController::class, 'update'])->name('update');
         Route::delete('{id}', [PenindakanController::class, 'destroy'])->name('destroy');

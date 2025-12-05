@@ -7,6 +7,7 @@ use App\Models\Alamat\Provinsi;
 use App\Models\Alamat\Kabupaten;
 use App\Models\Alamat\Kecamatan;
 use App\Models\Operasi\Disposisi;
+use App\Models\Operasi\Penugasan;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengaduan extends Model
@@ -31,6 +32,12 @@ class Pengaduan extends Model
         'ditolak_at',
         'catatan_tolak',
     ];
+
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class, 'pengaduan_id');
+    }
+
 
     public function disposisi()
     {
