@@ -141,7 +141,7 @@ class LaporanHarianService
             }
 
             $anggotaId = null;
-            $isSuperAdmin = $user->hasRole('superadmin');
+            $isSuperAdmin = $user->hasRole('super_admin');
 
             if ($isSuperAdmin) {
                 if (empty($data['anggota_id'])) {
@@ -273,7 +273,7 @@ class LaporanHarianService
     {
         $user = Auth::user();
 
-        if (!$user->hasRole('superadmin')) {
+        if (!$user->hasRole('super_admin')) {
             throw new CustomException('Akses ditolak. Hanya Superadmin yang diizinkan mengubah laporan.', 403);
         }
 
@@ -401,7 +401,7 @@ class LaporanHarianService
         ])
             ->where('jenis', 'insiden')
             ->where('telah_dieskalasi', false)
-            ->whereNull('divalidasi_oleh')
+            // ->whereNull('divalidasi_oleh')
             ->where('severity', '<>', 'rendah');
 
         if ($user->hasRole('super_admin')) {

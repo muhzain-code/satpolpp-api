@@ -287,7 +287,7 @@ return new class extends Migration
         Schema::create('penugasan', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('pengaduan_id')->nullable()->constrained('disposisi')->cascadeOnDelete();
+            $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->cascadeOnDelete();
             $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
 
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();

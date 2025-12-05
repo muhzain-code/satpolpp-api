@@ -2,13 +2,15 @@
 
 namespace App\Services\Operasi;
 
+use App\Exceptions\CustomException;
 use App\Models\Operasi\Penugasan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PenugasanService
 {
-    public function create(array $data)
+    public function create($data)
     {
         DB::beginTransaction();
 
@@ -36,10 +38,12 @@ class PenugasanService
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            return [
-                'message' => 'Terjadi kesalahan saat membuat penugasan.',
-                'error'   => $e->getMessage(),
-            ];
+            Log::error(
+                'eror create penugasan',
+                ['error' => $e->getMessage()]
+            );
+
+          throw new CustomException('Gagal menambah data');
         }
     }
 
