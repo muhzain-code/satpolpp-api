@@ -8,6 +8,7 @@ use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Penindakan\Penindakan;
+use App\Models\Penindakan\PenindakanAnggota;
 use App\Services\BAPGeneratorService;
 use Illuminate\Support\Facades\Storage;
 
@@ -59,6 +60,8 @@ class PenindakanService
                     'pengaduan_id'       => $data['pengaduan_id'] ?? null,
                     'laporan_harian_id'  => $data['laporan_harian_id'] ?? null,
 
+                    'anggota_pelapor_id'  => $data['anggota_pelapor_id'] ?? null,
+
                     'jenis_penindakan'   => $data['jenis_penindakan'],
                     'uraian'             => $data['uraian'] ?? null,
 
@@ -99,9 +102,22 @@ class PenindakanService
                     }
                 }
 
+                $penugasanList = [];
+                if (!empty($data['anggota'])) {
+                    foreach ($data['anggota'] as $anggotaId) {
+                        $penugasan = PenindakanAnggota::create([
+                            'penindakan_id' => $penindakan->id,
+                            'anggota_id' => $anggotaId,
+                            'peran'      => $data['peran'][$anggotaId] ?? null,
+                            'created_by' => Auth::id(),
+                        ]);
+                        $penugasanList[] = $penugasan;
+                    }
+                }
+
                 return [
                     'message' => 'Penindakan berhasil ditambahkan',
-                    'data'    => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
+                    'data'    => $penindakan->load('penindakanRegulasi', 'penindakanLampiran', 'penindakanAnggota'),
                 ];
             });
         } catch (Exception $e) {
@@ -118,6 +134,7 @@ class PenindakanService
         $query = Penindakan::with([
             'penindakanLampiran',
             'penindakanRegulasi.regulasi',
+            'penindakanAnggota.anggota',
             'creator',
             'kecamatan',
             'desa',
@@ -145,6 +162,8 @@ class PenindakanService
             'operasi_id'            => $penindakan->operasi_id,
             'laporan_harian_id'     => $penindakan->laporan_harian_id,
             'pengaduan_id'          => $penindakan->pengaduan_id,
+
+            'nama_pelapor'          => $penindakan->anggotaPelapor->nama,
 
             // Lokasi (Flat)
             'kecamatan_id'          => $penindakan->kecamatan_id,
@@ -180,6 +199,14 @@ class PenindakanService
                 return [
                     'jenis' => $item->jenis,
                     'url'   => url(Storage::url($item->path_file)),
+                ];
+            })->toArray(),
+
+            'list_penindakan_anggota'         => $penindakan->penindakanAnggota->map(function ($item) {
+                return [
+                    'id' => $item->anggota->id ?? '-',
+                    'nama'  => $item->anggota->nama ?? '-',
+                    'peran' => $item->peran ?? '-',
                 ];
             })->toArray(),
         ];
@@ -289,9 +316,29 @@ class PenindakanService
                     }
                 }
 
+                $penugasanList = [];
+
+                if (isset($data['anggota']) && is_array($data['anggota'])) {
+
+                    // hapus semua penugasan lama
+                    PenindakanAnggota::where('penindakan_id', $penindakan->id)->delete();
+
+                    // insert ulang anggota baru
+                    foreach ($data['anggota'] as $anggotaId) {
+                        $penugasan = PenindakanAnggota::create([
+                            'penindakan_id' => $penindakan->id,
+                            'anggota_id' => $anggotaId,
+                            'peran'      => $data['peran'][$anggotaId] ?? null,
+                            'created_by' => Auth::id(),
+                        ]);
+
+                        $penugasanList[] = $penugasan;
+                    }
+                }
+
                 return [
                     'message' => 'Penindakan berhasil diperbarui',
-                    'data' => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
+                    'data' => $penindakan->load('penindakanRegulasi', 'penindakanLampiran', 'penindakanAnggota'),
                 ];
             });
         } catch (Exception $e) {
@@ -309,16 +356,14 @@ class PenindakanService
                 $penindakan = Penindakan::with('penindakanLampiran')->find($id);
 
                 if (!$penindakan) {
-                    throw new CustomException('Penindakan tidak ditemukan', 404);
+                    throw new CustomException('Penindakan tidak ditemukan');
                 }
 
                 if ($penindakan->butuh_validasi_ppns === true && $penindakan->status_validasi_ppns !== 'revisi') {
                     throw new CustomException(
-                        'Penindakan regulasi hanya bisa diubah ketika status PPNS = revisi',
-                        403
+                        'Penindakan regulasi hanya bisa diubah ketika status PPNS = revisi'
                     );
                 }
-
                 // Hapus file lampiran
                 foreach ($penindakan->penindakanLampiran() as $lampiran) {
                     Storage::disk('public')->delete($lampiran->path_file);
@@ -326,11 +371,15 @@ class PenindakanService
                 }
 
                 $penindakan->penindakanRegulasi()->delete();
+                $penindakan->penindakanAnggota()->delete();
                 $penindakan->delete();
 
                 return ['message' => 'Penindakan berhasil dihapus', 'data' => null];
             });
         } catch (Exception $e) {
+            Log::error('gagal menghapus penindakan', [
+                'error' => $e->getMessage()
+            ]);
             throw new CustomException('Gagal menghapus penindakan', 422);
         }
     }
@@ -340,7 +389,7 @@ class PenindakanService
         try {
             return DB::transaction(function () use ($id, $data) {
 
-                $penindakan = Penindakan::with('penindakanRegulasi')->find($id);
+                $penindakan = Penindakan::find($id);
 
                 if (!$penindakan) {
                     throw new CustomException('Penindakan tidak ditemukan', 404);
@@ -372,7 +421,7 @@ class PenindakanService
 
                 return [
                     'message' => 'Validasi PPNS berhasil',
-                    'data'    => $penindakan->load('penindakanRegulasi', 'penindakanLampiran'),
+                    'data'    => $penindakan,
                 ];
             });
         } catch (Exception $e) {

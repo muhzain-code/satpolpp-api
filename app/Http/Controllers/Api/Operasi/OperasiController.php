@@ -23,7 +23,6 @@ class OperasiController extends Controller
 
     public function index(Request $request)
     {
-
         $request->input('per_page', 25);
         $request->input('page', 1);
 

@@ -26,6 +26,7 @@ class Penindakan extends Model
         'laporan_harian_id',
         'pengaduan_id',
         'jenis_penindakan',
+        'anggota_pelapor_id',
         'kecamatan_id',
         'desa_id',
         'lokasi',
@@ -41,6 +42,8 @@ class Penindakan extends Model
         'updated_by',
         'deleted_by',
     ];
+
+
 
     public function operasi()
     {
@@ -61,6 +64,11 @@ class Penindakan extends Model
     public function penindakanRegulasi()
     {
         return $this->hasMany(PenindakanRegulasi::class);
+    }
+
+    public function penindakanAnggota()
+    {
+        return $this->hasMany(PenindakanAnggota::class);
     }
 
     public function pengaduan()

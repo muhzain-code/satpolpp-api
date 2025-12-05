@@ -144,7 +144,7 @@ class StatistikSeeder extends Seeder
             if (count($anggotaIds) > 0) {
                 $tim = $faker->randomElements($anggotaIds, 2);
                 foreach ($tim as $idx => $anggotaId) {
-                    DB::table('operasi_penugasan')->insert([
+                    DB::table('penugasan')->insert([
                         'operasi_id' => $operasiId,
                         'anggota_id' => $anggotaId,
                         'peran'      => ($idx == 0) ? 'Ketua Tim' : 'Anggota',

@@ -24,6 +24,8 @@ class PenindakanRequest extends FormRequest
             'pengaduan_id'       => ['nullable', 'integer', 'exists:pengaduan,id'],
             'laporan_harian_id'  => ['nullable', 'integer', 'exists:laporan_harian,id'],
 
+            'anggota_pelapor_id'  => ['nullable', 'integer', 'exists:anggota,id'],
+
             // Jenis penindakan
             'jenis_penindakan'   => ['required', 'in:teguran,pembinaan,penyitaan,proses_hukum'],
 
@@ -52,6 +54,12 @@ class PenindakanRequest extends FormRequest
             'lampiran.*.path_file'   => ['required', 'string', 'max:1000'],
             'lampiran.*.nama_file'   => ['nullable', 'string', 'max:255'],
             'lampiran.*.jenis'       => ['nullable', 'in:foto,video,dokumen'],
+
+            'anggota'       => 'nullable|array',
+            'anggota.*'     => 'integer|exists:anggota,id',
+
+            'peran'         => 'nullable|array',
+            'peran.*'       => 'nullable|string|max:255',
         ];
     }
 

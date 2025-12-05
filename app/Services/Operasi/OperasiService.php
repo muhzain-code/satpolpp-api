@@ -4,13 +4,13 @@ namespace App\Services\Operasi;
 
 use Barryvdh\DomPDF\PDF;
 use App\Models\Operasi\Operasi;
+use App\Models\Operasi\Penugasan;
 use Illuminate\Support\Facades\DB;
 use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Services\NomorGeneratorService;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Operasi\OperasiPenugasan;
 
 class OperasiService
 {
@@ -120,7 +120,7 @@ class OperasiService
                 $penugasanList = [];
                 if (!empty($data['anggota'])) {
                     foreach ($data['anggota'] as $anggotaId) {
-                        $penugasan = OperasiPenugasan::create([
+                        $penugasan = Penugasan::create([
                             'operasi_id' => $operasi->id,
                             'anggota_id' => $anggotaId,
                             'peran'      => $data['peran'][$anggotaId] ?? null,
@@ -242,11 +242,11 @@ class OperasiService
                 if (isset($data['anggota']) && is_array($data['anggota'])) {
 
                     // hapus semua penugasan lama
-                    OperasiPenugasan::where('operasi_id', $operasi->id)->delete();
+                    Penugasan::where('operasi_id', $operasi->id)->delete();
 
                     // insert ulang anggota baru
                     foreach ($data['anggota'] as $anggotaId) {
-                        $penugasan = OperasiPenugasan::create([
+                        $penugasan = Penugasan::create([
                             'operasi_id' => $operasi->id,
                             'anggota_id' => $anggotaId,
                             'peran'      => $data['peran'][$anggotaId] ?? null,
@@ -339,7 +339,7 @@ class OperasiService
     public function getOperasiAnggota()
     {
         $anggotaId = Auth::user()->anggota_id;
-        $operasi = OperasiPenugasan::with('operasiActive', 'creator', 'updater')->where('anggota_id', $anggotaId)->get();
+        $operasi = Penugasan::with('operasiActive', 'creator', 'updater')->where('anggota_id', $anggotaId)->get();
 
         return [
             'message' => 'Data operasi anggota berhasil ditemukan',

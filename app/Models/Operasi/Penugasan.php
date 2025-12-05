@@ -8,13 +8,14 @@ use App\Models\Operasi\Operasi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class OperasiPenugasan extends Model
+class Penugasan extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'operasi_penugasan';
+    protected $table = 'penugasan';
 
     protected $fillable = [
+        'disposisi_id',
         'operasi_id',
         'anggota_id',
         'peran',

@@ -284,18 +284,24 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('operasi_penugasan', function (Blueprint $table) {
+        Schema::create('penugasan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('operasi_id')->constrained('operasi')->cascadeOnDelete();
+
+            // Sumber utama
+            $table->foreignId('disposisi_id')->nullable()->constrained('disposisi')->cascadeOnDelete();
+
+            // Opsional jika disposisi membuat operasi
+            $table->foreignId('operasi_id')->nullable()->constrained('operasi')->nullOnDelete();
+
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
             $table->string('peran')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->unique(['disposisi_id', 'anggota_id']);
         });
 
         /**
@@ -351,6 +357,8 @@ return new class extends Migration
             $table->foreignId('laporan_harian_id')->nullable()->constrained('laporan_harian')->nullOnDelete();
             $table->foreignId('pengaduan_id')->nullable()->constrained('pengaduan')->nullOnDelete();
 
+            $table->foreignId('anggota_pelapor_id')->nullable()->constrained('anggota')->nullOnDelete();
+
             // Jenis penindakan
             $table->enum('jenis_penindakan', ['teguran', 'pembinaan', 'penyitaan', 'proses_hukum'])->default('teguran');
 
@@ -380,6 +388,15 @@ return new class extends Migration
 
             $table->index(['operasi_id', 'pengaduan_id', 'laporan_harian_id']);
             $table->index(['status_validasi_ppns']);
+        });
+
+        Schema::create('penindakan_anggota', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('penindakan_id')->constrained('penindakan')->cascadeOnDelete();
+            $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
+            $table->string('peran')->nullable();
+            $table->timestamps();
+            $table->unique(['penindakan_id', 'anggota_id']);
         });
 
         Schema::create('penindakan_regulasi', function (Blueprint $table) {
