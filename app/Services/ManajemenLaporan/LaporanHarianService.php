@@ -102,7 +102,7 @@ class LaporanHarianService
 
                         // Detail Laporan
                         'jenis'           => $item->jenis,
-                        'urgensi'         => $item->urgensi ?? 'non-urgent', // urgent / non-urgent
+                        'urgensi'         => $item->urgent ?? 'non-urgent', // urgent / non-urgent
                         'severity'        => $item->severity ?? '-',
                         // 'catatan'         => $item->catatan,
                         // 'lokasi_lat_lng'  => ($item->lat && $item->lng) ? "{$item->lat}, {$item->lng}" : '-',
@@ -249,21 +249,21 @@ class LaporanHarianService
             $regulasiId = null;
             $severity   = null;
             $urgensi    = 'non-urgent';
-
             if (isset($data['jenis']) && $data['jenis'] === 'insiden') {
                 $kategoriId = $data['kategori_pelanggaran_id'] ?? null;
                 $regulasiId = $data['regulasi_indikatif_id'] ?? null;
                 $severity   = $data['severity'] ?? null;
-                $urgensi    = $data['urgensi'] ?? 'non-urgent';
-
+                $urgensi    = $data['urgent'] ?? 'non-urgent';
+                
                 if (!$severity) throw new CustomException('Severity wajib diisi untuk insiden.');
             }
+            // dd($urgensi);
 
             // 4. Create Data
             $laporan = LaporanHarian::create([
                 'anggota_id'              => $anggotaId,
                 'jenis'                   => $data['jenis'] ?? 'aman',
-                'urgensi'                 => $urgensi,
+                'urgent'                 => $urgensi,
                 'catatan'                 => $data['catatan'] ?? null,
                 'lat'                     => $data['lat'] ?? null,
                 'lng'                     => $data['lng'] ?? null,
