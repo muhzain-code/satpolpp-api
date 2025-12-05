@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ManajemenLaporan\LaporanHarianController;
 use App\Http\Controllers\Api\DokumenRegulasi\KategoriRegulasiController;
 use App\Http\Controllers\Api\ManajemenLaporan\LampiranLaporanController;
 use App\Http\Controllers\Api\DokumenRegulasi\RegulationProgressController;
+use App\Http\Controllers\Api\Operasi\PenugasanController;
 
 /**
  * ==========================
@@ -140,6 +141,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu')->group(function () {
+        Route::post('/penugasan', [PenugasanController::class, 'store'])->name('penugasan.store');
+        Route::put('/penugasan/{id}', [PenugasanController::class, 'update'])->name('penugasan.update');
+
         Route::prefix('operasi')->name('operasi.')->group(function () {
             Route::get('/', [OperasiController::class, 'index'])->name('index');
             Route::post('/', [OperasiController::class, 'store'])->name('store');
@@ -148,6 +152,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
             Route::delete('{id}', [OperasiController::class, 'destroy'])->name('destroy');
         });
     });
+
+
 
     /**
      * ==========================
@@ -351,9 +357,9 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * ==========================
      */
     Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
-            Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
-            Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
-        });
+        Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+        Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
+    });
 
     /**
      * ==========================

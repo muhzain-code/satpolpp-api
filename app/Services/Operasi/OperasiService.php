@@ -135,23 +135,23 @@ class OperasiService
                 // -----------------------------------------
                 // 3. GENERATE PDF SURAT TUGAS (OTOMATIS)
                 // -----------------------------------------
-                $pdf = app('dompdf.wrapper')->loadView('pdf.surat_tugas', [
-                    'operasi'   => $operasi,
-                    'penugasan' => $penugasanList,
-                    'tanggal'   => $operasi->tanggal_surat_tugas,
-                ]);
+                // $pdf = app('dompdf.wrapper')->loadView('pdf.surat_tugas', [
+                //     'operasi'   => $operasi,
+                //     'penugasan' => $penugasanList,
+                //     'tanggal'   => $operasi->tanggal_surat_tugas,
+                // ]);
 
                 $filename = 'surat_tugas_' . $operasi->id . '.pdf';
                 $path = 'surat_tugas/' . $filename;
 
-                Storage::disk('public')->put($path, $pdf->output());
+                // Storage::disk('public')->put($path, $pdf->output());
 
                 // -----------------------------------------
                 // 4. UPDATE PATH PDF DI TABEL OPERASI
                 // -----------------------------------------
-                $operasi->update([
-                    'surat_tugas_pdf' => $path
-                ]);
+                // $operasi->update([
+                //     'surat_tugas_pdf' => $path
+                // ]);
 
                 return [
                     'success' => true,
@@ -174,18 +174,30 @@ class OperasiService
         $user = Auth::user();
 
         if ($user->hasRole('super_admin')) {
-            $operasi = Operasi::find($id);
+            $operasi = Operasi::with(['penugasan.anggota'])->find($id);
         }
 
         if ($user->hasRole('komandan_regu')) {
-            $operasi = Operasi::where('created_by', $user->id)->find($id);
+            $operasi = Operasi::with(['penugasan.anggota'])
+                ->where('created_by', $user->id)
+                ->find($id);
         }
 
         if (!$operasi) {
             throw new CustomException('Data operasi tidak ditemukan', 404);
         }
 
-        $data =  [
+        // mapping penugasan
+        $penugasan = $operasi->penugasan->map(function ($p) {
+            return [
+                'id'         => $p->id,
+                'anggota_id' => $p->anggota_id,
+                'nama'       => $p->anggota->nama ?? null,
+                'peran'      => $p->peran,
+            ];
+        });
+
+        $data = [
             'id' => $operasi->id,
             'kode_operasi' => $operasi->kode_operasi,
             'nomor_surat_tugas' => $operasi->nomor_surat_tugas,
@@ -195,6 +207,9 @@ class OperasiService
             'uraian' => $operasi->uraian,
             'mulai' => $operasi->mulai,
             'selesai' => $operasi->selesai,
+
+            // tambahkan ini
+            'penugasan' => $penugasan,
         ];
 
         return [
@@ -202,6 +217,7 @@ class OperasiService
             'data' => $data
         ];
     }
+
 
     public function update($data, $id)
     {

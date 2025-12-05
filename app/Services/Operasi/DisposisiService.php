@@ -88,7 +88,8 @@ class DisposisiService
             'pengaduan.kategoriPengaduan',
             'pengaduan.kecamatan',
             'pengaduan.desa',
-            'komandan'
+            'komandan',
+            'penugasan.anggota'
         ])->find($id);
 
         if (!$disposisi) {
@@ -97,25 +98,39 @@ class DisposisiService
 
         $pengaduan = $disposisi->pengaduan;
 
+        // Mapping penugasan
+        $penugasan = $disposisi->penugasan->map(function ($p) {
+            return [
+                'id'         => $p->id,
+                'anggota_id' => $p->anggota_id,
+                'nama'       => $p->anggota->nama ?? null,
+                'peran'      => $p->peran,
+            ];
+        });
+
         return [
             'message' => 'Disposisi berhasil ditemukan',
             'data' => [
                 'id' => $disposisi->id,
+
                 'pengaduan' => $pengaduan ? [
-                    'id' => $pengaduan->id,
+                    'id'    => $pengaduan->id,
                     'nomor_tiket' => $pengaduan->nomor_tiket,
-                    'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
-                    'deskripsi' => $pengaduan->deskripsi,
-                    'lat' => $pengaduan->lat,
-                    'lng' => $pengaduan->lng,
-                    'kecamatan' => $pengaduan->kecamatan->nama ?? null,
-                    'desa' => $pengaduan->desa->nama ?? null,
+                    'kategori'    => $pengaduan->kategoriPengaduan->nama ?? null,
+                    'deskripsi'   => $pengaduan->deskripsi,
+                    'lat'         => $pengaduan->lat,
+                    'lng'         => $pengaduan->lng,
+                    'kecamatan'   => $pengaduan->kecamatan->nama ?? null,
+                    'desa'        => $pengaduan->desa->nama ?? null,
                 ] : null,
-                'komandan_id' => $disposisi->komandan_id ?? null,
+
+                'komandan_id'   => $disposisi->komandan_id,
                 'nama_komandan' => $disposisi->komandan->name ?? null,
-                'catatan' => $disposisi->catatan,
-                'batas_waktu' => $disposisi->batas_waktu,
-                'status' => $disposisi->status,
+                'catatan'       => $disposisi->catatan,
+                'batas_waktu'   => $disposisi->batas_waktu,
+                'status'        => $disposisi->status,
+
+                'penugasan'     => $penugasan,
             ]
         ];
     }

@@ -28,6 +28,11 @@ class Penugasan extends Model
     {
         return $this->belongsTo(Operasi::class);
     }
+    public function disposisi()
+    {
+        return $this->belongsTo(Disposisi::class);
+    }
+
     public function operasiActive()
     {
         return $this->belongsTo(Operasi::class)->where('status', 'aktif');

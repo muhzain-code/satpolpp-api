@@ -35,6 +35,11 @@ class Operasi extends Model
         return $this->belongsTo(Pengaduan::class);
     }
 
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class);
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

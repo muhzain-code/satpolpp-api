@@ -41,6 +41,11 @@ class Disposisi extends Model
         return $this->belongsTo(Pengaduan::class);
     }
 
+    public function penugasan()
+    {
+        return $this->hasMany(Penugasan::class);
+    }
+
     public function komandan()
     {
         return $this->belongsTo(User::class, 'komandan_id');
