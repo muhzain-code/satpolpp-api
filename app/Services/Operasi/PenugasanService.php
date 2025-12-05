@@ -14,7 +14,7 @@ class PenugasanService
     public function getAll($perPage, $currentPage, array $filters = []): array
     {
         $user = Auth::user();
-        $query = Penugasan::with(['anggota', 'disposisi', 'operasi', 'creator'])
+        $query = Penugasan::with(['anggota', 'disposisi.pengaduan', 'operasi', 'creator'])
             ->orderBy('created_at', 'desc');
 
         // --- LOGIKA HAK AKSES (SCOPE) ---
@@ -51,6 +51,7 @@ class PenugasanService
                 'id'            => $item->id,
                 'jenis_tugas'   => $item->disposisi_id ? 'disposisi' : 'Operasi',
                 'disposisi_id'  => $item->disposisi_id,
+                'pengaduan_id'  => $item->disposisi->pengaduan->id,
                 'operasi_id'    => $item->operasi_id,
                 'anggota_id'    => $item->anggota_id,
                 'nama_anggota'  => $item->anggota->nama,
