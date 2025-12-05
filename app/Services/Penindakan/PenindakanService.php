@@ -48,6 +48,36 @@ class PenindakanService
     public function create(array $data): array
     {
         try {
+            // --- LOGIKA BARU DI SINI ---
+            $user = Auth::user();
+
+            // 1. Tentukan Siapa Pelapornya
+            // Jika user punya anggota_id (Role Anggota), paksa pakai ID dia.
+            // Jika tidak (Superadmin), pakai inputan dari form (bisa null).
+            $pelaporId = $user->anggota_id ?? ($data['anggota_pelapor_id'] ?? null);
+
+            // Update data pelapor utama
+            $data['anggota_pelapor_id'] = $pelaporId;
+
+            // 2. Pastikan Pelapor masuk ke dalam list Penugasan Anggota (Pivot)
+            if ($pelaporId) {
+                // Inisialisasi array jika belum ada
+                if (!isset($data['anggota'])) {
+                    $data['anggota'] = [];
+                }
+
+                // Masukkan ID pelapor ke array anggota jika belum ada (biar tidak duplikat)
+                if (!in_array($pelaporId, $data['anggota'])) {
+                    $data['anggota'][] = $pelaporId;
+
+                    // Opsional: Berikan peran default jika belum diset
+                    if (!isset($data['peran'][$pelaporId])) {
+                        $data['peran'][$pelaporId] = 'Pelapor';
+                    }
+                }
+            }
+            // --- END LOGIKA BARU ---
+
             return DB::transaction(function () use ($data) {
 
                 // Tentukan status PPNS awal
@@ -60,7 +90,8 @@ class PenindakanService
                     'pengaduan_id'       => $data['pengaduan_id'] ?? null,
                     'laporan_harian_id'  => $data['laporan_harian_id'] ?? null,
 
-                    'anggota_pelapor_id'  => $data['anggota_pelapor_id'] ?? null,
+                    // Field ini sekarang sudah otomatis terisi logic di atas
+                    'anggota_pelapor_id' => $data['anggota_pelapor_id'],
 
                     'jenis_penindakan'   => $data['jenis_penindakan'],
                     'uraian'             => $data['uraian'] ?? null,
@@ -103,11 +134,13 @@ class PenindakanService
                 }
 
                 $penugasanList = [];
+                // Logic ini sekarang akan otomatis menyertakan pelapor karena sudah kita inject di atas
                 if (!empty($data['anggota'])) {
                     foreach ($data['anggota'] as $anggotaId) {
                         $penugasan = PenindakanAnggota::create([
                             'penindakan_id' => $penindakan->id,
                             'anggota_id' => $anggotaId,
+                            // Menggunakan peran yang diset di atas atau inputan user
                             'peran'      => $data['peran'][$anggotaId] ?? null,
                             'created_by' => Auth::id(),
                         ]);
@@ -122,7 +155,7 @@ class PenindakanService
             });
         } catch (Exception $e) {
             Log::error('Gagal menambah penindakan', ['error' => $e->getMessage()]);
-            throw new CustomException('Gagal menambah penindakan', 422);
+            throw new CustomException('Gagal menambah penindakan : ' . $e->getMessage(), 422);
         }
     }
 
