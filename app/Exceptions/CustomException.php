@@ -11,6 +11,6 @@ class CustomException extends Exception
         return response()->json([
             'status' => 'Error',
             'message' => $this->getMessage()
-        ], $this->getCode() ?: 400);
+        ], $this->getCode() ?: 200);
     }
 }

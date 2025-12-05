@@ -31,11 +31,6 @@ class PenugasanRequest extends FormRequest
             'disposisi_id' => [
                 'nullable',
                 'exists:disposisi,id',
-                function ($attr, $value, $fail) {
-                    if (!$value && !$this->operasi_id) {
-                        $fail("disposisi_id atau operasi_id wajib diisi salah satu.");
-                    }
-                }
             ],
 
             'operasi_id' => ['nullable', 'exists:operasi,id'],
@@ -46,16 +41,6 @@ class PenugasanRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:anggota,id',
-
-                // unique per disposisi
-                Rule::unique('penugasan', 'anggota_id')
-                    ->where(fn($q) => $q->where('disposisi_id', $this->disposisi_id))
-                    ->ignore($id),
-
-                // unique per operasi
-                Rule::unique('penugasan', 'anggota_id')
-                    ->where(fn($q) => $q->where('operasi_id', $this->operasi_id))
-                    ->ignore($id),
             ],
 
             // PERAN

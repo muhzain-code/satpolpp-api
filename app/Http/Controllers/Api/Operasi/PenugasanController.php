@@ -6,6 +6,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operasi\PenugasanRequest;
+use App\Http\Requests\Operasi\PenugasanUpdateRequest;
 use App\Services\Operasi\PenugasanService;
 
 class PenugasanController extends Controller
@@ -67,7 +68,7 @@ class PenugasanController extends Controller
     /**
      * Memperbarui penugasan (Update)
      */
-    public function update(PenugasanRequest $request, $id)
+    public function update(PenugasanUpdateRequest $request, $id)
     {
         $result = $this->service->update($id, $request->validated());
 

@@ -141,18 +141,18 @@ class StatistikSeeder extends Seeder
             ]);
 
             // B. Insert Penugasan Anggota (Ambil 2 anggota acak)
-            if (count($anggotaIds) > 0) {
-                $tim = $faker->randomElements($anggotaIds, 2);
-                foreach ($tim as $idx => $anggotaId) {
-                    DB::table('penugasan')->insert([
-                        'operasi_id' => $operasiId,
-                        'anggota_id' => $anggotaId,
-                        'peran'      => ($idx == 0) ? 'Ketua Tim' : 'Anggota',
-                        'created_by' => $userId,
-                        'created_at' => now(),
-                    ]);
-                }
-            }
+            // if (count($anggotaIds) > 0) {
+            //     $tim = $faker->randomElements($anggotaIds, 2);
+            //     foreach ($tim as $idx => $anggotaId) {
+            //         DB::table('penugasan')->insert([
+            //             'operasi_id' => $operasiId,
+            //             'anggota_id' => $anggotaId,
+            //             'peran'      => ($idx == 0) ? 'Ketua Tim' : 'Anggota',
+            //             'created_by' => $userId,
+            //             'created_at' => now(),
+            //         ]);
+            //     }
+            // }
         }
 
         $this->command->info('Seeding selesai!');

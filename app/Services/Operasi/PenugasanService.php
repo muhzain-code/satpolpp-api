@@ -2,9 +2,9 @@
 
 namespace App\Services\Operasi;
 
+use App\Exceptions\CustomException;
 use App\Models\Operasi\Penugasan;
 use Illuminate\Support\Facades\DB;
-use App\Exceptions\CustomException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -51,7 +51,7 @@ class PenugasanService
                 'id'            => $item->id,
                 'jenis_tugas'   => $item->disposisi_id ? 'disposisi' : 'Operasi',
                 'disposisi_id'  => $item->disposisi_id,
-                'pengaduan_id'  => $item->disposisi->pengaduan->id,
+                'pengaduan_id'  => $item->disposisi?->pengaduan?->id,
                 'operasi_id'    => $item->operasi_id,
                 'anggota_id'    => $item->anggota_id,
                 'nama_anggota'  => $item->anggota->nama,
@@ -149,7 +149,8 @@ class PenugasanService
         $data = $penugasan->transform(function ($item) {
             return [
                 'id'            => $item->id,
-                'anggota_id'    => $item->anggota->id ?? null,
+                'anggota_id'    => $item->anggota_id ?? null,
+                'peran'         => $item->peran,
                 'nama'          => $item->anggota->nama ?? null,
                 'kode_anggota'  => $item->anggota->kode_anggota ?? null,
                 'unit'          => $item->anggota->unit->nama ?? null,
@@ -177,10 +178,11 @@ class PenugasanService
 
             // Validasi logic: Harus ada parent (disposisi ATAU Operasi)
             if (empty($data['disposisi_id']) && empty($data['operasi_id'])) {
-                throw new CustomException('Penugasan harus memiliki disposisi ID atau Operasi ID', 400);
+                throw new CustomException('Penugasan harus memiliki disposisi ID atau Operasi ID');
             }
 
             foreach ($data['anggota_id'] as $index => $anggotaId) {
+
                 // Gunakan updateOrCreate untuk menghindari error Duplicate Entry
                 // Jika anggota sudah ditugaskan di disposisi/operasi ini, update perannya saja.
                 $record = Penugasan::updateOrCreate(
@@ -197,7 +199,6 @@ class PenugasanService
 
                 $createdItems[] = $record;
             }
-
             DB::commit();
 
             return [
@@ -224,53 +225,96 @@ class PenugasanService
      */
     public function update(int $id, array $data)
     {
-        DB::beginTransaction();
+        return DB::transaction(function () use ($id, $data) {
+            try {
+                // ------------------------------------------------------------------
+                // 1. RESOLVE CONTEXT (Tentukan Parent: Disposisi atau Operasi)
+                // ------------------------------------------------------------------
 
-        try {
-            $penugasan = Penugasan::find($id);
+                // Cek apakah input memiliki ID parent. Jika tidak, ambil dari data existing ($id)
+                $disposisiId = $data['disposisi_id'] ?? null;
+                $operasiId   = $data['operasi_id'] ?? null;
 
-            if (!$penugasan) {
-                throw new CustomException('Data penugasan tidak ditemukan', 404);
-            }
-
-            // Validasi Logic: Jika user mengganti anggota, pastikan anggota baru belum ada di tim yang sama
-            if (isset($data['anggota_id']) && $data['anggota_id'] != $penugasan->anggota_id) {
-                $isExist = Penugasan::where('anggota_id', $data['anggota_id'])
-                    ->where(function ($q) use ($penugasan) {
-                        $q->where('disposisi_id', $penugasan->disposisi_id)
-                            ->orWhere('operasi_id', $penugasan->operasi_id);
-                    })
-                    ->where('id', '!=', $id) // Kecuali data ini sendiri
-                    ->exists();
-
-                if ($isExist) {
-                    throw new CustomException('Anggota tersebut sudah ada dalam penugasan ini', 400);
+                if (!$disposisiId && !$operasiId) {
+                    $existing = Penugasan::findOrFail($id); // Fail fast jika id tidak ada
+                    $disposisiId = $existing->disposisi_id;
+                    $operasiId   = $existing->operasi_id;
                 }
+
+                // Validasi: Pastikan minimal salah satu parent terisi
+                if (!$disposisiId && !$operasiId) {
+                    throw new CustomException('Gagal mendeteksi konteks Disposisi atau Operasi.');
+                }
+
+                // ------------------------------------------------------------------
+                // 2. PROSES UPDATE/CREATE (Upsert)
+                // ------------------------------------------------------------------
+
+                $processedAnggotaIds = [];
+                $updatedRecords = [];
+
+                foreach ($data['anggota_id'] as $index => $anggotaId) {
+
+                    // Ambil peran secara aman (cegah error undefined array key)
+                    $peran = $data['peran'][$index] ?? null;
+
+                    // Gunakan updateOrCreate agar kode lebih deklaratif
+                    $record = Penugasan::updateOrCreate(
+                        [
+                            // Kriteria pencarian (Composite Key)
+                            'disposisi_id' => $disposisiId,
+                            'operasi_id'   => $operasiId,
+                            'anggota_id'   => $anggotaId,
+                        ],
+                        [
+                            // Data yang diperbarui
+                            'peran' => $peran,
+                        ]
+                    );
+
+                    // Jika data baru dibuat (wasRecentlyCreated), isi created_by
+                    // Kita update manual karena updateOrCreate param ke-2 akan menimpa created_by jika ditaruh di sana
+                    if ($record->wasRecentlyCreated) {
+                        $record->update(['created_by' => Auth::id()]);
+                    }
+
+                    $updatedRecords[] = $record;
+                    $processedAnggotaIds[] = $anggotaId;
+                }
+
+                // ------------------------------------------------------------------
+                // 3. SYNC (Hapus anggota yang tidak ada di request)
+                // ------------------------------------------------------------------
+
+                // Query dasar berdasarkan parent
+                $query = Penugasan::query();
+
+                if ($disposisiId) {
+                    $query->where('disposisi_id', $disposisiId);
+                } else {
+                    $query->where('operasi_id', $operasiId);
+                }
+
+                // Hapus yang tidak termasuk dalam list yang baru diproses
+                $query->whereNotIn('anggota_id', $processedAnggotaIds)->delete();
+
+                return [
+                    'message' => 'Daftar penugasan berhasil disinkronisasi',
+                    'data'    => $updatedRecords,
+                ];
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                throw new CustomException('Data penugasan awal tidak ditemukan.', 404);
+            } catch (\Throwable $e) {
+                Log::error('Error sync penugasan: ' . $e->getMessage(), [
+                    'stack' => $e->getTraceAsString()
+                ]);
+
+                // Rethrow jika itu custom exception kita, jika bukan buat generic error 500
+                throw ($e instanceof CustomException)
+                    ? $e
+                    : new CustomException('Terjadi kesalahan saat memperbarui penugasan.', 500);
             }
-
-            // Lakukan update
-            $penugasan->update([
-                'anggota_id'   => $data['anggota_id'] ?? $penugasan->anggota_id, // Ambil single value, bukan array[0]
-                'peran'        => $data['peran'] ?? $penugasan->peran, // Ambil single value
-                'disposisi_id' => $data['disposisi_id'] ?? $penugasan->disposisi_id,
-                'operasi_id'   => $data['operasi_id'] ?? $penugasan->operasi_id,
-            ]);
-
-            DB::commit();
-
-            return [
-                'message' => 'Penugasan berhasil diperbarui',
-                'data'    => $penugasan,
-            ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error update penugasan: ' . $e->getMessage());
-
-            if ($e instanceof CustomException) {
-                throw $e;
-            }
-            throw new CustomException('Gagal memperbarui penugasan', 500);
-        }
+        });
     }
 
     public function delete($id)

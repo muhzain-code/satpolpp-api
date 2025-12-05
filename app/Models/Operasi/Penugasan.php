@@ -16,9 +16,9 @@ class Penugasan extends Model
     protected $table = 'penugasan';
 
     protected $fillable = [
-        'disposisi',
+        'disposisi_id',
         'operasi_id',
-        'anggota_id',
+        'anggota_id',   
         'peran',
         'created_by',
         'updated_by',
