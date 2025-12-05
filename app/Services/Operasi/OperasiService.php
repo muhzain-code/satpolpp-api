@@ -25,64 +25,133 @@ class OperasiService
     {
         $user = Auth::user();
 
+        // 1. Init Base Query
+        $query = Operasi::with('pengaduan')->orderBy('created_at', 'desc');
+
+        // 2. Filter Berdasarkan Role
         if ($user->hasRole('super_admin')) {
-            $operasi = Operasi::with('pengaduan')->orderBy('created_at', 'desc');
+            // Super admin melihat semua, tidak perlu filter tambahan
+        } elseif ($user->hasRole('komandan_regu')) {
+            $query->where('created_by', $user->id);
+        } elseif ($user->hasRole('anggota_regu')) {
+            // Cek validasi data anggota
+            if (!$user->anggota) {
+                throw new CustomException('Akun Anda tidak terhubung dengan data anggota.', 403);
+            }
+
+            // Hanya tampilkan operasi di mana anggota ini ditugaskan
+            $query->whereHas('penugasan', function ($q) use ($user) {
+                $q->where('anggota_id', $user->anggota->id);
+            });
         }
 
-        if ($user->hasRole('komandan_regu')) {
-            $operasi = Operasi::with('pengaduan')->where('created_by', $user->id)->orderBy('created_at', 'desc');
-        }
-
+        // 3. Filter Request (Pencarian & Sortir)
         if ($request->filled('pengaduan_id')) {
-            $operasi->where('pengaduan_id', $request->pengaduan_id);
+            $query->where('pengaduan_id', $request->pengaduan_id);
         }
 
         if ($request->filled('mulai')) {
-            $operasi->whereDate('mulai', '>=', $request->mulai);
+            $query->whereDate('mulai', '>=', $request->mulai);
         }
 
         if ($request->filled('selesai')) {
-            $operasi->whereDate('selesai', '<=', $request->selesai);
+            $query->whereDate('selesai', '<=', $request->selesai);
         }
 
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
-
-            $operasi->where(function ($q) use ($keyword) {
+            $query->where(function ($q) use ($keyword) {
                 $q->where('kode_operasi', 'like', "%{$keyword}%")
                     ->orWhere('judul', 'like', "%{$keyword}%");
             });
         }
 
-        $operasi = $operasi->paginate(
+        // 4. Eksekusi Pagination
+        $operasi = $query->paginate(
             $request['per_page'] ?? 10,
             ['*'],
             'page',
             $request['page'] ?? 1
         );
 
+        // 5. Transform Data
         $operasi->getCollection()->transform(function ($item) {
             return [
-                'id' => $item->id,
-                'kode_operasi' => $item->kode_operasi,
+                'id'                => $item->id,
+                'kode_operasi'      => $item->kode_operasi,
                 'nomor_surat_tugas' => $item->nomor_surat_tugas,
-                'surat_tugas_pdf' => $item->surat_tugas_pdf ? url(Storage::url($item->surat_tugas_pdf)) : null,
-                'pengaduan_id' => $item->pengaduan_id,
-                'judul' => $item->judul,
-                'uraian' => $item->uraian,
-                'mulai' => $item->mulai,
-                'selesai' => $item->selesai,
+                'surat_tugas_pdf'   => $item->surat_tugas_pdf ? url(Storage::url($item->surat_tugas_pdf)) : null,
+                'pengaduan_id'      => $item->pengaduan_id,
+                'judul'             => $item->judul,
+                'uraian'            => $item->uraian,
+                'mulai'             => $item->mulai,
+                'selesai'           => $item->selesai,
             ];
         });
 
         return [
             'message' => 'Operasi berhasil ditampilkan',
-            'data' => [
+            'data'    => [
                 'current_page' => $operasi->currentPage(),
                 'per_page'     => $operasi->perPage(),
                 'total'        => $operasi->total(),
                 'last_page'    => $operasi->lastPage(),
                 'items'        => $operasi->items()
+            ]
+        ];
+    }
+
+    public function getById($id)
+    {
+        $user = Auth::user();
+
+        // 1. Init Base Query dengan Relasi
+        $query = Operasi::with(['penugasan.anggota']);
+
+        // 2. Terapkan Validasi Role (Sama persis dengan getAll agar aman)
+        if ($user->hasRole('komandan_regu')) {
+            $query->where('created_by', $user->id);
+        } elseif ($user->hasRole('anggota_regu')) {
+            if (!$user->anggota) {
+                throw new CustomException('Akun Anda tidak terhubung dengan data anggota.', 403);
+            }
+            // Pastikan user hanya bisa melihat detail jika dia ditugaskan di operasi tersebut
+            $query->whereHas('penugasan', function ($q) use ($user) {
+                $q->where('anggota_id', $user->anggota->id);
+            });
+        }
+
+        // 3. Cari Data
+        $operasi = $query->find($id);
+
+        if (!$operasi) {
+            throw new CustomException('Data operasi tidak ditemukan atau Anda tidak memiliki akses.', 404);
+        }
+
+        // 4. Transform Penugasan
+        $penugasan = $operasi->penugasan->map(function ($p) {
+            return [
+                'id'         => $p->id,
+                'anggota_id' => $p->anggota_id,
+                'nama'       => $p->anggota->nama ?? null,
+                'peran'      => $p->peran,
+            ];
+        });
+
+        // 5. Return Data
+        return [
+            'message' => 'Operasi berhasil ditemukan',
+            'data'    => [
+                'id'                => $operasi->id,
+                'kode_operasi'      => $operasi->kode_operasi,
+                'nomor_surat_tugas' => $operasi->nomor_surat_tugas,
+                'surat_tugas_pdf'   => $operasi->surat_tugas_pdf ? url(Storage::url($operasi->surat_tugas_pdf)) : null,
+                'pengaduan_id'      => $operasi->pengaduan_id,
+                'judul'             => $operasi->judul,
+                'uraian'            => $operasi->uraian,
+                'mulai'             => $operasi->mulai,
+                'selesai'           => $operasi->selesai,
+                'penugasan'         => $penugasan,
             ]
         ];
     }
@@ -169,54 +238,7 @@ class OperasiService
     }
 
 
-    public function getById($id)
-    {
-        $user = Auth::user();
 
-        if ($user->hasRole('super_admin')) {
-            $operasi = Operasi::with(['penugasan.anggota'])->find($id);
-        }
-
-        if ($user->hasRole('komandan_regu')) {
-            $operasi = Operasi::with(['penugasan.anggota'])
-                ->where('created_by', $user->id)
-                ->find($id);
-        }
-
-        if (!$operasi) {
-            throw new CustomException('Data operasi tidak ditemukan', 404);
-        }
-
-        // mapping penugasan
-        $penugasan = $operasi->penugasan->map(function ($p) {
-            return [
-                'id'         => $p->id,
-                'anggota_id' => $p->anggota_id,
-                'nama'       => $p->anggota->nama ?? null,
-                'peran'      => $p->peran,
-            ];
-        });
-
-        $data = [
-            'id' => $operasi->id,
-            'kode_operasi' => $operasi->kode_operasi,
-            'nomor_surat_tugas' => $operasi->nomor_surat_tugas,
-            'surat_tugas_pdf' => $operasi->surat_tugas_pdf ? url(Storage::url($operasi->surat_tugas_pdf)) : null,
-            'pengaduan_id' => $operasi->pengaduan_id,
-            'judul' => $operasi->judul,
-            'uraian' => $operasi->uraian,
-            'mulai' => $operasi->mulai,
-            'selesai' => $operasi->selesai,
-
-            // tambahkan ini
-            'penugasan' => $penugasan,
-        ];
-
-        return [
-            'message' => 'Operasi berhasil ditemukan',
-            'data' => $data
-        ];
-    }
 
 
     public function update($data, $id)

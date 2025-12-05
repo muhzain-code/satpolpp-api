@@ -14,38 +14,107 @@ class DisposisiService
 {
     public function getAll($filter)
     {
-        $disposisi = Disposisi::with('pengaduan', 'komandan')->orderBy('created_at', 'desc');
+        $user = Auth::user();
 
-        if (isset($filter['pengaduan_id'])) {
-            $disposisi->where('pengaduan_id', $filter['pengaduan_id']);
+        // 1. Inisialisasi Query Dasar
+        $query = Disposisi::with(['pengaduan', 'komandan'])
+            ->orderBy('created_at', 'desc');
+
+        // 2. Terapkan Batasan Role
+        if ($user->hasRole('komandan_regu')) {
+            if (!$user->anggota || !$user->anggota->unit_id) {
+                throw new CustomException('User tidak terkait dengan anggota atau unit', 403);
+            }
+            $query->where('komandan_id', $user->id);
         }
 
-        if (isset($filter['komandan_id'])) {
-            $disposisi->where('komandan_id', $filter['komandan_id']);
+        // 3. Terapkan Filter Tambahan
+        if (!empty($filter['pengaduan_id'])) {
+            $query->where('pengaduan_id', $filter['pengaduan_id']);
         }
 
-        $disposisi = $disposisi->paginate($filter['per_page'], ['*'], 'page', $filter['page']);
+        if (!empty($filter['komandan_id'])) {
+            $query->where('komandan_id', $filter['komandan_id']);
+        }
 
+        // 4. Eksekusi Pagination
+        $disposisi = $query->paginate($filter['per_page'] ?? 10, ['*'], 'page', $filter['page'] ?? 1);
+
+        // 5. Transform Data
         $disposisi->getCollection()->transform(function ($item) {
             return [
-                'id' => $item->id,
+                'id'           => $item->id,
                 'pengaduan_id' => $item->pengaduan_id,
-                'nomor_tiket' => $item->pengaduan->nomor_tiket,
-                'komandan_id' => $item->komandan->name ?? null,
-                'catatan' => $item->catatan,
-                'batas_waktu' => $item->batas_waktu,
-                'status' => $item->status,
+                'nomor_tiket'  => $item->pengaduan->nomor_tiket ?? null,
+                'komandan_id'  => $item->komandan->name ?? null,
+                'catatan'      => $item->catatan,
+                'batas_waktu'  => $item->batas_waktu,
+                'status'       => $item->status,
             ];
         });
 
         return [
             'message' => 'Disposisi berhasil ditampilkan',
-            'data' => [
+            'data'    => [
                 'current_page' => $disposisi->currentPage(),
-                'per_page' => $disposisi->perPage(),
-                'total' => $disposisi->total(),
-                'last_page' => $disposisi->lastPage(),
-                'items' => $disposisi->items()
+                'per_page'     => $disposisi->perPage(),
+                'total'        => $disposisi->total(),
+                'last_page'    => $disposisi->lastPage(),
+                'items'        => $disposisi->items()
+            ]
+        ];
+    }
+
+    public function getById($id)
+    {
+        $user = Auth::user();
+
+        // 1. Inisialisasi Query Dasar dengan Relasi Lengkap
+        $query = Disposisi::with([
+            'pengaduan.kategoriPengaduan',
+            'pengaduan.kecamatan',
+            'pengaduan.desa',
+            'komandan'
+        ]);
+
+        // 2. Terapkan Batasan Role (Sama persis dengan getAll)
+        // Ini memastikan user hanya bisa getById data milik unitnya sendiri
+        if ($user->hasRole('komandan_regu')) {
+            if (!$user->anggota || !$user->anggota->unit_id) {
+                throw new CustomException('User tidak terkait dengan anggota atau unit', 403);
+            }
+            $query->where('komandan_id', $user->id);
+        }
+
+        // 3. Cari Data (Find akan otomatis menyertakan where clause di atas jika ada)
+        $disposisi = $query->find($id);
+
+        if (!$disposisi) {
+            throw new CustomException('Data disposisi tidak ditemukan atau Anda tidak memiliki akses', 404);
+        }
+
+        // 4. Transform Data
+        $pengaduan = $disposisi->pengaduan;
+
+        return [
+            'message' => 'Disposisi berhasil ditemukan',
+            'data'    => [
+                'id'        => $disposisi->id,
+                'pengaduan' => $pengaduan ? [
+                    'id'          => $pengaduan->id,
+                    'nomor_tiket' => $pengaduan->nomor_tiket,
+                    'kategori'    => $pengaduan->kategoriPengaduan->nama ?? null,
+                    'deskripsi'   => $pengaduan->deskripsi,
+                    'lat'         => $pengaduan->lat,
+                    'lng'         => $pengaduan->lng,
+                    'kecamatan'   => $pengaduan->kecamatan->nama ?? null,
+                    'desa'        => $pengaduan->desa->nama ?? null,
+                ] : null,
+                'komandan_id'   => $disposisi->komandan_id ?? null,
+                'nama_komandan' => $disposisi->komandan->name ?? null,
+                'catatan'       => $disposisi->catatan,
+                'batas_waktu'   => $disposisi->batas_waktu,
+                'status'        => $disposisi->status,
             ]
         ];
     }
@@ -80,44 +149,6 @@ class DisposisiService
 
             throw new CustomException('Gagal membuat disposisi', 422);
         }
-    }
-
-    public function getById($id)
-    {
-        $disposisi = Disposisi::with([
-            'pengaduan.kategoriPengaduan',
-            'pengaduan.kecamatan',
-            'pengaduan.desa',
-            'komandan'
-        ])->find($id);
-
-        if (!$disposisi) {
-            throw new CustomException('Data disposisi tidak ditemukan', 404);
-        }
-
-        $pengaduan = $disposisi->pengaduan;
-
-        return [
-            'message' => 'Disposisi berhasil ditemukan',
-            'data' => [
-                'id' => $disposisi->id,
-                'pengaduan' => $pengaduan ? [
-                    'id' => $pengaduan->id,
-                    'nomor_tiket' => $pengaduan->nomor_tiket,
-                    'kategori' => $pengaduan->kategoriPengaduan->nama ?? null,
-                    'deskripsi' => $pengaduan->deskripsi,
-                    'lat' => $pengaduan->lat,
-                    'lng' => $pengaduan->lng,
-                    'kecamatan' => $pengaduan->kecamatan->nama ?? null,
-                    'desa' => $pengaduan->desa->nama ?? null,
-                ] : null,
-                'komandan_id' => $disposisi->komandan_id ?? null,
-                'nama_komandan' => $disposisi->komandan->name ?? null,
-                'catatan' => $disposisi->catatan,
-                'batas_waktu' => $disposisi->batas_waktu,
-                'status' => $disposisi->status,
-            ]
-        ];
     }
 
     public function update($data, $id)
