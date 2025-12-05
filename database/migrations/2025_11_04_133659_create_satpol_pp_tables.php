@@ -373,14 +373,32 @@ return new class extends Migration
 
             $table->text('uraian')->nullable();
 
-            // Validasi PPNS (aktif hanya saat proses hukum)
+            $table->enum('status_validasi_komandan', ['menunggu', 'ditolak', 'revisi', 'disetujui'])
+                ->default('menunggu')
+                ->comment('Status approval awal oleh Komandan');
+
+            $table->text('catatan_validasi_komandan')->nullable(); // Instruksi revisi atau alasan tolak
+            $table->foreignId('komandan_validator_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('tanggal_validasi_komandan')->nullable();
+
+            // =====================================================================
+            // TIER 2: VALIDASI PPNS (OPSIONAL)
+            // =====================================================================
+            // Flag ini HANYA diset oleh Komandan saat status 'disetujui'.
+            // false = Kasus selesai di tempat (Teguran/Pembinaan).
+            // true  = Kasus lanjut ke pemberkasan (PPNS).
             $table->boolean('butuh_validasi_ppns')->default(false);
-            $table->enum('status_validasi_ppns', ['menunggu', 'ditolak', 'revisi', 'disetujui'])->nullable();
+
+            // Status ini baru terisi (menunggu) jika butuh_validasi_ppns = true.
+            $table->enum('status_validasi_ppns', ['menunggu', 'ditolak', 'revisi', 'disetujui'])
+                ->nullable()
+                ->comment('Hanya aktif jika diteruskan oleh komandan');
+
             $table->text('catatan_validasi_ppns')->nullable();
             $table->foreignId('ppns_validator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('tanggal_validasi_ppns')->nullable();
 
-            // Audit
+            // --- AUDIT TRAIL ---
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
@@ -388,8 +406,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            // INDEXING UNTUK PERFORM
             $table->index(['operasi_id', 'pengaduan_id', 'laporan_harian_id']);
+            $table->index(['status_validasi_komandan']); // Sering difilter di dashboard
             $table->index(['status_validasi_ppns']);
+            $table->index(['butuh_validasi_ppns']);
         });
 
         Schema::create('penindakan_anggota', function (Blueprint $table) {
