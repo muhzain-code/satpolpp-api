@@ -19,17 +19,16 @@ class PenindakanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Salah satu wajib diisi (operasi / pengaduan / laporan_harian)
+
+            // --- RELASI DASAR ---
             'operasi_id'         => ['nullable', 'integer', 'exists:operasi,id'],
             'pengaduan_id'       => ['nullable', 'integer', 'exists:pengaduan,id'],
             'laporan_harian_id'  => ['nullable', 'integer', 'exists:laporan_harian,id'],
 
-            'anggota_pelapor_id'  => ['nullable', 'integer', 'exists:anggota,id'],
+            'anggota_pelapor_id' => ['nullable', 'integer', 'exists:anggota,id'],
 
-            // Jenis penindakan
             'jenis_penindakan'   => ['required', 'in:teguran,pembinaan,penyitaan,proses_hukum'],
 
-            // Lokasi
             'kecamatan_id'       => ['nullable', 'integer', 'exists:kecamatan,id'],
             'desa_id'            => ['nullable', 'integer', 'exists:desa,id'],
             'lokasi'             => ['nullable', 'string'],
@@ -38,23 +37,30 @@ class PenindakanRequest extends FormRequest
 
             'uraian'             => ['nullable', 'string'],
 
-            // PPNS (aktif hanya saat jenis_penindakan = proses_hukum)
             'butuh_validasi_ppns'   => ['integer', 'in:0,1'],
             'status_validasi_ppns'  => ['nullable', 'in:menunggu,ditolak,revisi,disetujui'],
             'catatan_validasi_ppns' => ['nullable', 'string'],
             'ppns_validator_id'     => ['nullable', 'integer', 'exists:users,id'],
 
-            // REGULASI — jika diperlukan
+            // --- REGULASI ---
             'regulasi'                   => ['nullable', 'array'],
             'regulasi.*.regulasi_id'     => ['required_with:regulasi', 'integer', 'exists:regulasi,id'],
             'regulasi.*.pasal_dilanggar' => ['nullable'],
 
-            // LAMPIRAN
-            'lampiran'               => ['nullable', 'array'],
-            'lampiran.*.path_file'   => ['required', 'string', 'max:1000'],
-            'lampiran.*.nama_file'   => ['nullable', 'string', 'max:255'],
-            'lampiran.*.jenis'       => ['nullable', 'in:foto,video,dokumen'],
+            // --- LAMPIRAN (MENDUKUNG FILE & PATH STRING) ---
+            'lampiran'                 => ['nullable', 'array'],
 
+            // Jika upload file baru
+            'lampiran.*.file'          => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png'],
+
+            // Jika file lama (sudah tersimpan)
+            'lampiran.*.path_file'     => ['nullable', 'string', 'max:1000'],
+
+            // Metadata lampiran
+            'lampiran.*.nama_file'     => ['nullable', 'string', 'max:255'],
+            'lampiran.*.jenis'         => ['nullable', 'in:foto,video,dokumen'],
+
+            // --- ANGGOTA ---
             'anggota'       => 'nullable|array',
             'anggota.*'     => 'integer|exists:anggota,id',
 
