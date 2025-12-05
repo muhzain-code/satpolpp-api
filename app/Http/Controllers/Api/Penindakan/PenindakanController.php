@@ -6,6 +6,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Penindakan\PenindakanRequest;
+use App\Http\Requests\Penindakan\ValidasiKomandanRequest;
 use App\Services\Penindakan\PenindakanService;
 use App\Http\Requests\Penindakan\ValidasiPpnsRequest;
 
@@ -60,7 +61,7 @@ class PenindakanController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function validasiKomandan(ValidasiPpnsRequest $request, $id)
+    public function validasiKomandan(ValidasiKomandanRequest $request, $id)
     {
         $result = $this->service->validasiKomandan($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
