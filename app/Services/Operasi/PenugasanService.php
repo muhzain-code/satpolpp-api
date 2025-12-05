@@ -134,9 +134,9 @@ class PenugasanService
     {
         $user = Auth::user();
 
-        // Ambil data penugasan berdasarkan pengaduan_id
+        // Ambil data penugasan berdasarkan disposisi_id
         $penugasan = Penugasan::with(['anggota.unit', 'anggota.jabatan'])
-            ->where('pengaduan_id', $id)
+            ->where('disposisi_id', $id)
             ->get();
 
         // Jika tidak ada data

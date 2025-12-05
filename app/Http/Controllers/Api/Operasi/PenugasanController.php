@@ -25,8 +25,8 @@ class PenugasanController extends Controller
         $perPage = $request->input('per_page', 10);
         $currentPage = $request->input('page', 1);
 
-        // 2. Ambil filter yang diizinkan (pengaduan_id & operasi_id)
-        $filters = $request->only(['pengaduan_id', 'operasi_id']);
+        // 2. Ambil filter yang diizinkan (disposisi_id & operasi_id)
+        $filters = $request->only(['disposisi_id', 'operasi_id']);
 
         // 3. Panggil service
         $result = $this->service->getAll($perPage, $currentPage, $filters);
