@@ -203,12 +203,14 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     Route::middleware('role:super_admin|anggota_regu|komandan_regu')->group(function () {
         // Laporan Harian Resource
         Route::prefix('laporan')->name('laporan.')->group(function () {
-            Route::get('/', [LaporanHarianController::class, 'getAll'])->name('index');
+            Route::get('/', [LaporanHarianController::class, 'index'])->name('index');
             Route::post('/', [LaporanHarianController::class, 'store'])->name('store');
             Route::get('{id}', [LaporanHarianController::class, 'show'])->name('show');
             Route::put('{id}', [LaporanHarianController::class, 'update'])->name('update');
             Route::delete('{id}', [LaporanHarianController::class, 'destroy'])->name('destroy');
         });
+
+        Route::get('validasi-laporan', [LaporanHarianController::class, 'validasiKomandan'])->middleware('role:super_admin|komandan_regu');
     });
     /**
      * ==========================
@@ -377,10 +379,10 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
      * Role: komandan_regu
      * ==========================
      */
-    Route::middleware('role:super_admin|komandan_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
-        Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
-        Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
-    });
+    // Route::middleware('role:super_admin|komandan_regu|anggota_regu')->prefix('list-validasi')->name('list-validasi.')->group(function () {
+    //     Route::get('/', [LaporanHarianController::class, 'getValidasi'])->name('list-validasi');
+    //     Route::put('/{id}', [LaporanHarianController::class, 'pressesValidasi'])->name('proses-validasi');
+    // });
 
     /**
      * ==========================

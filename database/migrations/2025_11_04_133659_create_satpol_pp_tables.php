@@ -316,6 +316,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('anggota_id')->constrained('anggota')->cascadeOnDelete();
             $table->enum('jenis', ['aman', 'insiden'])->default('aman');
+            $table->boolean('urgent')->default(false);
             $table->text('catatan')->nullable();
 
             $table->decimal('lat', 10, 7)->nullable();
@@ -324,12 +325,10 @@ return new class extends Migration
             $table->foreignId('kategori_pelanggaran_id')->nullable()->constrained('kategori_pengaduan')->nullOnDelete();
             $table->foreignId('regulasi_indikatif_id')->nullable()->constrained('regulasi')->nullOnDelete();
 
-            $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->nullable();
+            $table->enum('severity', ['rendah', 'sedang', 'tinggi'])->default('rendah');
             $table->enum('status_validasi', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
             $table->string('catatan_validasi')->nullable();
             $table->foreignId('divalidasi_oleh')->nullable()->constrained('users')->nullOnDelete();
-
-            $table->boolean('telah_dieskalasi')->default(false);
 
             $table->timestamps();
             $table->softDeletes();

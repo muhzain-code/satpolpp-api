@@ -37,6 +37,11 @@ class LaporanHarianRequest extends FormRequest
                 $isPost ? 'required' : 'sometimes',
                 'in:aman,insiden'
             ],
+            
+            'urgent' => [
+                $isPost ? 'required' : 'sometimes',
+                'boolean'
+            ],
 
             'catatan' => ['nullable', 'string'],
             'lat'     => ['nullable', 'numeric', 'between:-90,90'],
@@ -62,7 +67,7 @@ class LaporanHarianRequest extends FormRequest
             'lampiran.*' => [
                 'file',
                 'max:10240',
-                'mimes:jpg,jpeg,png,mp4,mov,pdf,doc,docx'
+                'mimes:jpg,jpeg,png,mp4'
             ],
         ];
     }
