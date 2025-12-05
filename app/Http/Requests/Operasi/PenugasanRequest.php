@@ -24,7 +24,7 @@ class PenugasanRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id'); // untuk update
+        $id = $this->route('id'); 
 
         return [
             // wajib salah satu

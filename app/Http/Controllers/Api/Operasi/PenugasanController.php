@@ -45,6 +45,13 @@ class PenugasanController extends Controller
 
         return $this->successResponse($result['data'], $result['message']);
     }
+    public function listAnggotaPenugasan($id)
+    {
+        // Service sudah menangani logic 404 dan hak akses
+        $result = $this->service->listAnggotaPenugasan($id);
+
+        return $this->successResponse($result['data'], $result['message']);
+    }
 
     /**
      * Membuat penugasan baru (Create)

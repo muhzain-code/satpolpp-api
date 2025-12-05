@@ -348,6 +348,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
     Route::middleware('role:super_admin|anggota_regu|komandan_regu')->group(function () {
         Route::get('penugasan', [PenugasanController::class, 'index']);
         Route::get('penugasan/{id}', [PenugasanController::class, 'show']);
+        Route::get('list-anggota-penugasan/{id}', [PenugasanController::class, 'listAnggotaPenugasan']);
+        
     });
     Route::middleware('role:super_admin|anggota_regu')->group(function () {
         Route::prefix('progress')->name('progress.')->group(function () {
