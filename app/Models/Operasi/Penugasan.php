@@ -16,7 +16,7 @@ class Penugasan extends Model
     protected $table = 'penugasan';
 
     protected $fillable = [
-        'pengaduan_id',
+        'disposisi',
         'operasi_id',
         'anggota_id',
         'peran',
@@ -29,9 +29,9 @@ class Penugasan extends Model
     {
         return $this->belongsTo(Operasi::class);
     }
-    public function pengaduan()
+    public function disposisi()
     {
-        return $this->belongsTo(Pengaduan::class);
+        return $this->belongsTo(Disposisi::class);
     }
 
     public function operasiActive()

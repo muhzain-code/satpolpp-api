@@ -14,7 +14,7 @@ class PenugasanService
     public function getAll($perPage, $currentPage, array $filters = []): array
     {
         $user = Auth::user();
-        $query = Penugasan::with(['anggota', 'pengaduan', 'operasi', 'creator'])
+        $query = Penugasan::with(['anggota', 'disposisi', 'operasi', 'creator'])
             ->orderBy('created_at', 'desc');
 
         // --- LOGIKA HAK AKSES (SCOPE) ---
@@ -35,8 +35,8 @@ class PenugasanService
 
         // --- FILTER PARAMETER ---
 
-        if (!empty($filters['pengaduan_id'])) {
-            $query->where('pengaduan_id', $filters['pengaduan_id']);
+        if (!empty($filters['disposisi_id'])) {
+            $query->where('disposisi_id', $filters['disposisi_id']);
         }
 
         if (!empty($filters['operasi_id'])) {
@@ -49,8 +49,8 @@ class PenugasanService
         $penugasan->getCollection()->transform(function ($item) {
             return [
                 'id'            => $item->id,
-                'jenis_tugas'   => $item->pengaduan_id ? 'Pengaduan' : 'Operasi',
-                'pengaduan_id'  => $item->pengaduan_id,
+                'jenis_tugas'   => $item->disposisi_id ? 'disposisi' : 'Operasi',
+                'disposisi_id'  => $item->disposisi_id,
                 'operasi_id'    => $item->operasi_id,
                 'anggota_id'    => $item->anggota_id,
                 'nama_anggota'  => $item->anggota->nama,
@@ -80,7 +80,7 @@ class PenugasanService
         $user = Auth::user();
 
         // Mulai query
-        $query = Penugasan::with(['anggota.unit', 'anggota.jabatan', 'pengaduan', 'operasi'])
+        $query = Penugasan::with(['anggota.unit', 'anggota.jabatan', 'disposisi', 'operasi'])
             ->where('id', $id);
 
         // --- LOGIKA HAK AKSES (SCOPE) ---
@@ -108,7 +108,7 @@ class PenugasanService
         // Transformasi single object
         $data = [
             'id'             => $penugasan->id,
-            'pengaduan_id'   => $penugasan->pengaduan_id,
+            'disposisi_id'   => $penugasan->disposisi_id,
             'operasi_id'     => $penugasan->operasi_id,
             'peran'          => $penugasan->peran,
             'anggota' => [
@@ -119,8 +119,8 @@ class PenugasanService
                 'jabatan'       => $penugasan->anggota->jabatan?->nama,
                 'foto'          => $penugasan->anggota->foto ? url(Storage::url($penugasan->anggota->foto)) : null,
             ],
-            'konteks_tugas' => $penugasan->pengaduan_id
-                ? ['tipe' => 'Pengaduan', 'detail' => $penugasan->pengaduan]
+            'konteks_tugas' => $penugasan->disposisi_id
+                ? ['tipe' => 'disposisi', 'detail' => $penugasan->disposisi]
                 : ['tipe' => 'Operasi', 'detail' => $penugasan->operasi],
         ];
 
@@ -141,17 +141,17 @@ class PenugasanService
         try {
             $createdItems = [];
 
-            // Validasi logic: Harus ada parent (Pengaduan ATAU Operasi)
-            if (empty($data['pengaduan_id']) && empty($data['operasi_id'])) {
-                throw new CustomException('Penugasan harus memiliki Pengaduan ID atau Operasi ID', 400);
+            // Validasi logic: Harus ada parent (disposisi ATAU Operasi)
+            if (empty($data['disposisi_id']) && empty($data['operasi_id'])) {
+                throw new CustomException('Penugasan harus memiliki disposisi ID atau Operasi ID', 400);
             }
 
             foreach ($data['anggota_id'] as $index => $anggotaId) {
                 // Gunakan updateOrCreate untuk menghindari error Duplicate Entry
-                // Jika anggota sudah ditugaskan di pengaduan/operasi ini, update perannya saja.
+                // Jika anggota sudah ditugaskan di disposisi/operasi ini, update perannya saja.
                 $record = Penugasan::updateOrCreate(
                     [
-                        'pengaduan_id' => $data['pengaduan_id'] ?? null,
+                        'disposisi_id' => $data['disposisi_id'] ?? null,
                         'operasi_id'   => $data['operasi_id'] ?? null,
                         'anggota_id'   => $anggotaId,
                     ],
@@ -203,7 +203,7 @@ class PenugasanService
             if (isset($data['anggota_id']) && $data['anggota_id'] != $penugasan->anggota_id) {
                 $isExist = Penugasan::where('anggota_id', $data['anggota_id'])
                     ->where(function ($q) use ($penugasan) {
-                        $q->where('pengaduan_id', $penugasan->pengaduan_id)
+                        $q->where('disposisi_id', $penugasan->disposisi_id)
                             ->orWhere('operasi_id', $penugasan->operasi_id);
                     })
                     ->where('id', '!=', $id) // Kecuali data ini sendiri
@@ -218,7 +218,7 @@ class PenugasanService
             $penugasan->update([
                 'anggota_id'   => $data['anggota_id'] ?? $penugasan->anggota_id, // Ambil single value, bukan array[0]
                 'peran'        => $data['peran'] ?? $penugasan->peran, // Ambil single value
-                'pengaduan_id' => $data['pengaduan_id'] ?? $penugasan->pengaduan_id,
+                'disposisi_id' => $data['disposisi_id'] ?? $penugasan->disposisi_id,
                 'operasi_id'   => $data['operasi_id'] ?? $penugasan->operasi_id,
             ]);
 
