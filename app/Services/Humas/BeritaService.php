@@ -4,6 +4,7 @@ namespace App\Services\Humas;
 
 use App\Exceptions\CustomException;
 use App\Models\Humas\Berita;
+use App\Services\OptimizePhotoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,18 +13,30 @@ use Illuminate\Support\Str;
 
 class BeritaService
 {
+
+    protected OptimizePhotoService $optimizeService;
+
+    public function __construct(OptimizePhotoService $optimizeService)
+    {
+        $this->optimizeService = $optimizeService;
+    }
     private function generateUniqueSlug($baseSlug, $ignoreId = null)
     {
         $slug = $baseSlug;
-        $counter = 1;
+        $isFirstCollision = true;
 
-        // Cek ke tabel 'berita' bukan 'konten' lagi
         while (Berita::where('slug', $slug)
             ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
             ->exists()
         ) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
+            if ($isFirstCollision) {
+                $randomHash = Str::random(6);
+                $slug = $baseSlug . '-' . $randomHash;
+                $isFirstCollision = false;
+            } else {
+                $randomHash = Str::random(6);
+                $slug = Str::beforeLast($slug, '-') . '-' . $randomHash;
+            }
         }
 
         return $slug;
@@ -69,8 +82,9 @@ class BeritaService
             $userId = Auth::id();
             $path = null;
 
-            if (isset($data['path_gambar']) && $data['path_gambar']->isValid()) {
-                $path = $data['path_gambar']->store('berita', 'public'); // Folder penyimpanan disesuaikan
+            if (isset($data['path_gambar']) && $data['path_gambar'] instanceof \Illuminate\Http\UploadedFile && $data['path_gambar']->isValid()) {
+                $uploadedFile = $data['path_gambar'];
+                $path = $this->optimizeService->optimizeImage($uploadedFile, 'berita');
             }
 
             $slug = Str::slug($data['judul']);
@@ -130,15 +144,15 @@ class BeritaService
                 throw new CustomException('Data berita tidak ditemukan');
             }
 
-            // Handle Upload Gambar
+
+            $imagePath = $berita->path_gambar;
             if (isset($data['path_gambar']) && $data['path_gambar'] instanceof \Illuminate\Http\UploadedFile) {
-                // Hapus gambar lama jika ada
                 if ($berita->path_gambar && Storage::disk('public')->exists($berita->path_gambar)) {
                     Storage::disk('public')->delete($berita->path_gambar);
                 }
-                $data['path_gambar'] = $data['path_gambar']->store('berita', 'public');
-            } else {
-                $data['path_gambar'] = $berita->path_gambar;
+
+                $uploadedFile = $data['path_gambar'];
+                $imagePath= $this->optimizeService->optimizeImage($uploadedFile, 'berita');
             }
 
             // Handle Published At
@@ -154,7 +168,7 @@ class BeritaService
 
             // Handle Slug
             $newSlug = $berita->slug;
-            if ($berita->judul !== $data['judul']) {
+            if (isset($data['judul']) && $berita->judul !== $data['judul']) {
                 $newSlug = Str::slug($data['judul']);
                 $newSlug = $this->generateUniqueSlug($newSlug, $berita->id);
             }
@@ -164,7 +178,7 @@ class BeritaService
                 'slug'             => $newSlug,
                 'Kategori'         => $data['kategori'],
                 'isi'              => $data['isi'],
-                'path_gambar'      => $data['path_gambar'],
+                'path_gambar'      => $imagePath,
                 'tampilkan_publik' => $data['tampilkan_publik'],
                 'published_at'     => $publishedAt,
                 'updated_by'       => $userId,

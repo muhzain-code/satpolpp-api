@@ -401,8 +401,7 @@ class LaporanHarianService
         ])
             ->where('jenis', 'insiden')
             ->where('telah_dieskalasi', false)
-            ->whereNull('divalidasi_oleh')
-            ->where('severity', '<>', 'rendah');
+            ->where('severity','tinggi');
 
         if ($user->hasRole('super_admin')) {
         } else if ($user->hasRole('komandan_regu')) {
@@ -425,7 +424,6 @@ class LaporanHarianService
         }
 
         $laporan = $query
-            ->orderByRaw("FIELD(severity, 'tinggi', 'sedang') ASC")
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $currentPage);
 
