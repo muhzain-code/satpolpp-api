@@ -186,6 +186,8 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
 
     // Penindakan CRUD (super_admin | komandan_regu only)
     Route::middleware('role:super_admin|anggota_regu')->prefix('penindakan')->name('penindakan.')->group(function () {
+        
+        Route::post('/validasi-komandan/{id}', [PenindakanController::class, 'validasiKomandan'])->name('validasiKomandan');
         Route::post('/', [PenindakanController::class, 'store'])->name('store');
         Route::put('{id}', [PenindakanController::class, 'update'])->name('update');
         Route::delete('{id}', [PenindakanController::class, 'destroy'])->name('destroy');

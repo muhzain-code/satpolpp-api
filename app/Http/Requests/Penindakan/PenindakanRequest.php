@@ -37,10 +37,10 @@ class PenindakanRequest extends FormRequest
 
             'uraian'             => ['nullable', 'string'],
 
-            'butuh_validasi_ppns'   => ['integer', 'in:0,1'],
-            'status_validasi_ppns'  => ['nullable', 'in:menunggu,ditolak,revisi,disetujui'],
-            'catatan_validasi_ppns' => ['nullable', 'string'],
-            'ppns_validator_id'     => ['nullable', 'integer', 'exists:users,id'],
+            // 'butuh_validasi_ppns'   => ['integer', 'in:0,1'],
+            // 'status_validasi_ppns'  => ['nullable', 'in:menunggu,ditolak,revisi,disetujui'],
+            // 'catatan_validasi_ppns' => ['nullable', 'string'],
+            // 'ppns_validator_id'     => ['nullable', 'integer', 'exists:users,id'],
 
             // --- REGULASI ---
             'regulasi'                   => ['nullable', 'array'],

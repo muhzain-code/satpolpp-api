@@ -59,4 +59,10 @@ class PenindakanController extends Controller
         $result = $this->service->validasiPPNS($id, $request->validated());
         return $this->successResponse($result['data'], $result['message']);
     }
+
+    public function validasiKomandan(ValidasiPpnsRequest $request, $id)
+    {
+        $result = $this->service->validasiKomandan($id, $request->validated());
+        return $this->successResponse($result['data'], $result['message']);
+    }
 }
