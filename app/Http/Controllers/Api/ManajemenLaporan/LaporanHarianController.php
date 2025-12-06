@@ -82,7 +82,7 @@ class LaporanHarianController extends Controller
 
     /**
      * Validasi Komandan (Setujui / Tolak / Revisi)
-     * Endpoint: POST /api/laporan-harian/{id}/validasi-komandan
+     * Endpoint: PUT /api/laporan-harian/{id}/validasi-komandan
      */
     public function validasiKomandan(AccByKomandanRequest $request, string $id): JsonResponse
     {

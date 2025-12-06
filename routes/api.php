@@ -210,7 +210,7 @@ Route::middleware(['auth:sanctum', 'throttle:200,1'])->group(function () {
             Route::delete('{id}', [LaporanHarianController::class, 'destroy'])->name('destroy');
         });
 
-        Route::get('validasi-laporan', [LaporanHarianController::class, 'validasiKomandan'])->middleware('role:super_admin|komandan_regu');
+        Route::put('validasi-laporan/{id}', [LaporanHarianController::class, 'validasiKomandan'])->middleware('role:super_admin|komandan_regu');
     });
     /**
      * ==========================
